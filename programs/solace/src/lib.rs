@@ -1,9 +1,15 @@
 use anchor_lang::prelude::*;
+use vipers::prelude::*;
+
 mod state;
 mod errors;
+mod utils;
+mod validators;
 
 pub use state::*;
 pub use errors::*;
+pub use utils;
+pub use validators::*;
 
 declare_id!("8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U");
 
@@ -13,6 +19,7 @@ pub mod solace {
     use super::*;
 
     // Create the wallet for a owner
+    #[access_control(ctx.accounts.validate())]
     pub fn create_wallet(ctx: Context<CreateWallet>, owner: Pubkey, guardian_keys: Vec<Pubkey>, recovery_threshold: u8, bump: u8) -> Result<()> {
         let wallet = &mut ctx.accounts.wallet;
         wallet.owner = owner;
@@ -22,6 +29,7 @@ pub mod solace {
         wallet.pending_guardians= guardian_keys;
         wallet.recovery_mode = false;
         wallet.recovery_threshold = recovery_threshold;
+        wallet.wallet_recovery_sequence = 0;
         Ok(())
     }
 
@@ -90,13 +98,63 @@ pub mod solace {
         Ok(())
     }
 
-    // Initiate wallet recovery for an account
-    pub fn recover_wallet(_ctx: Context<NoAccount>) -> Result<()> {
+    /// Initiate wallet recovery for an account
+    pub fn initiate_wallet_recovery(ctx: Context<InitiateWalletRecovery>, new_owner: Pubkey, recovery_bump: u8) -> Result<()> {
+        let wallet = &mut ctx.accounts.wallet;
+        let recovery = &mut ctx.accounts.recovery;
+
+        recovery.wallet = wallet.key();
+        recovery.new_owner= new_owner;
+        recovery.proposer = ctx.accounts.proposer.key();
+        recovery.bump = recovery_bump;
+        recovery.new_owner = ctx.accounts.proposer.key();
+
+        wallet.recovery_mode = true;
+        wallet.current_recovery = Some(recovery.key());
+
         Ok(())
     }
 
-    // Approve the recovery as a guardian
-    pub fn approve_recovery(_ctx: Context<NoAccount>) -> Result<()> {
+
+    /// Approve the recovery attempt as a key pair guardian
+    #[access_control(ctx.accounts.validate())]
+    pub fn approve_recovery_by_keypair(ctx: Context<ApproveRecoveryByKeypair>) -> Result<()> {
+        let wallet = &mut ctx.accounts.wallet_to_recover;
+        let recovery = &mut ctx.accounts.recovery_attempt;
+
+        let index = utils::get_key_index::<Pubkey>(wallet.approved_guardians.clone(), ctx.accounts.guardian.key())
+            .ok_or(Errors::InvalidGuardian)
+            .unwrap();
+
+        recovery.approvals[index] = true;
+
+        let can_update = utils::can_update_owner(&wallet, &recovery).unwrap();
+        if can_update {
+            wallet.recovery_mode = false;
+            wallet.owner = recovery.new_owner;
+            recovery.is_executed = true;
+        }
+        Ok(())
+    }
+    
+    /// Approve the recovery attempt as a Solace Guardian
+    #[access_control(ctx.accounts.validate())]
+    pub fn approve_recovery_by_solace(ctx: Context<ApproveRecoveryBySolace>) -> Result<()> {
+        let wallet = &mut ctx.accounts.wallet_to_recover;
+        let recovery = &mut ctx.accounts.recovery_attempt;
+
+        let index = utils::get_key_index(wallet.approved_guardians.clone(), ctx.accounts.guardian_wallet.key())
+            .ok_or(Errors::InvalidGuardian) 
+            .unwrap();
+
+        recovery.approvals[index] = true;
+
+        let can_update = utils::can_update_owner(&wallet, &recovery).unwrap();
+        if can_update {
+            wallet.recovery_mode = false;
+            wallet.owner = recovery.new_owner;
+            recovery.is_executed = true;
+        }
         Ok(())
     }
 
@@ -156,4 +214,49 @@ pub struct RemoveGuardian<'info> {
     guardian: AccountInfo<'info>,
     #[account(mut)]
     owner: Signer<'info>
+}
+
+/// Initiate a wallet recovery for a particular Solace Wallet
+/// This can be anyone signing for recover (Ideally the new wallet of the user)
+#[derive(Accounts)]
+pub struct InitiateWalletRecovery<'info> {
+    #[account(mut)] // TODO: Add constraint to check guardian
+    wallet: Account<'info, Wallet>,
+    #[account(
+        init,
+        payer = proposer,
+        space = 1000, // TODO: Add dynamic spacing
+        seeds = [wallet.key().as_ref(), wallet.wallet_recovery_sequence.to_le_bytes().as_ref()],
+        bump
+    )]
+    recovery: Account<'info, RecoveryAttempt>,
+    #[account(mut)]
+    proposer: Signer<'info>,
+    system_program: Program<'info, System>
+}
+
+#[derive(Accounts)]
+pub struct ApproveRecoveryByKeypair<'info> {
+    #[account(mut)]
+    wallet_to_recover: Account<'info, Wallet>,
+    // The guardian approving the recovery - Must be a keypair guardian
+    #[account(mut)]
+    guardian: Signer<'info>,
+    // The recovery account
+    #[account(mut)]
+    recovery_attempt: Account<'info, RecoveryAttempt>
+}
+
+#[derive(Accounts)]
+pub struct ApproveRecoveryBySolace<'info> {
+    #[account(mut)]
+    wallet_to_recover: Account<'info, Wallet>,
+    // The guardian approving the recovery - Must be a keypair guardian
+    #[account(mut)]
+    owner: Signer<'info>,
+    #[account(mut, has_one=owner)]
+    guardian_wallet: Account<'info, Wallet>,
+    // The recovery account
+    #[account(mut)]
+    recovery_attempt: Account<'info, RecoveryAttempt>
 }

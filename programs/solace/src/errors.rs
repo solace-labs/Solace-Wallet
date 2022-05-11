@@ -7,4 +7,10 @@ pub enum Errors {
 
     #[msg("Amount not exact")]
     FullfillmentAmountNotExact,
+
+    #[msg("No approved guardian")]
+    NoApprovedGuardians,
+
+    #[msg("Key not found")]
+    KeyNotFound,
 }

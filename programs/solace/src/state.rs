@@ -16,16 +16,23 @@ pub struct Wallet {
     pub recovery_mode: bool,
     // The recovery threshold
     pub recovery_threshold: u8,
+    // Wallet recovery sequence
+    pub wallet_recovery_sequence: u64,
+    // Current recovery address
+    pub current_recovery: Option<Pubkey>,
 }
 
 #[account]
-pub struct WalletRecovery {
+pub struct RecoveryAttempt {
+    pub bump: u8,
     // The parent wallet
     pub wallet: Pubkey,
     // The owner of the wallet
     pub owner: Pubkey,
     // The proposer of the recovery
     pub proposer: Pubkey,
+    // New proposed owner
+    pub new_owner: Pubkey,
     // The guardians of the recovery
     pub guardians: Vec<Pubkey>,
     // The approvals provided by the guardians

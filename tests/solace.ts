@@ -5,6 +5,7 @@ import { assert } from "chai";
 import { Solace } from "../target/types/solace";
 
 const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
+const { BN } = anchor;
 
 describe("solace", () => {
   // Configure the client to use the local cluster.
@@ -21,6 +22,13 @@ describe("solace", () => {
   let guardian2: anchor.web3.Keypair;
 
   const getWallet = () => program.account.wallet.fetch(walletAddress);
+  const airdrop = async (address: anchor.web3.PublicKey) => {
+    const sg = await program.provider.connection.requestAirdrop(
+      address,
+      1 * LAMPORTS_PER_SOL
+    );
+    await program.provider.connection.confirmTransaction(sg);
+  };
 
   before(async () => {
     owner = Keypair.generate();
@@ -54,7 +62,7 @@ describe("solace", () => {
 
   it("should add a guardian", async () => {
     await program.methods
-      .addGuardians([guardian1.publicKey, guardian2.publicKey], 2)
+      .addGuardians([guardian1.publicKey, guardian2.publicKey], 1)
       .accounts({
         wallet: walletAddress,
         owner: owner.publicKey,
@@ -107,5 +115,50 @@ describe("solace", () => {
     const wallet = await getWallet();
     assert(wallet.pendingGuardians.length === 0);
     assert(wallet.approvedGuardians.length === 0);
+  });
+
+  it("should add and approve guardian", async () => {
+    await program.methods
+      .addGuardians([guardian1.publicKey, guardian2.publicKey], 1)
+      .accounts({
+        wallet: walletAddress,
+        owner: owner.publicKey,
+      })
+      .signers([owner])
+      .rpc();
+    await program.methods
+      .approveGuardian()
+      .accounts({
+        wallet: walletAddress,
+        guardian: guardian1.publicKey,
+      })
+      .signers([guardian1])
+      .rpc();
+  });
+
+  it("should initiate wallet recovery and recover wallet", async () => {
+    let wallet = await getWallet();
+    assert(wallet.owner.equals(owner.publicKey), "Wallet not owned by owner");
+    await airdrop(guardian1.publicKey);
+    const newOwner = Keypair.generate();
+    const [recoveryAddress, bump] = findProgramAddressSync(
+      [
+        walletAddress.toBuffer(),
+        new BN(wallet.walletRecoverySequence).toBuffer("le", 8),
+      ],
+      program.programId
+    );
+    await program.methods
+      .initiateWalletRecovery(newOwner.publicKey, bump)
+      .accounts({
+        wallet: walletAddress,
+        recovery: recoveryAddress,
+        guardian: guardian1.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .signers([guardian1])
+      .rpc();
+    wallet = await getWallet();
+    assert(wallet.owner.equals(newOwner.publicKey), "Wallet owner unchanged");
   });
 });
