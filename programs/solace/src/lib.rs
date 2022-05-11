@@ -8,7 +8,6 @@ mod validators;
 
 pub use state::*;
 pub use errors::*;
-pub use utils;
 pub use validators::*;
 
 declare_id!("8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U");
