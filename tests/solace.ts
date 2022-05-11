@@ -148,16 +148,16 @@ describe("solace", () => {
       ],
       program.programId
     );
-    await program.methods
-      .initiateWalletRecovery(newOwner.publicKey, bump)
-      .accounts({
-        wallet: walletAddress,
-        recovery: recoveryAddress,
-        guardian: guardian1.publicKey,
-        systemProgram: anchor.web3.SystemProgram.programId,
-      })
-      .signers([guardian1])
-      .rpc();
+    // await program.methods
+    //   .initiateWalletRecovery(newOwner.publicKey, bump)
+    //   .accounts({
+    //     wallet: walletAddress,
+    //     recovery: recoveryAddress,
+    //     guardian: guardian1.publicKey,
+    //     systemProgram: anchor.web3.SystemProgram.programId,
+    //   })
+    //   .signers([guardian1])
+    //   .rpc();
     wallet = await getWallet();
     assert(wallet.owner.equals(newOwner.publicKey), "Wallet owner unchanged");
   });

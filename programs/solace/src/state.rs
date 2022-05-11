@@ -20,6 +20,8 @@ pub struct Wallet {
     pub wallet_recovery_sequence: u64,
     // Current recovery address
     pub current_recovery: Option<Pubkey>,
+    // All the accounts the users are guarding
+    pub guarding: Vec<Pubkey>,
 }
 
 #[account]

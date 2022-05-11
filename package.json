@@ -4,7 +4,9 @@
         "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
     },
     "dependencies": {
-        "@project-serum/anchor": "^0.24.2"
+        "@project-serum/anchor": "^0.24.2",
+        "ipfs": "^0.62.3",
+        "orbit-db": "^0.28.6"
     },
     "devDependencies": {
         "@types/bn.js": "^5.1.0",
