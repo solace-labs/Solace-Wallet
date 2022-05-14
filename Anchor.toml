@@ -1,6 +1,10 @@
 [features]
-seeds = false
+seeds = true 
+
 [programs.localnet]
+solace = "8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U"
+
+[programs.testnet]
 solace = "8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U"
 
 [registry]

@@ -71,7 +71,6 @@ pub mod solace {
         wallet.approved_guardians.push(ctx.accounts.guardian.key());
 
         msg!("Guardian Approved");
-
         Ok(())
     }
 

@@ -1,21 +1,24 @@
 {
-    "scripts": {
-        "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
-        "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
-    },
-    "dependencies": {
-        "@project-serum/anchor": "^0.24.2",
-        "ipfs": "^0.62.3",
-        "orbit-db": "^0.28.6"
-    },
-    "devDependencies": {
-        "@types/bn.js": "^5.1.0",
-        "@types/chai": "^4.3.0",
-        "@types/mocha": "^9.0.0",
-        "chai": "^4.3.4",
-        "mocha": "^9.0.3",
-        "prettier": "^2.6.2",
-        "ts-mocha": "^10.0.0",
-        "typescript": "^4.3.5"
-    }
+  "scripts": {
+    "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
+    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
+    "package": "anchor build && mkdir -p src/solace/ && cp -f target/idl/solace.json src/solace/idl.json && cp -i target/types/solace.ts src/solace/types.ts"
+  },
+  "dependencies": {
+    "@nestjs/mapped-types": "*",
+    "@project-serum/anchor": "^0.18.2",
+    "axios": "^0.27.2",
+    "ipfs": "^0.62.3",
+    "orbit-db": "^0.28.6"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.0",
+    "@types/chai": "^4.3.0",
+    "@types/mocha": "^9.0.0",
+    "chai": "^4.3.4",
+    "mocha": "^9.0.3",
+    "prettier": "^2.6.2",
+    "ts-mocha": "^10.0.0",
+    "typescript": "^4.3.5"
+  }
 }

@@ -3,15 +3,19 @@ import { Program } from "@project-serum/anchor";
 import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey";
 import { assert } from "chai";
 import { Solace } from "../target/types/solace";
+import SolaceIdl from "../target/idl/solace.json";
+import { SolaceSDK } from "../src/sdk";
+import { ApiProvider } from "../src/api";
 
 const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
 const { BN } = anchor;
 
 describe("solace", () => {
   // Configure the client to use the local cluster.
-  anchor.setProvider(anchor.AnchorProvider.env());
+  anchor.setProvider(anchor.Provider.local());
 
   const program = anchor.workspace.Solace as Program<Solace>;
+  // const program = new Program(SolaceIdl, this.programId) as Program<Solace>;
   let owner: anchor.web3.Keypair;
   let signer: anchor.web3.Keypair;
   let seedBase: anchor.web3.Keypair;
@@ -30,6 +34,8 @@ describe("solace", () => {
     await program.provider.connection.confirmTransaction(sg);
   };
 
+  let solaceSdk: SolaceSDK;
+
   before(async () => {
     owner = Keypair.generate();
     seedBase = Keypair.generate();
@@ -45,95 +51,33 @@ describe("solace", () => {
       10 * LAMPORTS_PER_SOL
     );
     await program.provider.connection.confirmTransaction(sg);
+    solaceSdk = new SolaceSDK({
+      apiProvider: new ApiProvider("http://localhost:3000"),
+      program,
+      owner,
+    });
   });
 
   it("should create a solace wallet", async () => {
-    await program.methods
-      .createWallet(owner.publicKey, [], 0, walletBump)
-      .accounts({
-        signer: signer.publicKey,
-        base: seedBase.publicKey,
-        wallet: walletAddress,
-        systemProgram: anchor.web3.SystemProgram.programId,
-      })
-      .signers([signer])
-      .rpc();
+    await solaceSdk.createWalletWithName(signer, "name.solace.io");
+    walletAddress = solaceSdk.wallet;
   });
 
-  it("should add a guardian", async () => {
-    await program.methods
-      .addGuardians([guardian1.publicKey, guardian2.publicKey], 1)
-      .accounts({
-        wallet: walletAddress,
-        owner: owner.publicKey,
-      })
-      .signers([owner])
-      .rpc();
-    const wallet = await getWallet();
-    assert(wallet.pendingGuardians.length === 2);
-  });
-
-  it("should approve a guardian", async () => {
-    await program.methods
-      .approveGuardian()
-      .accounts({
-        wallet: walletAddress,
-        guardian: guardian1.publicKey,
-      })
-      .signers([guardian1])
-      .rpc();
-    const wallet = await getWallet();
-    assert(wallet.pendingGuardians.length === 1);
-    assert(wallet.approvedGuardians.length === 1);
-  });
+  // it("should add a guardian", async () => {
+  //   await solaceSdk.addGuardian(guardian1.publicKey);
+  //   const wallet = await solaceSdk.fetchWalletData();
+  //   assert(wallet.pendingGuardians.length === 1);
+  // });
 
   it("should remove a pending guardian", async () => {
-    await program.methods
-      .removeGuardians()
-      .accounts({
-        wallet: walletAddress,
-        guardian: guardian2.publicKey,
-        owner: owner.publicKey,
-      })
-      .signers([owner])
-      .rpc();
+    await solaceSdk.removeGuardian(guardian1.publicKey);
     const wallet = await getWallet();
-    assert(wallet.pendingGuardians.length === 0);
-    assert(wallet.approvedGuardians.length === 1);
-  });
-
-  it("should remove an approved guardian", async () => {
-    await program.methods
-      .removeGuardians()
-      .accounts({
-        wallet: walletAddress,
-        guardian: guardian1.publicKey,
-        owner: owner.publicKey,
-      })
-      .signers([owner])
-      .rpc();
-    const wallet = await getWallet();
-    assert(wallet.pendingGuardians.length === 0);
     assert(wallet.approvedGuardians.length === 0);
   });
 
   it("should add and approve guardian", async () => {
-    await program.methods
-      .addGuardians([guardian1.publicKey, guardian2.publicKey], 1)
-      .accounts({
-        wallet: walletAddress,
-        owner: owner.publicKey,
-      })
-      .signers([owner])
-      .rpc();
-    await program.methods
-      .approveGuardian()
-      .accounts({
-        wallet: walletAddress,
-        guardian: guardian1.publicKey,
-      })
-      .signers([guardian1])
-      .rpc();
+    await solaceSdk.addGuardian(guardian1.publicKey);
+    await solaceSdk.removeGuardian(guardian1.publicKey);
   });
 
   it("should initiate wallet recovery and recover wallet", async () => {
@@ -148,16 +92,7 @@ describe("solace", () => {
       ],
       program.programId
     );
-    // await program.methods
-    //   .initiateWalletRecovery(newOwner.publicKey, bump)
-    //   .accounts({
-    //     wallet: walletAddress,
-    //     recovery: recoveryAddress,
-    //     guardian: guardian1.publicKey,
-    //     systemProgram: anchor.web3.SystemProgram.programId,
-    //   })
-    //   .signers([guardian1])
-    //   .rpc();
+    await solaceSdk.createWalletToRequestRecovery(newOwner, walletAddress);
     wallet = await getWallet();
     assert(wallet.owner.equals(newOwner.publicKey), "Wallet owner unchanged");
   });
