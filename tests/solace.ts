@@ -63,21 +63,16 @@ describe("solace", () => {
     walletAddress = solaceSdk.wallet;
   });
 
-  // it("should add a guardian", async () => {
-  //   await solaceSdk.addGuardian(guardian1.publicKey);
-  //   const wallet = await solaceSdk.fetchWalletData();
-  //   assert(wallet.pendingGuardians.length === 1);
-  // });
+  it("should add a guardian", async () => {
+    await solaceSdk.addGuardian(guardian1.publicKey);
+    const wallet = await solaceSdk.fetchWalletData();
+    assert(wallet.pendingGuardians.length === 1);
+  });
 
   it("should remove a pending guardian", async () => {
     await solaceSdk.removeGuardian(guardian1.publicKey);
     const wallet = await getWallet();
     assert(wallet.approvedGuardians.length === 0);
-  });
-
-  it("should add and approve guardian", async () => {
-    await solaceSdk.addGuardian(guardian1.publicKey);
-    await solaceSdk.removeGuardian(guardian1.publicKey);
   });
 
   it("should initiate wallet recovery and recover wallet", async () => {
@@ -92,8 +87,15 @@ describe("solace", () => {
       ],
       program.programId
     );
+    console.log(newOwner.publicKey.toString());
+    console.log(newOwner.secretKey);
     await solaceSdk.createWalletToRequestRecovery(newOwner, walletAddress);
     wallet = await getWallet();
     assert(wallet.owner.equals(newOwner.publicKey), "Wallet owner unchanged");
+  });
+
+  it("should get guardian data", async () => {
+    const res = await solaceSdk.getGuardianData();
+    console.log(res);
   });
 });

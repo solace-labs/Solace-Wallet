@@ -26,6 +26,7 @@ export class SolaceSDK {
       ...data,
     });
     sdk.seed = new anchor.web3.PublicKey(seed);
+    return this;
   }
 
   constructor(data: SolaceSDKData) {
@@ -76,8 +77,7 @@ export class SolaceSDK {
     );
     this.wallet = walletAddress;
     await this.confirmTx(tx);
-
-    // await this.apiProvider.setName(walletAddress.toString(), name);
+    await this.apiProvider.setName(walletAddress.toString(), name);
   }
 
   /**
@@ -106,6 +106,7 @@ export class SolaceSDK {
         guardianPublicKey
       );
       await this.confirmTx(tx);
+      await this.apiProvider.addGuardian(this.wallet, guardianPublicKey);
       return true;
     } catch (e) {
       return false;
@@ -126,7 +127,8 @@ export class SolaceSDK {
           owner: this.owner,
         },
       });
-      this.confirmTx(tx);
+      await this.confirmTx(tx);
+      await this.apiProvider.removeGuardian(this.wallet, guardianAdress);
       return true;
     } catch (e) {
       return false;
@@ -212,5 +214,23 @@ export class SolaceSDK {
       }
     );
     this.confirmTx(tx);
+  }
+
+  async getNameFromAddress(address: anchor.web3.PublicKey) {
+    try {
+      const res = await this.apiProvider.getName(address.toString());
+      return res.data.data.name;
+    } catch (e) {
+      console.log("API ERROR - 9");
+    }
+  }
+
+  async getAddressFromName(name: string) {
+    try {
+      const res = await this.apiProvider.getAddress(name);
+      return res.data.data.address;
+    } catch (e) {
+      console.log("API ERROR - 10");
+    }
   }
 }

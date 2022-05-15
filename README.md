@@ -1,48 +1,45 @@
 # Solace Wallet
 
-Solace is a program based wallet for Solana which eases user's onboarding and enhances security using social recovery
+Solace is a program (smart-contract) based non-custodial wallet for Solana which eases user's onboarding and enhances security using social recovery, written in Rust
 
-### Idea
+Program Address (Testnet) - `8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U`
 
-### Program Flow
+![solace](./assets/Solace.jpg)
 
-1. Create a wallet
-   Signer: Any
+### The Problem
 
-   Any user can create a wallet. The wallet owner need not be the one paying the gas for the wallet creation.
+Seed Phrases deter mass adoption of crypto wallets.
+Users tend to lose their seed phrases or they are a vector of attack by hackers. Having a single point of failure for user's funds, was never a good thing.
 
-2. Add Guardians (Send request to guardians)
-   Signer: Wallet Owner
+Social recovery based smart-contract / program wallets are the way of the future. They remove barrier to adoption by making seed-phrases a thing of the past and provide multiple layers of security to the user's funds.
 
-   Wallet owners can add accounts as guardians to their wallet.
-   TODO: Make it such that the owner need not pay the gas for the same
+### How does it work
 
-   The guardian public key is added to the list of Pending Guardian vector. These accounts are not "yet" guardians
+1. User creates a Solace Program Wallet Account, signed by a Keypair generated for them
+2. This signing keypair becomes the owner of the Program Wallet and is required for signing any transaction
+3. The user then adds guardians to guard the Program Wallet. These guardians can be friends / family or other wallets the user has access to (Phantom, Ledger, ...)
+4. In case of losing access to the signing key pair (device theft, damage, hack, ...), the user can initiate the recovery process for their existing Program Wallet with a new Signing Keypair, and request the guardians to approve the request on-chain
+5. If the guardians approve of this over a threshold (3/5 or 5/7 majority as set initially), the program wallet's new owner now becomes keypair requesting for recovery.
+6. Thus, the user's funds were never jeopardized as a result of losing the device or the seed phrase as a recovery request freezes any funds from moving out
+7. A timelock is used to prevent the hacker / malicious user from changing the guardian, such that a recovery is always prioritized over changing a guardian
 
-3. Approve guardian request
-   Signer: Guardian
+### Advantages
 
-   An account which has been requested to guard an existing wallet. Can either approve or decline to be the guardian of the requesting wallet
+1. **_Ease of Onboarding_** - Seed phrase to the user's signing account is redundant, and not as important as it would've been if it held all of the user's assets
+2. **_Fund Security_** Funds are stored in the program (smart-contract), and is protected by the `recovery_mode` flag, which prevents funds from leaving the system
 
-   TODO: Reject a guardian request
+### Protocol
 
-4. Remove guardian
-   Signer: Wallet Owner
+Solace is a wallet protocol, which allows anyone to build their UI Layer on top of it. We have built the Solace Wallet App and the Solace Backend to demonstrate the capabilities of Solace
 
-   A wallet owner can remove a guardian at any given time
-   TODO: Add timelock to removing guardians
+### IPFS
 
-5. Initiate wallet recovery procedure
-   Signer: Any
+We use Orbit DB and IPFS to store user's guardian information. Improvisations can be made where the addresses are hashed to prevent any social engineering attacks on the user.
+Current use cases of IPFS for Solace are as follows:
 
-   Any new KeyPair wallet should be able to initiate a recovery procedure for an existing Solace Wallet
+1. Store user's unique names (user_names) so as to make paying to other solace users convenient
+2. Store user's guardian information so as to notify the guardian of recovery requests
 
-6. Approve wallet recovery request
-   Signer: Guardian
+### Comparision between Keypair wallets and Program (Smart Contract) based wallets
 
-   Approve a recovery request for a Solace Wallet, so that the recovery threshold can be met
-
-7. Reject wallet recovery request
-   Signer: Guardian
-
-   Reject a recovery request for a Solace Wallet, so that the recovery threshold is not met
+![comparison](./assets/image.jpeg)

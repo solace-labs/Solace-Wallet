@@ -5,57 +5,87 @@ export class ApiProvider {
   constructor(private readonly baseUrl: string) {}
 
   async requestAirdrop(publicKey: anchor.web3.PublicKey) {
-    const res = await axios.post(`$baseUrl/wallets/request-airdrop`, {
-      data: {
-        publicAddress: publicKey.toString(),
-        deviceToken: "string",
-      },
-    });
+    try {
+      const res = await axios.post(`${this.baseUrl}/wallets/request-airdrop`, {
+        data: {
+          publicAddress: publicKey.toString(),
+          deviceToken: "string",
+        },
+      });
+    } catch (e) {
+      console.log("API Failed - 1");
+    }
   }
 
   async addGuardian(
     user: anchor.web3.PublicKey,
     guardian: anchor.web3.PublicKey
   ) {
-    console.log(user.toString(), guardian.toString());
-    const res = await axios.post(`${this.baseUrl}/guardian/add`, {
-      userAddress: user.toString(),
-      guardianAddress: guardian.toString(),
-    });
+    try {
+      const res = await axios.post(`${this.baseUrl}/guardian/add`, {
+        userAddress: user.toString(),
+        guardianAddress: guardian.toString(),
+      });
+    } catch (e) {
+      console.log("API Failed - 2");
+    }
   }
 
   async removeGuardian(
     user: anchor.web3.PublicKey,
     guardian: anchor.web3.PublicKey
   ) {
-    const res = await axios.post(`${this.baseUrl}/guardian/remove`, {
-      userAddress: user.toString(),
-      guardianAddress: guardian.toString(),
-    });
+    try {
+      const res = await axios.post(`${this.baseUrl}/guardian/remove`, {
+        userAddress: user.toString(),
+        guardianAddress: guardian.toString(),
+      });
+    } catch (e) {
+      console.log("API Failed - 3");
+    }
   }
 
   async getGuardianData(user: anchor.web3.PublicKey) {
-    return await axios.post(`${this.baseUrl}/guardian/data`, {
-      userAddress: user.toString(),
-    });
+    try {
+      const res = await axios.post(`${this.baseUrl}/guardian/data`, {
+        userAddress: user.toString(),
+      });
+      return res.data.data;
+    } catch (e) {
+      console.log("API Failed - 3");
+    }
   }
 
   async setName(address: string, name: string) {
-    return await axios.post("", {
-      name,
-      address,
-    });
+    try {
+      const res = await axios.post(`${this.baseUrl}/name/set`, {
+        name,
+        address,
+      });
+    } catch (e) {
+      console.log("API Failed - 4");
+    }
   }
 
   async getName(address: string) {
-    return await axios.post("", {
-      address,
-    });
+    try {
+      const res = await axios.post(`${this.baseUrl}/name/get/name`, {
+        address,
+      });
+      return res.data.data;
+    } catch (e) {
+      console.log("API Failed - 5");
+    }
   }
 
   async getAddress(name: string) {
-    return await axios.post("", {
-      name,
-    });
+    try {
+      const res = await axios.post(`${this.baseUrl}/name/get/address`, {
+        name,
+      });
+      return res.data.data;
+    } catch (e) {
+      console.log("API Failed - 6");
+    }
   }
 }
