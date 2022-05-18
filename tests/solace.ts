@@ -24,6 +24,7 @@ describe("solace", () => {
 
   let guardian1: anchor.web3.Keypair;
   let guardian2: anchor.web3.Keypair;
+  let newOwner: anchor.web3.Keypair;
 
   const getWallet = () => program.account.wallet.fetch(walletAddress);
   const airdrop = async (address: anchor.web3.PublicKey) => {
@@ -42,6 +43,7 @@ describe("solace", () => {
     signer = Keypair.generate();
     guardian1 = Keypair.generate();
     guardian2 = Keypair.generate();
+    newOwner = Keypair.generate();
     [walletAddress, walletBump] = findProgramAddressSync(
       [Buffer.from("SOLACE"), seedBase.publicKey.toBuffer()],
       program.programId
@@ -66,20 +68,26 @@ describe("solace", () => {
   it("should add a guardian", async () => {
     await solaceSdk.addGuardian(guardian1.publicKey);
     const wallet = await solaceSdk.fetchWalletData();
-    assert(wallet.pendingGuardians.length === 1);
+    assert(
+      wallet.approvedGuardians.length === 1,
+      "The number of approved guardians should be 1"
+    );
   });
 
-  it("should remove a pending guardian", async () => {
+  it("should remove an approved guardian", async () => {
     await solaceSdk.removeGuardian(guardian1.publicKey);
     const wallet = await getWallet();
-    assert(wallet.approvedGuardians.length === 0);
+    assert(
+      wallet.approvedGuardians.length === 0,
+      "The number of approved guardians should be 0"
+    );
   });
 
-  it("should initiate wallet recovery and recover wallet", async () => {
+  it("should add guardian and initiate wallet recovery", async () => {
     let wallet = await getWallet();
+    await solaceSdk.addGuardian(guardian1.publicKey);
     assert(wallet.owner.equals(owner.publicKey), "Wallet not owned by owner");
     await airdrop(guardian1.publicKey);
-    const newOwner = Keypair.generate();
     const [recoveryAddress, bump] = findProgramAddressSync(
       [
         walletAddress.toBuffer(),
@@ -87,15 +95,23 @@ describe("solace", () => {
       ],
       program.programId
     );
-    console.log(newOwner.publicKey.toString());
-    console.log(newOwner.secretKey);
     await solaceSdk.createWalletToRequestRecovery(newOwner, walletAddress);
     wallet = await getWallet();
-    assert(wallet.owner.equals(newOwner.publicKey), "Wallet owner unchanged");
+    assert(wallet.recoveryMode, "The wallet should be in recovery mode");
   });
 
-  it("should get guardian data", async () => {
-    const res = await solaceSdk.getGuardianData();
-    console.log(res);
+  it("guardian should approve the recovery, and the wallet should be recovered to the new owner", async () => {
+    let sdk2 = new SolaceSDK({
+      apiProvider: new ApiProvider(""),
+      owner: guardian1,
+      program: program,
+    });
+    let wallet = await getWallet();
+    await sdk2.approveRecoveryByKeypair(walletAddress);
+    wallet = await getWallet();
+    assert(
+      wallet.owner === newOwner.publicKey,
+      "The owner of the wallet should be the new owner"
+    );
   });
-});
+})

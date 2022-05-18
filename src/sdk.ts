@@ -60,6 +60,8 @@ export class SolaceSDK {
       )
     );
 
+    console.log("Owner Address", this.owner.publicKey.toString());
+
     const tx = await this.program.rpc.createWallet(
       this.owner.publicKey,
       [],
@@ -124,11 +126,12 @@ export class SolaceSDK {
         accounts: {
           wallet: this.wallet,
           guardian: guardianAdress,
-          owner: this.owner,
+          owner: this.owner.publicKey,
         },
+        signers: [this.owner],
       });
       await this.confirmTx(tx);
-      await this.apiProvider.removeGuardian(this.wallet, guardianAdress);
+      // await this.apiProvider.removeGuardian(this.wallet, guardianAdress);
       return true;
     } catch (e) {
       return false;
@@ -157,7 +160,7 @@ export class SolaceSDK {
    * @param addressToRecover
    * @returns
    */
-  async approveRecovery(addressToRecover: anchor.web3.PublicKey) {
+  async approveRecoveryByKeypair(addressToRecover: anchor.web3.PublicKey) {
     try {
       const walletData = await this.fetchDataForWallet(addressToRecover);
       const [recoveryAddress, bump] = findProgramAddressSync(
@@ -167,16 +170,16 @@ export class SolaceSDK {
         ],
         this.program.programId
       );
-      const tx = await this.program.rpc.approveRecoveryBySolace({
+      const tx = await this.program.rpc.approveRecoveryByKeypair({
         accounts: {
           walletToRecover: addressToRecover,
-          owner: this.owner,
-          guardianWallet: this.wallet,
+          guardian: this.owner.publicKey,
           recoveryAttempt: recoveryAddress,
         },
+        signers: [this.owner]
       });
-      this.confirmTx(tx);
-      return true;
+      await this.confirmTx(tx);
+      return recoveryAddress;
     } catch (e) {
       return false;
     }
@@ -191,7 +194,13 @@ export class SolaceSDK {
     newOwner: anchor.web3.Keypair,
     addressToRecover: anchor.web3.PublicKey
   ) {
-    // TODO: Airdrop
+    // await this.apiProvider.requestAirdrop(newOwner.publicKey);
+    await this.program.provider.connection.confirmTransaction(
+      await this.program.provider.connection.requestAirdrop(
+        newOwner.publicKey,
+        1 * LAMPORTS_PER_SOL
+      )
+    );
     const walletData = await this.fetchDataForWallet(addressToRecover);
     const [recoveryAddress, bump] = findProgramAddressSync(
       [
@@ -202,7 +211,6 @@ export class SolaceSDK {
     );
     const tx = await this.program.rpc.initiateWalletRecovery(
       newOwner.publicKey,
-      bump,
       {
         accounts: {
           wallet: addressToRecover,
@@ -213,7 +221,7 @@ export class SolaceSDK {
         signers: [newOwner],
       }
     );
-    this.confirmTx(tx);
+    await this.confirmTx(tx);
   }
 
   async getNameFromAddress(address: anchor.web3.PublicKey) {

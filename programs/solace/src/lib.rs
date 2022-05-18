@@ -10,6 +10,8 @@ pub use state::*;
 pub use errors::*;
 pub use validators::*;
 
+ 
+
 declare_id!("8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U");
 
 #[program]
@@ -18,11 +20,11 @@ pub mod solace {
     use super::*;
 
     // Create the wallet for a owner
-    #[access_control(ctx.accounts.validate())]
-    pub fn create_wallet(ctx: Context<CreateWallet>, owner: Pubkey, guardian_keys: Vec<Pubkey>, recovery_threshold: u8, bump: u8) -> Result<()> {
+    // #[access_control(ctx.accounts.validate())]
+    pub fn create_wallet(ctx: Context<CreateWallet>, owner: Pubkey, guardian_keys: Vec<Pubkey>, recovery_threshold: u8, _bump: u8) -> Result<()> {
         let wallet = &mut ctx.accounts.wallet;
         wallet.owner = owner;
-        wallet.bump = bump;
+        wallet.bump = *ctx.bumps.get("wallet").unwrap();
         wallet.base = ctx.accounts.base.key();
         wallet.approved_guardians = vec![];
         wallet.pending_guardians= guardian_keys;
@@ -47,17 +49,17 @@ pub mod solace {
         Ok(())
     }
 
-    /// Adds a guadian to the wallet's pending_guardian vector 
+    /// Adds a guadian to the wallet's approved_guardian vector 
     /// Access Control - Owner Only
     pub fn add_guardians(ctx: Context<AddGuardians>, guardians: Vec<Pubkey>, recovery_threshold: u8) -> Result<()> {
         let wallet = &mut ctx.accounts.wallet;
         guardians.iter().for_each(|key| {
-            wallet.pending_guardians.push(*key);
+            wallet.approved_guardians.push(*key);
             ()
         });
         // TODO: Handle recovery thresholds based on how many guardians are approved
         wallet.recovery_threshold = recovery_threshold;
-        msg!("Added new pending guardians");
+        msg!("Added new approved guardians");
         Ok(())
     }
 
@@ -78,33 +80,26 @@ pub mod solace {
     /// TODO: Add timelock to remove guardians
     pub fn remove_guardians(ctx: Context<RemoveGuardian>) -> Result<()> {
         let wallet = &mut ctx.accounts.wallet;
-        let pending_guardians = wallet.pending_guardians.clone();
         let approved_guardians = wallet.approved_guardians.clone();
-        let index = [pending_guardians, approved_guardians]
-            .concat()
+        let index = approved_guardians
             .iter()
             .position(|&x| x == ctx.accounts.guardian.key())
             .ok_or(errors::Errors::InvalidGuardian)
             .unwrap();
-        let pending_guardians_len = &wallet.pending_guardians.len();
-        if index < *pending_guardians_len {
-            wallet.pending_guardians.remove(index);
-        } else {
-            wallet.approved_guardians.remove(index - pending_guardians_len);
-        }
+        wallet.approved_guardians.remove(index);
         msg!("Guardain removed");
         Ok(())
     }
 
     /// Initiate wallet recovery for an account
-    pub fn initiate_wallet_recovery(ctx: Context<InitiateWalletRecovery>, new_owner: Pubkey, recovery_bump: u8) -> Result<()> {
+    pub fn initiate_wallet_recovery(ctx: Context<InitiateWalletRecovery>, new_owner: Pubkey) -> Result<()> {
         let wallet = &mut ctx.accounts.wallet;
         let recovery = &mut ctx.accounts.recovery;
 
         recovery.wallet = wallet.key();
         recovery.new_owner= new_owner;
         recovery.proposer = ctx.accounts.proposer.key();
-        recovery.bump = recovery_bump;
+        recovery.bump = *ctx.bumps.get("recovery").unwrap();
         recovery.new_owner = ctx.accounts.proposer.key();
 
         wallet.recovery_mode = true;
@@ -123,6 +118,8 @@ pub mod solace {
         let index = utils::get_key_index::<Pubkey>(wallet.approved_guardians.clone(), ctx.accounts.guardian.key())
             .ok_or(Errors::InvalidGuardian)
             .unwrap();
+
+        msg!("Guardian found at index {:?}", &index);
 
         recovery.approvals[index] = true;
 
