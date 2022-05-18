@@ -48,8 +48,9 @@ Current use cases of IPFS for Solace are as follows:
 
 The core team is building Solace and juggling a Full Time Job. If you have experience with React Native, Rust (Anchor) or Node JS / Typescript, create an issue an in of the following repos and let's collaborate
 
-** Solace Protocol Repo ** - https://github.com/d3fkon/solace
-** Solace Mobile App ** https://github.com/d3fkon/solace-rn
+**Solace Protocol Repo** - https://github.com/d3fkon/solace
+
+**Solace Mobile App** https://github.com/d3fkon/solace-rn
 
 Let's build Solana's adoption driven wallet together
 
