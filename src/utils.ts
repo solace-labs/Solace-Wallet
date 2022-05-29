@@ -1,5 +1,5 @@
 import { AnchorProvider, Program } from "@project-serum/anchor";
-import { Solace } from "../target/types/solace";
+import { Solace } from "./solace/types";
 
 export class Utils {
   constructor(private readonly program: Program<Solace>) {}

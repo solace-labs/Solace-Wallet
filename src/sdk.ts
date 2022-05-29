@@ -66,7 +66,6 @@ export class SolaceSDK {
       this.owner.publicKey,
       [],
       0,
-      walletBump,
       {
         accounts: {
           signer: this.owner.publicKey,
@@ -176,7 +175,7 @@ export class SolaceSDK {
           guardian: this.owner.publicKey,
           recoveryAttempt: recoveryAddress,
         },
-        signers: [this.owner]
+        signers: [this.owner],
       });
       await this.confirmTx(tx);
       return recoveryAddress;

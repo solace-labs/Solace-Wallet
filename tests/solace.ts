@@ -2,10 +2,10 @@ import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
 import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey";
 import { assert } from "chai";
-import { Solace } from "../target/types/solace";
 import SolaceIdl from "../target/idl/solace.json";
 import { SolaceSDK } from "../src/sdk";
 import { ApiProvider } from "../src/api";
+import { Solace } from "../src/solace/types";
 
 const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
 const { BN } = anchor;
@@ -27,6 +27,8 @@ describe("solace", () => {
   let newOwner: anchor.web3.Keypair;
 
   const getWallet = () => program.account.wallet.fetch(walletAddress);
+  const getRecoveryAccount = (address: anchor.web3.PublicKey) =>
+    program.account.recoveryAttempt.fetch(address);
   const airdrop = async (address: anchor.web3.PublicKey) => {
     const sg = await program.provider.connection.requestAirdrop(
       address,
@@ -104,14 +106,14 @@ describe("solace", () => {
     let sdk2 = new SolaceSDK({
       apiProvider: new ApiProvider(""),
       owner: guardian1,
-      program: program,
+      program,
     });
     let wallet = await getWallet();
     await sdk2.approveRecoveryByKeypair(walletAddress);
     wallet = await getWallet();
     assert(
-      wallet.owner === newOwner.publicKey,
+      wallet.owner.toString() === newOwner.publicKey.toString(),
       "The owner of the wallet should be the new owner"
     );
   });
-})
+});
