@@ -52,7 +52,36 @@ The core team is building Solace and juggling a full time job. If you have exper
 
 **Solace Mobile App** https://github.com/d3fkon/solace-rn
 
-------
+---
 
 Let's build Solana's adoption driven wallet together
 
+### Installation Instructions
+
+1. The smart-contract / program lives in `programs/solace`
+2. The Solace SDK gets built into `src/solace` and is used in `src/sdk.ts`. The new types can be generated using `npm run package`
+3. The react-native mobile app lives in `client`
+4. The nestjs server code lives in `server`
+
+Please make sure that you install your packages separately and note mix things up<br/>
+
+`cd client && npm i <PACKAGE_NAME>` for installing client node packages <br/>
+`cd server && npm i <PACKAGE_NAME>` for installing nestjs server node packages <br/>
+`npm i <PACKAGE_NAME>` for any anchor and solana related packages <br/>
+
+---
+
+### Brief Roadmap
+
+- [x] SDK and type generation
+- [x] NestJS Server
+- [x] OrbitDB/IPFS Integration for storing guardian information
+- [x] React Native mobile app
+- [ ] IPFS Enhance security measures
+- [ ] E2E Testing
+
+---
+
+### License
+
+Solace is released under the MIT license. For details check the [LICENSE](LICENSE)file

@@ -1,11 +1,12 @@
 {
   "scripts": {
+    "preinstall": "cd client && npm i",
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
     "package": "anchor build && mkdir -p src/solace/ && cp -f target/idl/solace.json src/solace/idl.json && cp -i target/types/solace.ts src/solace/types.ts",
-    "client:android": "cd client && react-native run-android",
-    "client:ios": "cd client && react-native run-ios",
-    "client:start": "cd client && react-native start"
+    "client:android": "cd client && npm run android",
+    "client:ios": "cd client && npm run ios",
+    "client:start": "cd client && npm run start"
   },
   "dependencies": {
     "@nestjs/mapped-types": "*",
