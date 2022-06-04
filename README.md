@@ -69,6 +69,7 @@ Please make sure that you install your packages separately and note mix things u
 - [x] React Native mobile app
 - [ ] IPFS Enhance security measures
 - [ ] E2E Testing
+- [ ] Alpha Release
 
 ---
 
