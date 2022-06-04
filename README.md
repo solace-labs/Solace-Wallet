@@ -44,19 +44,9 @@ Current use cases of IPFS for Solace are as follows:
 
 ![comparison](./assets/image.jpeg)
 
-### Looking for contributors
-
-The core team is building Solace and juggling a full time job. If you have experience with React Native, Rust (Anchor) or Node JS / Typescript, create an issue an in of the following repos and let's collaborate
-
-**Solace Protocol Repo** - https://github.com/d3fkon/solace-wallet
-
-**Solace Mobile App** https://github.com/d3fkon/solace-rn
-
----
+## Installation Instructions
 
 Let's build Solana's adoption driven wallet together
-
-### Installation Instructions
 
 1. The smart-contract / program lives in `programs/solace`
 2. The Solace SDK gets built into `src/solace` and is used in `src/sdk.ts`. The new types can be generated using `npm run package`
@@ -65,13 +55,13 @@ Let's build Solana's adoption driven wallet together
 
 Please make sure that you install your packages separately and note mix things up<br/>
 
-`cd client && npm i <PACKAGE_NAME>` for installing client node packages <br/>
-`cd server && npm i <PACKAGE_NAME>` for installing nestjs server node packages <br/>
-`npm i <PACKAGE_NAME>` for any anchor and solana related packages <br/>
+- `cd client && npm i <PACKAGE_NAME>` for installing client node packages <br/>
+- `cd server && npm i <PACKAGE_NAME>` for installing nestjs server node packages <br/>
+- `npm i <PACKAGE_NAME>` for any anchor and solana related packages <br/>
 
 ---
 
-### Brief Roadmap
+## Brief Roadmap
 
 - [x] SDK and type generation
 - [x] NestJS Server
@@ -82,6 +72,6 @@ Please make sure that you install your packages separately and note mix things u
 
 ---
 
-### License
+## License
 
-Solace is released under the MIT license. For details check the [LICENSE](LICENSE)file
+Solace is released under the MIT license. For details check the [LICENSE](LICENSE) file
