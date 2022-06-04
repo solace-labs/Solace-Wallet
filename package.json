@@ -2,7 +2,10 @@
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
-    "package": "anchor build && mkdir -p src/solace/ && cp -f target/idl/solace.json src/solace/idl.json && cp -i target/types/solace.ts src/solace/types.ts"
+    "package": "anchor build && mkdir -p src/solace/ && cp -f target/idl/solace.json src/solace/idl.json && cp -i target/types/solace.ts src/solace/types.ts",
+    "client:android": "cd client && react-native run-android",
+    "client:ios": "cd client && react-native run-ios",
+    "client:start": "cd client && react-native start"
   },
   "dependencies": {
     "@nestjs/mapped-types": "*",
