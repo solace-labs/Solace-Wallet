@@ -54,10 +54,6 @@ export type Solace = {
         {
           "name": "recoveryThreshold",
           "type": "u8"
-        },
-        {
-          "name": "bump",
-          "type": "u8"
         }
       ]
     },
@@ -75,6 +71,32 @@ export type Solace = {
       "name": "depositSol",
       "accounts": [],
       "args": []
+    },
+    {
+      "name": "sendSol",
+      "accounts": [
+        {
+          "name": "toAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "amountOfLamports",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "addGuardians",
@@ -184,10 +206,6 @@ export type Solace = {
         {
           "name": "newOwner",
           "type": "publicKey"
-        },
-        {
-          "name": "recoveryBump",
-          "type": "u8"
         }
       ]
     },
@@ -426,10 +444,6 @@ export const IDL: Solace = {
         {
           "name": "recoveryThreshold",
           "type": "u8"
-        },
-        {
-          "name": "bump",
-          "type": "u8"
         }
       ]
     },
@@ -447,6 +461,32 @@ export const IDL: Solace = {
       "name": "depositSol",
       "accounts": [],
       "args": []
+    },
+    {
+      "name": "sendSol",
+      "accounts": [
+        {
+          "name": "toAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "amountOfLamports",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "addGuardians",
@@ -556,10 +596,6 @@ export const IDL: Solace = {
         {
           "name": "newOwner",
           "type": "publicKey"
-        },
-        {
-          "name": "recoveryBump",
-          "type": "u8"
         }
       ]
     },

@@ -47,8 +47,23 @@ pub mod solace {
         Ok(())
     }
 
-    // Deposit sol to the wallet
+    // Deposit sol to the wallet. But why would anyone ever do that?
     pub fn deposit_sol(_ctx: Context<NoAccount>) -> Result<()> {
+        Ok(())
+    }
+
+    // Send sol to a particular account
+    pub fn send_sol(ctx: Context<SendSol>, amount_of_lamports: u64) -> Result<()> {
+        let from_account = &mut ctx.accounts.wallet;
+        // TODO: Check if the pda is in recovery mode and abort transaction if then
+
+        assert!(!from_account.recovery_mode, "Payments are disabled");
+        let to = ctx.accounts.to_account.to_account_info();
+        let from = ctx.accounts.wallet.to_account_info();
+
+        **from.try_borrow_mut_lamports()? -= amount_of_lamports;
+        **to.try_borrow_mut_lamports()? += amount_of_lamports;
+
         Ok(())
     }
 
@@ -229,6 +244,19 @@ pub struct RemoveGuardian<'info> {
     /// CHECK: The guardian account to remove
     #[account()]
     guardian: AccountInfo<'info>,
+    #[account(mut)]
+    owner: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct SendSol<'info> {
+    /// CHECK: The account to which sol needs to be sent to
+    #[account(mut)]
+    to_account: AccountInfo<'info>,
+
+    #[account(mut, has_one = owner)]
+    wallet: Account<'info, Wallet>,
+
     #[account(mut)]
     owner: Signer<'info>,
 }

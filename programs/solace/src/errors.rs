@@ -13,4 +13,7 @@ pub enum Errors {
 
     #[msg("Key not found")]
     KeyNotFound,
+
+    #[msg("Payments are disabled - Wallet in recovery mode")]
+    PaymentsDisabled,
 }

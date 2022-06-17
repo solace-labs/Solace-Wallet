@@ -34,7 +34,9 @@ describe("solace", () => {
       address,
       1 * LAMPORTS_PER_SOL
     );
-    await program.provider.connection.confirmTransaction(sg);
+    const confirmation = await program.provider.connection.confirmTransaction(
+      sg
+    );
   };
 
   let solaceSdk: SolaceSDK;
@@ -65,6 +67,26 @@ describe("solace", () => {
   it("should create a solace wallet", async () => {
     await solaceSdk.createWalletWithName(signer, "name.solace.io");
     walletAddress = solaceSdk.wallet;
+  });
+
+  it("should send 500 lamports to a random address", async () => {
+    let randomWallet = anchor.web3.Keypair.generate();
+    await airdrop(randomWallet.publicKey);
+    await airdrop(walletAddress);
+
+    let walletBalance = await program.provider.connection.getBalance(
+      randomWallet.publicKey
+    );
+
+    let beforeBalance = await program.provider.connection.getBalance(
+      randomWallet.publicKey
+    );
+    await solaceSdk.sendSol(randomWallet.publicKey, 10);
+    let afterBalance = await program.provider.connection.getBalance(
+      randomWallet.publicKey
+    );
+
+    assert(afterBalance === beforeBalance + 10, "SOL Not transferred");
   });
 
   it("should add a guardian", async () => {

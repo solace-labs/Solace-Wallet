@@ -54,10 +54,6 @@
         {
           "name": "recoveryThreshold",
           "type": "u8"
-        },
-        {
-          "name": "bump",
-          "type": "u8"
         }
       ]
     },
@@ -75,6 +71,32 @@
       "name": "depositSol",
       "accounts": [],
       "args": []
+    },
+    {
+      "name": "sendSol",
+      "accounts": [
+        {
+          "name": "toAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "amountOfLamports",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "addGuardians",
@@ -184,10 +206,6 @@
         {
           "name": "newOwner",
           "type": "publicKey"
-        },
-        {
-          "name": "recoveryBump",
-          "type": "u8"
         }
       ]
     },

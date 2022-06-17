@@ -82,6 +82,20 @@ export class SolaceSDK {
   }
 
   /**
+   * Should send some amount of SOL to the `toAddress`
+   */
+  async sendSol(toAddress: anchor.web3.PublicKey, lamports: number) {
+    await this.program.rpc.sendSol(new anchor.BN(lamports), {
+      accounts: {
+        toAccount: toAddress,
+        wallet: this.wallet,
+        owner: this.owner.publicKey,
+      },
+      signers: [this.owner],
+    });
+  }
+
+  /**
    * Add a guardian to the wallet, signed by the owner
    * @param {anchor.web3.PublicKey} guardianPublicKey
    */
