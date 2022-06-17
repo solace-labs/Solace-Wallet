@@ -53,7 +53,7 @@ Let's build Solana's adoption driven wallet together
 3. The react-native mobile app lives in `client`
 4. The nestjs server code lives in `server`
 
-Please make sure that you install your packages separately and note mix things up<br/>
+Please make sure that you install your packages separately and not cross-install the packages<br/>
 
 - `cd client && npm i <PACKAGE_NAME>` for installing client node packages <br/>
 - `cd server && npm i <PACKAGE_NAME>` for installing nestjs server node packages <br/>
