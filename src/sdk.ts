@@ -13,6 +13,7 @@ interface SolaceSDKData {
   owner: anchor.web3.Keypair;
 }
 
+// The SDK to interface with the client
 export class SolaceSDK {
   wallet: anchor.web3.PublicKey;
   helper: Utils;
@@ -237,6 +238,9 @@ export class SolaceSDK {
     await this.confirmTx(tx);
   }
 
+  /**
+   * Get User's name from wallet address
+   */
   async getNameFromAddress(address: anchor.web3.PublicKey) {
     try {
       const res = await this.apiProvider.getName(address.toString());
@@ -246,6 +250,9 @@ export class SolaceSDK {
     }
   }
 
+  /**
+   * Get User's wallet address from name
+   */
   async getAddressFromName(name: string) {
     try {
       const res = await this.apiProvider.getAddress(name);
