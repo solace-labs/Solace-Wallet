@@ -39,11 +39,13 @@ pub mod solace {
 
     // Add a token acount for a particular mint address. Ex. USDC
     pub fn add_token_account(_ctx: Context<NoAccount>) -> Result<()> {
+        todo!();
         Ok(())
     }
 
     // Deposit SPL tokens for a given mint address
     pub fn deposit_spl_tokens(_ctx: Context<NoAccount>) -> Result<()> {
+        todo!();
         Ok(())
     }
 
