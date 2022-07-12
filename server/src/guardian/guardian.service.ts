@@ -10,7 +10,11 @@ export class GuardainService {
     this.userDataDb = userData;
   }
 
-  /** Add a guradian to the current user*/
+  /**
+   * Add a guardian to the current user, based on the user id
+   * A bluk of the logic exists in making sure these users exist
+   * TODO: Ensuring authenticity by the way of using signatures
+   */
   async addGuardian(user: string, guardian: string) {
     console.log(user, guardian);
     let userData = await this.getGuardianData(user);

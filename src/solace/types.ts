@@ -384,6 +384,11 @@ export type Solace = {
       "code": 6003,
       "name": "KeyNotFound",
       "msg": "Key not found"
+    },
+    {
+      "code": 6004,
+      "name": "PaymentsDisabled",
+      "msg": "Payments are disabled - Wallet in recovery mode"
     }
   ]
 };
@@ -774,6 +779,11 @@ export const IDL: Solace = {
       "code": 6003,
       "name": "KeyNotFound",
       "msg": "Key not found"
+    },
+    {
+      "code": 6004,
+      "name": "PaymentsDisabled",
+      "msg": "Payments are disabled - Wallet in recovery mode"
     }
   ]
 };

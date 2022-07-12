@@ -67,8 +67,11 @@ Please make sure that you install your packages separately and not cross-install
 - [x] NestJS Server
 - [x] OrbitDB/IPFS Integration for storing guardian information
 - [x] React Native mobile app
-- [ ] IPFS Enhance security measures
-- [ ] E2E Testing
+- [x] IPFS Enhance security measures
+- [x] E2E Testing
+- [ ] Create an NPM Package for Solace
+- [ ] Host a Publicly available NestJS Server for anyone to test
+- [x] Use Dependency Injection to configure the SDK
 - [ ] Alpha Release
 
 ---
