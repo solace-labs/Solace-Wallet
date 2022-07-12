@@ -1,6 +1,6 @@
 # Solace Wallet
 
-Solace is a program (smart-contract) based non-custodial wallet for Solana which eases user's onboarding and enhances security using social recovery, written in Rust
+Solace is a program (smart-contract) based non-custodial wallet for Solana which eases user's onboarding and enhances security using social recovery, written in Rust.
 
 Program Address (Testnet) - `8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U`
 
