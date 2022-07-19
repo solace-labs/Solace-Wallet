@@ -1,6 +1,7 @@
 import * as anchor from "@project-serum/anchor";
 import axios from "axios";
 /** API Service Provider to make API Calls */
+
 export class ApiProvider {
   constructor(private readonly baseUrl: string) {}
 

@@ -78,6 +78,8 @@ export class SolaceSDK {
       }
     );
     this.wallet = walletAddress;
+    // Instead of confirming transaction here, send it via an API
+    // this.program.provider.connection.sendTransaction
     await this.confirmTx(tx);
     await this.apiProvider.setName(walletAddress.toString(), name);
   }
