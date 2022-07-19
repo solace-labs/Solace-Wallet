@@ -69,12 +69,20 @@ Please make sure that you install your packages separately and not cross-install
 - [x] React Native mobile app
 - [x] IPFS Enhance security measures
 - [x] E2E Testing
-- [x] Create an NPM Package for Solace
 - [x] Use Dependency Injection to configure the SDK
+- [x] Create an NPM Package for Solace = (https://www.npmjs.com/package/solace-sdk)
 - [ ] Host a Publicly available NestJS Server for anyone to test
 - [ ] Alpha Release
+- [ ] Migrate to Textile
+- [ ] solace-backend-sdk for hosting backend
 
 ---
+
+### Update
+
+We are slightly shifting the architecture of the application to include a relay server which executes the transactions on the blockchain using a well-funded wallet, while tracking the funding rates on IPFS. This will ensure that the wallet usage of the user is tracked and will guarantee a smoother experience for the user themselves.
+
+## The Solace SDK will soon be updated to echo the same.
 
 ## License
 
