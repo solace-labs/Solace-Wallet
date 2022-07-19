@@ -65,7 +65,7 @@ Please make sure that you install your packages separately and not cross-install
 
 - [x] SDK and type generation
 - [x] NestJS Server
-- [x] OrbitDB/IPFS Integration for storing guardian information
+- [x] ThreadDB/IPFS Integration for storing guardian information
 - [x] React Native mobile app
 - [x] IPFS Enhance security measures
 - [x] E2E Testing
