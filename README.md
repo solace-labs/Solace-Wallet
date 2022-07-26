@@ -34,7 +34,7 @@ Solace is a wallet protocol, which allows anyone to build their UI Layer on top 
 
 ### IPFS
 
-We use Orbit DB and IPFS to store user's guardian information. Improvisations can be made where the addresses are hashed to prevent any social engineering attacks on the user.
+We use ~~OrbitDB~~ ThreadDB and IPFS to store user's guardian information. Improvisations can be made where the addresses are hashed to prevent any social engineering attacks on the user.
 Current use cases of IPFS for Solace are as follows:
 
 1. Store user's unique names (user_names) so as to make paying to other solace users convenient
@@ -65,16 +65,25 @@ Please make sure that you install your packages separately and not cross-install
 
 - [x] SDK and type generation
 - [x] NestJS Server
-- [x] OrbitDB/IPFS Integration for storing guardian information
+- [x] # ~~OrbitDB~~ ThreadDb/IPFS Integration for storing guardian information
+- [x] ThreadDB/IPFS Integration for storing guardian information
 - [x] React Native mobile app
 - [x] IPFS Enhance security measures
 - [x] E2E Testing
-- [ ] Create an NPM Package for Solace
-- [ ] Host a Publicly available NestJS Server for anyone to test
 - [x] Use Dependency Injection to configure the SDK
+- [x] Create an NPM Package for Solace = (https://www.npmjs.com/package/solace-sdk)
+- [ ] Host a Publicly available NestJS Server for anyone to test
 - [ ] Alpha Release
+- [ ] Migrate to Textile
+- [ ] solace-backend-sdk for hosting backend
 
 ---
+
+### Update
+
+We are slightly shifting the architecture of the application to include a relay server which executes the transactions on the blockchain using a well-funded wallet, while tracking the funding rates on IPFS. This will ensure that the wallet usage of the user is tracked and will guarantee a smoother experience for the user themselves.
+
+## The Solace SDK will soon be updated to echo the same.
 
 ## License
 
