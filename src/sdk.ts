@@ -8,7 +8,6 @@ import { BN } from "bn.js";
 const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
 
 interface SolaceSDKData {
-  apiProvider: ApiProvider;
   program: Program<Solace>;
   owner: anchor.web3.Keypair;
 }
@@ -34,7 +33,6 @@ export class SolaceSDK {
     this.helper = new Utils(data.program);
     this.program = data.program;
     this.owner = data.owner;
-    this.apiProvider = data.apiProvider;
   }
 
   fetchWalletData = () => this.fetchDataForWallet(this.wallet);
@@ -46,7 +44,11 @@ export class SolaceSDK {
    * Create a new Solace wallet
    * @param {anchor.web3.Keypair} signer
    */
-  async createWalletWithName(signer: anchor.web3.Keypair, name: string) {
+  async createWalletWithName(
+    signer: anchor.web3.Keypair,
+    name: string,
+    requestAirdrop: boolean
+  ) {
     const seedBase = Keypair.generate();
     const [walletAddress, walletBump] = findProgramAddressSync(
       [Buffer.from("SOLACE"), seedBase.publicKey.toBuffer()],
@@ -54,12 +56,14 @@ export class SolaceSDK {
     );
 
     // await this.apiProvider.requestAirdrop(this.owner.publicKey);
-    await this.program.provider.connection.confirmTransaction(
-      await this.program.provider.connection.requestAirdrop(
-        this.owner.publicKey,
-        1 * LAMPORTS_PER_SOL
-      )
-    );
+    if (requestAirdrop) {
+      await this.program.provider.connection.confirmTransaction(
+        await this.program.provider.connection.requestAirdrop(
+          this.owner.publicKey,
+          1 * LAMPORTS_PER_SOL
+        )
+      );
+    }
 
     console.log("Owner Address", this.owner.publicKey.toString());
 
@@ -238,29 +242,5 @@ export class SolaceSDK {
       }
     );
     await this.confirmTx(tx);
-  }
-
-  /**
-   * Get User's name from wallet address
-   */
-  async getNameFromAddress(address: anchor.web3.PublicKey) {
-    try {
-      const res = await this.apiProvider.getName(address.toString());
-      return res.data.data.name;
-    } catch (e) {
-      console.log("API ERROR - 9");
-    }
-  }
-
-  /**
-   * Get User's wallet address from name
-   */
-  async getAddressFromName(name: string) {
-    try {
-      const res = await this.apiProvider.getAddress(name);
-      return res.data.data.address;
-    } catch (e) {
-      console.log("API ERROR - 10");
-    }
   }
 }

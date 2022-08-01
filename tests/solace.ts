@@ -2,9 +2,7 @@ import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
 import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey";
 import { assert } from "chai";
-import SolaceIdl from "../target/idl/solace.json";
 import { SolaceSDK } from "../src/sdk";
-import { ApiProvider } from "../src/api";
 import { Solace } from "../src/solace/types";
 
 const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
@@ -58,14 +56,13 @@ describe("solace", () => {
     );
     await program.provider.connection.confirmTransaction(sg);
     solaceSdk = new SolaceSDK({
-      apiProvider: new ApiProvider("http://localhost:3000"),
       program,
       owner,
     });
   });
 
   it("should create a solace wallet", async () => {
-    await solaceSdk.createWalletWithName(signer, "name.solace.io");
+    await solaceSdk.createWalletWithName(signer, "name.solace.io", true);
     walletAddress = solaceSdk.wallet;
   });
 
@@ -126,7 +123,6 @@ describe("solace", () => {
 
   it("guardian should approve the recovery, and the wallet should be recovered to the new owner", async () => {
     let sdk2 = new SolaceSDK({
-      apiProvider: new ApiProvider(""),
       owner: guardian1,
       program,
     });
