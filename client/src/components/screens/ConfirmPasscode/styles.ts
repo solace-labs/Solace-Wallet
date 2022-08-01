@@ -50,6 +50,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     fontFamily: 'SpaceMono-Bold',
   },
+  passcode: {
+    width: 14,
+    height: 14,
+    marginLeft: 16,
+    marginRight: 16,
+    borderRadius: 8,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
 
 export default styles;

@@ -4,8 +4,6 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-  TextInputComponent,
-  Pressable,
   Alert,
   Image,
 } from 'react-native';
@@ -31,33 +29,31 @@ export type Props = {
 const MainPasscodeScreen: React.FC<Props> = ({navigation}) => {
   const [code, setCode] = useState('');
   const textInputRef = useRef(null);
-  const [pinReady, setPinReady] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
   const MAX_LENGTH = 5;
 
-  const {state, dispatch} = useContext(GlobalContext);
+  const {dispatch} = useContext(GlobalContext);
 
   const tempArray = new Array(MAX_LENGTH).fill(0);
 
-  const focusMainInput = () => {
-    setIsFocused(true);
+  const focusMainInput = async () => {
     const textInput = textInputRef.current! as TextInput;
     textInput.focus();
   };
 
-  const handleOnPress = () => {
-    focusMainInput();
+  const handleOnPress = async () => {
+    await focusMainInput();
   };
 
   useEffect(() => {
-    focusMainInput();
+    setTimeout(() => {
+      focusMainInput();
+    }, 500);
   }, []);
 
   const checkPinReady = useCallback(async () => {
     if (code.length === MAX_LENGTH) {
       const response = await AsyncStorage.getItem('user');
       let user;
-      console.log('PASSCODE CHECK', code, response);
       if (response) {
         user = JSON.parse(response);
       }
@@ -89,7 +85,6 @@ const MainPasscodeScreen: React.FC<Props> = ({navigation}) => {
           <Text style={styles.heading}>enter passcode</Text>
           <TouchableOpacity
             onPress={() => handleOnPress()}
-            onBlur={() => handleOnPress()}
             style={styles.passcodeContainer}>
             {tempArray.map((_, index) => {
               const isComplete = code.length - index > 0;
@@ -120,14 +115,10 @@ const MainPasscodeScreen: React.FC<Props> = ({navigation}) => {
               returnKeyType="done"
               keyboardType="number-pad"
               textContentType="oneTimeCode"
+              autoFocus={true}
             />
           </View>
         </View>
-        {/* <TouchableOpacity
-          onPress={() => checkPinReady()}
-          style={styles.buttonStyle}>
-          <Text style={styles.buttonTextStyle}>next</Text>
-        </TouchableOpacity> */}
       </View>
     </ScrollView>
   );

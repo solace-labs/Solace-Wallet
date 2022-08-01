@@ -17,22 +17,26 @@ export type Props = {
 
 const PasscodeScreen: React.FC<Props> = ({navigation}) => {
   const [code, setCode] = useState('');
+  const {state, dispatch} = useContext(GlobalContext);
   const textInputRef = useRef(null);
   const MAX_LENGTH = 5;
 
   const tempArray = new Array(MAX_LENGTH).fill(0);
 
-  const handleOnPress = () => {
+  const focusMainInput = async () => {
     const textInput = textInputRef.current! as TextInput;
     textInput.focus();
   };
 
-  useEffect(() => {
-    const textInput = textInputRef.current! as TextInput;
-    textInput.focus();
-  }, []);
+  const handleOnPress = async () => {
+    await focusMainInput();
+  };
 
-  const {state, dispatch} = useContext(GlobalContext);
+  useEffect(() => {
+    setTimeout(() => {
+      focusMainInput();
+    }, 500);
+  }, []);
 
   const checkPinReady = async () => {
     if (code.length === MAX_LENGTH) {
@@ -52,7 +56,6 @@ const PasscodeScreen: React.FC<Props> = ({navigation}) => {
           </Text>
           <TouchableOpacity
             onPress={() => handleOnPress()}
-            onBlur={() => handleOnPress()}
             style={styles.passcodeContainer}>
             {tempArray.map((_, index) => {
               const isComplete = code.length - index > 0;
@@ -79,6 +82,7 @@ const PasscodeScreen: React.FC<Props> = ({navigation}) => {
               returnKeyType="done"
               keyboardType="number-pad"
               textContentType="oneTimeCode"
+              autoFocus={true}
             />
           </View>
         </View>
