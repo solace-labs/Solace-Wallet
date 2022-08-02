@@ -10,11 +10,13 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
+    "@project-serum/anchor": "0.18.2",
     "@react-native-async-storage/async-storage": "^1.17.4",
     "@react-native-firebase/app": "^14.9.3",
     "@react-native-firebase/auth": "^14.9.3",
     "@react-navigation/native": "^6.0.10",
     "@react-navigation/native-stack": "^6.6.2",
+    "@solana/web3.js": "^1.50.1",
     "moment": "^2.29.3",
     "react": "17.0.2",
     "react-native": "0.68.1",

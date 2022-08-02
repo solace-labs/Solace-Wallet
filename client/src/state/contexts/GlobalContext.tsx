@@ -9,6 +9,10 @@ import React, {
 import {Contact} from '../../components/wallet/ContactItem';
 import {setAccountStatus, setUser} from '../actions/global';
 import globalReducer from '../reducers/global';
+// import {NodeWallet} from '@project-serum/anchor/dist/cjs/provider';
+// import {clusterApiUrl, Connection, Keypair} from '@solana/web3.js';
+// import * as anchor from '@project-serum/anchor';
+// import {Program, Provider} from '@project-serum/anchor';
 
 type InitialStateType = {
   accountStatus: AccountStatus;
@@ -66,6 +70,10 @@ export const GlobalContext = createContext<{
 const GlobalProvider = ({children}: {children: any}) => {
   const [state, dispatch] = useReducer(globalReducer, initialState);
 
+  // const newAccKeyPair = Keypair.generate();
+  // const newSk = newAccKeyPair.secretKey;
+  // const owner = Keypair.fromSecretKey(newSk);
+  // const data = new NodeWallet(owner);
   useEffect(() => {
     const getInitialData = async () => {
       const response = await AsyncStorage.getItem('user');
