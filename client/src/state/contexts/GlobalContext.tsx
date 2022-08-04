@@ -7,12 +7,12 @@ import React, {
   useState,
 } from 'react';
 import {Contact} from '../../components/wallet/ContactItem';
+
 import {setAccountStatus, setUser} from '../actions/global';
 import globalReducer from '../reducers/global';
-// import {NodeWallet} from '@project-serum/anchor/dist/cjs/provider';
-// import {clusterApiUrl, Connection, Keypair} from '@solana/web3.js';
-// import * as anchor from '@project-serum/anchor';
-// import {Program, Provider} from '@project-serum/anchor';
+import {Keypair} from '@solana/web3.js';
+import {NodeWallet} from '../../@project-serum/anchor/dist/cjs/provider';
+import * as anchor from '../../@project-serum/anchor';
 
 type InitialStateType = {
   accountStatus: AccountStatus;
@@ -70,10 +70,29 @@ export const GlobalContext = createContext<{
 const GlobalProvider = ({children}: {children: any}) => {
   const [state, dispatch] = useReducer(globalReducer, initialState);
 
-  // const newAccKeyPair = Keypair.generate();
-  // const newSk = newAccKeyPair.secretKey;
-  // const owner = Keypair.fromSecretKey(newSk);
-  // const data = new NodeWallet(owner);
+  const [keypair, setKeypair] = useState<Keypair>(() => Keypair.generate());
+  const [data, setData] = useState<NodeWallet | string>('');
+
+  // const randomKeypair = () => {
+  //   setKeypair(() => Keypair.generate());
+  // };
+
+  console.log({data, keypair});
+
+  useEffect(() => {
+    const newSecretKey = keypair.secretKey;
+    const owner = Keypair.fromSecretKey(newSecretKey, {skipValidation: true});
+    const _data = new NodeWallet(owner);
+    console.log();
+    console.log({_data});
+    // const program = new anchor.Program(
+    //   IDL as Solace,
+    //   new anchor.web3.PublicKey('8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U'),
+    // );
+    // console.log({program});
+    setData(_data);
+  }, [keypair]);
+
   useEffect(() => {
     const getInitialData = async () => {
       const response = await AsyncStorage.getItem('user');
