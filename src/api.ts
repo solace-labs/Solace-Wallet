@@ -1,4 +1,4 @@
-import * as anchor from "@project-serum/anchor";
+import * as anchor from "./anchor";
 import axios from "axios";
 /** API Service Provider to make API Calls */
 

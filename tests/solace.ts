@@ -1,5 +1,4 @@
 import * as anchor from "@project-serum/anchor";
-import { Program } from "@project-serum/anchor";
 import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey";
 import { assert } from "chai";
 import { SolaceSDK } from "../src/sdk";
@@ -10,10 +9,8 @@ const { BN } = anchor;
 
 describe("solace", () => {
   // Configure the client to use the local cluster.
-  anchor.setProvider(anchor.Provider.local());
-
-  const program = anchor.workspace.Solace as Program<Solace>;
-  // const program = new Program(SolaceIdl, this.programId) as Program<Solace>;
+  // anchor.setProvider(anchor.Provider.local());
+  // const solaceSdk.program = new solaceSdk.program(SolaceIdl, this.programId) as solaceSdk.program<Solace>;
   let owner: anchor.web3.Keypair;
   let signer: anchor.web3.Keypair;
   let seedBase: anchor.web3.Keypair;
@@ -24,17 +21,16 @@ describe("solace", () => {
   let guardian2: anchor.web3.Keypair;
   let newOwner: anchor.web3.Keypair;
 
-  const getWallet = () => program.account.wallet.fetch(walletAddress);
+  const getWallet = () => solaceSdk.program.account.wallet.fetch(walletAddress);
   const getRecoveryAccount = (address: anchor.web3.PublicKey) =>
-    program.account.recoveryAttempt.fetch(address);
+    solaceSdk.program.account.recoveryAttempt.fetch(address);
   const airdrop = async (address: anchor.web3.PublicKey) => {
-    const sg = await program.provider.connection.requestAirdrop(
+    const sg = await solaceSdk.program.provider.connection.requestAirdrop(
       address,
       1 * LAMPORTS_PER_SOL
     );
-    const confirmation = await program.provider.connection.confirmTransaction(
-      sg
-    );
+    const confirmation =
+      await solaceSdk.program.provider.connection.confirmTransaction(sg);
   };
 
   let solaceSdk: SolaceSDK;
@@ -46,19 +42,19 @@ describe("solace", () => {
     guardian1 = Keypair.generate();
     guardian2 = Keypair.generate();
     newOwner = Keypair.generate();
-    [walletAddress, walletBump] = findProgramAddressSync(
-      [Buffer.from("SOLACE"), seedBase.publicKey.toBuffer()],
-      program.programId
-    );
-    const sg = await program.provider.connection.requestAirdrop(
+    const sg = await SolaceSDK.connection.requestAirdrop(
       signer.publicKey,
       10 * LAMPORTS_PER_SOL
     );
-    await program.provider.connection.confirmTransaction(sg);
+    await SolaceSDK.connection.confirmTransaction(sg);
     solaceSdk = new SolaceSDK({
-      program,
       owner,
     });
+    solaceSdk = new SolaceSDK({ owner: owner });
+    [walletAddress, walletBump] = findProgramAddressSync(
+      [Buffer.from("SOLACE"), seedBase.publicKey.toBuffer()],
+      solaceSdk.program.programId
+    );
   });
 
   it("should create a solace wallet", async () => {
@@ -71,15 +67,15 @@ describe("solace", () => {
     await airdrop(randomWallet.publicKey);
     await airdrop(walletAddress);
 
-    let walletBalance = await program.provider.connection.getBalance(
+    let walletBalance = await solaceSdk.program.provider.connection.getBalance(
       randomWallet.publicKey
     );
 
-    let beforeBalance = await program.provider.connection.getBalance(
+    let beforeBalance = await solaceSdk.program.provider.connection.getBalance(
       randomWallet.publicKey
     );
     await solaceSdk.sendSol(randomWallet.publicKey, 10);
-    let afterBalance = await program.provider.connection.getBalance(
+    let afterBalance = await solaceSdk.program.provider.connection.getBalance(
       randomWallet.publicKey
     );
 
@@ -114,7 +110,7 @@ describe("solace", () => {
         walletAddress.toBuffer(),
         new BN(wallet.walletRecoverySequence).toBuffer("le", 8),
       ],
-      program.programId
+      solaceSdk.program.programId
     );
     await solaceSdk.createWalletToRequestRecovery(newOwner, walletAddress);
     wallet = await getWallet();
@@ -124,7 +120,6 @@ describe("solace", () => {
   it("guardian should approve the recovery, and the wallet should be recovered to the new owner", async () => {
     let sdk2 = new SolaceSDK({
       owner: guardian1,
-      program,
     });
     let wallet = await getWallet();
     await sdk2.approveRecoveryByKeypair(walletAddress);

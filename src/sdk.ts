@@ -1,25 +1,23 @@
 import { Program } from "@project-serum/anchor";
 import { Solace } from "./solace/types";
-import * as anchor from "@project-serum/anchor";
+import * as anchor from "./anchor";
 import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey";
-import { Utils } from "./utils";
-import { ApiProvider } from "./api";
 import { BN } from "bn.js";
 const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
 
 interface SolaceSDKData {
-  program: Program<Solace>;
   owner: anchor.web3.Keypair;
 }
 
 // The SDK to interface with the client
 export class SolaceSDK {
+  static connection = new anchor.web3.Connection("http://127.0.0.1:8899");
   wallet: anchor.web3.PublicKey;
-  helper: Utils;
-  apiProvider: ApiProvider;
   owner: anchor.web3.Keypair;
   program: Program<Solace>;
   seed: anchor.web3.PublicKey;
+
+  static newKeyPair() {}
 
   static fromSeed(seed: string, data: SolaceSDKData) {
     const sdk = new this({
@@ -30,8 +28,14 @@ export class SolaceSDK {
   }
 
   constructor(data: SolaceSDKData) {
-    this.helper = new Utils(data.program);
-    this.program = data.program;
+    anchor.setProvider(
+      new anchor.Provider(
+        SolaceSDK.connection,
+        new anchor.Wallet(data.owner),
+        anchor.Provider.defaultOptions()
+      )
+    );
+    this.program = anchor.workspace.Solace as Program<Solace>;
     this.owner = data.owner;
   }
 
@@ -85,7 +89,6 @@ export class SolaceSDK {
     // Instead of confirming transaction here, send it via an API
     // this.program.provider.connection.sendTransaction
     await this.confirmTx(tx);
-    await this.apiProvider.setName(walletAddress.toString(), name);
   }
 
   /**
@@ -111,7 +114,7 @@ export class SolaceSDK {
   ): Promise<boolean> {
     try {
       const walletData = await this.fetchWalletData();
-      await this.program.rpc.addGuardians(
+      const tx = await this.program.rpc.addGuardians(
         [guardianPublicKey],
         walletData.approvedGuardians.length + 1,
         {
@@ -123,12 +126,7 @@ export class SolaceSDK {
         }
       );
 
-      const tx = await this.apiProvider.addGuardian(
-        this.owner.publicKey,
-        guardianPublicKey
-      );
       await this.confirmTx(tx);
-      await this.apiProvider.addGuardian(this.wallet, guardianPublicKey);
       return true;
     } catch (e) {
       return false;
@@ -156,14 +154,6 @@ export class SolaceSDK {
     } catch (e) {
       return false;
     }
-  }
-
-  /**
-   *
-   * @returns
-   */
-  async getGuardianData() {
-    return this.apiProvider.getGuardianData(this.owner.publicKey);
   }
 
   /**

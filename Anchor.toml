@@ -11,8 +11,8 @@ solace = "8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U"
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
-# cluster = "http://127.0.0.1:8899"
+# cluster = "localnet"
+cluster = "http://127.0.0.1:8899"
 wallet = "/Users/ashwinprasad/.config/solana/id.json"
 
 [scripts]
