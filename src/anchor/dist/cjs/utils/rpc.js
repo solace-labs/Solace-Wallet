@@ -4,7 +4,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getMultipleAccounts = exports.invoke = void 0;
-const assert_1 = __importDefault(require("assert"));
 const web3_js_1 = require("@solana/web3.js");
 const common_1 = require("../utils/common");
 const common_2 = require("../program/common");
@@ -49,7 +48,6 @@ async function getMultipleAccountsCore(connection, publicKeys) {
             ": " +
             res.error.message);
     }
-    (0, assert_1.default)(typeof res.result !== "undefined");
     const accounts = [];
     for (const account of res.result.value) {
         let value = null;
@@ -59,7 +57,6 @@ async function getMultipleAccountsCore(connection, publicKeys) {
         }
         if (res.result.value) {
             const { executable, owner, lamports, data } = account;
-            (0, assert_1.default)(data[1] === "base64");
             value = {
                 executable,
                 owner: new web3_js_1.PublicKey(owner),

@@ -8,6 +8,7 @@ import {GlobalContext} from '../../../state/contexts/GlobalContext';
 import {changeUserName, setUser} from '../../../state/actions/global';
 import AssetScreen from './Asset';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SolaceSDK } from 'solace-sdk';
 
 export type Props = {
   navigation: any;
@@ -107,7 +108,10 @@ const WalletScreen: React.FC<Props> = ({navigation}) => {
             </View>
             <Text style={styles.buttonText}>send</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.buttonContainer} onPress={() => {
+            const keypair = SolaceSDK.newKeyPair();
+            console.log(keypair)
+          }}>
             <View style={styles.iconBackground}>
               <MaterialCommunityIcons
                 name="line-scan"

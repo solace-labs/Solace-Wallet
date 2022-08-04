@@ -17,7 +17,9 @@ export class SolaceSDK {
   program: Program<Solace>;
   seed: anchor.web3.PublicKey;
 
-  static newKeyPair() {}
+  static newKeyPair() {
+    return anchor.web3.Keypair.generate();
+  }
 
   static fromSeed(seed: string, data: SolaceSDKData) {
     const sdk = new this({

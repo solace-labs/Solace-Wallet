@@ -39,26 +39,6 @@ class Provider {
         return new Provider(connection, wallet, opts);
     }
     /**
-     * Returns a `Provider` read from the `ANCHOR_PROVIDER_URL` environment
-     * variable
-     *
-     * (This api is for Node only.)
-     */
-    static env() {
-        if (common_1.isBrowser) {
-            throw new Error(`Provider env is not available on browser.`);
-        }
-        const process = require("process");
-        const url = process.env.ANCHOR_PROVIDER_URL;
-        if (url === undefined) {
-            throw new Error("ANCHOR_PROVIDER_URL is not defined");
-        }
-        const options = Provider.defaultOptions();
-        const connection = new web3_js_1.Connection(url, options.commitment);
-        const wallet = NodeWallet.local();
-        return new Provider(connection, wallet, options);
-    }
-    /**
      * Sends the given transaction, paid for and signed by the provider's wallet.
      *
      * @param tx      The transaction to send.

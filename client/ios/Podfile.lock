@@ -410,6 +410,8 @@ PODS:
   - RNScreens (3.13.1):
     - React-Core
     - React-RCTImage
+  - RNSecureRandom (1.0.0):
+    - React
   - SocketRocket (0.6.0)
   - Yoga (1.14.0)
   - YogaKit (1.18.1):
@@ -475,6 +477,7 @@ DEPENDENCIES:
   - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
   - "RNFBAuth (from `../node_modules/@react-native-firebase/auth`)"
   - RNScreens (from `../node_modules/react-native-screens`)
+  - RNSecureRandom (from `../node_modules/react-native-securerandom`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -575,6 +578,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-firebase/auth"
   RNScreens:
     :path: "../node_modules/react-native-screens"
+  RNSecureRandom:
+    :path: "../node_modules/react-native-securerandom"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -636,10 +641,11 @@ SPEC CHECKSUMS:
   RNFBApp: b6276fc67748c7174275cace56776f0228ae58b2
   RNFBAuth: fce6c25e6416660487ac620eac0343a555bb1812
   RNScreens: 40a2cb40a02a609938137a1e0acfbf8fc9eebf19
+  RNSecureRandom: 0dcee021fdb3d50cd5cee5db0ebf583c42f5af0e
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
   Yoga: 17cd9a50243093b547c1e539c749928dd68152da
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
 
-PODFILE CHECKSUM: 38020535d28a699a87f3722b717558965a08e1e0
+PODFILE CHECKSUM: 648acd4355c11df71d70ac192a2a9b687d997589
 
 COCOAPODS: 1.11.3

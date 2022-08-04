@@ -19,6 +19,9 @@ target 'solace' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
+
+  pod 'RNSecureRandom', :path => '../node_modules/react-native-securerandom'
+
   target 'solaceTests' do
     inherit! :complete
     # Pods for testing

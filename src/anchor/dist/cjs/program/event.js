@@ -20,7 +20,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EventParser = exports.EventManager = void 0;
-const assert = __importStar(require("assert"));
 const LOG_START_INDEX = "Program log: ".length;
 class EventManager {
     constructor(programId, provider, coder) {
@@ -86,7 +85,6 @@ class EventManager {
         }
         // Kill the websocket connection if all listeners have been removed.
         if (this._eventCallbacks.size == 0) {
-            assert.ok(this._eventListeners.size === 0);
             if (this._onLogsSubscriptionId !== undefined) {
                 await this._provider.connection.removeOnLogsListener(this._onLogsSubscriptionId);
                 this._onLogsSubscriptionId = undefined;
@@ -193,14 +191,12 @@ class ExecutionContext {
         this.stack = [program];
     }
     program() {
-        assert.ok(this.stack.length > 0);
         return this.stack[this.stack.length - 1];
     }
     push(newProgram) {
         this.stack.push(newProgram);
     }
     pop() {
-        assert.ok(this.stack.length > 0);
         this.stack.pop();
     }
 }
