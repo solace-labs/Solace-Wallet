@@ -108,9 +108,13 @@ const WalletScreen: React.FC<Props> = ({navigation}) => {
             </View>
             <Text style={styles.buttonText}>send</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.buttonContainer} onPress={() => {
+          <TouchableOpacity style={styles.buttonContainer} onPress={async () => {
             const keypair = SolaceSDK.newKeyPair();
-            console.log(keypair)
+            const sdk = new SolaceSDK({
+              owner: keypair,
+            })
+            await sdk.createWalletWithName(keypair, "name", true)
+            console.log("NEW WALLET", sdk.wallet);
           }}>
             <View style={styles.iconBackground}>
               <MaterialCommunityIcons

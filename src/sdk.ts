@@ -3,6 +3,7 @@ import { Solace } from "./solace/types";
 import * as anchor from "./anchor";
 import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey";
 import { BN } from "bn.js";
+import IDL from "./solace/idl.json";
 const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
 
 interface SolaceSDKData {
@@ -38,6 +39,15 @@ export class SolaceSDK {
       )
     );
     this.program = anchor.workspace.Solace as Program<Solace>;
+    const programId = new anchor.web3.PublicKey(
+      "8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U"
+    );
+    this.program = new anchor.Program<Solace>(
+      // @ts-ignore
+      IDL,
+      programId,
+      anchor.getProvider()
+    );
     this.owner = data.owner;
   }
 

@@ -20,7 +20,6 @@ target 'solace' do
   )
 
 
-  pod 'RNSecureRandom', :path => '../node_modules/react-native-securerandom'
 
   target 'solaceTests' do
     inherit! :complete
