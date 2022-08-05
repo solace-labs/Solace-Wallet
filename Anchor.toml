@@ -12,7 +12,8 @@ url = "https://anchor.projectserum.com"
 
 [provider]
 # cluster = "localnet"
-cluster = "http://127.0.0.1:8899"
+# cluster = "http://127.0.0.1:8899"
+cluster = "testnet"
 wallet = "/Users/ashwinprasad/.config/solana/id.json"
 
 [scripts]

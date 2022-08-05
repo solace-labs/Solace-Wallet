@@ -42,15 +42,15 @@ describe("solace", () => {
     guardian1 = Keypair.generate();
     guardian2 = Keypair.generate();
     newOwner = Keypair.generate();
-    const sg = await SolaceSDK.connection.requestAirdrop(
+    const sg = await SolaceSDK.localConnection.requestAirdrop(
       signer.publicKey,
       10 * LAMPORTS_PER_SOL
     );
-    await SolaceSDK.connection.confirmTransaction(sg);
+    await SolaceSDK.localConnection.confirmTransaction(sg);
     solaceSdk = new SolaceSDK({
       owner,
+      network: "local",
     });
-    solaceSdk = new SolaceSDK({ owner: owner });
     [walletAddress, walletBump] = findProgramAddressSync(
       [Buffer.from("SOLACE"), seedBase.publicKey.toBuffer()],
       solaceSdk.program.programId
@@ -120,6 +120,7 @@ describe("solace", () => {
   it("guardian should approve the recovery, and the wallet should be recovered to the new owner", async () => {
     let sdk2 = new SolaceSDK({
       owner: guardian1,
+      network: "local",
     });
     let wallet = await getWallet();
     await sdk2.approveRecoveryByKeypair(walletAddress);

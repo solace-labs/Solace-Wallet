@@ -8,11 +8,15 @@ const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
 
 interface SolaceSDKData {
   owner: anchor.web3.Keypair;
+  network: "local" | "testnet";
 }
 
 // The SDK to interface with the client
 export class SolaceSDK {
-  static connection = new anchor.web3.Connection("http://127.0.0.1:8899");
+  static localConnection = new anchor.web3.Connection("http://127.0.0.1:8899");
+  static testnetConnection = new anchor.web3.Connection(
+    "https://api.testnet.solana.com"
+  );
   wallet: anchor.web3.PublicKey;
   owner: anchor.web3.Keypair;
   program: Program<Solace>;
@@ -33,7 +37,9 @@ export class SolaceSDK {
   constructor(data: SolaceSDKData) {
     anchor.setProvider(
       new anchor.Provider(
-        SolaceSDK.connection,
+        data.network == "local"
+          ? SolaceSDK.localConnection
+          : SolaceSDK.testnetConnection,
         new anchor.Wallet(data.owner),
         anchor.Provider.defaultOptions()
       )

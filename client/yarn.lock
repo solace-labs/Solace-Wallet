@@ -7511,10 +7511,10 @@
     "source-map-resolve" "^0.5.0"
     "use" "^3.1.0"
 
-"solace-sdk@^1.1.5":
-  "integrity" "sha512-t/9blItOmcffg/nCdpFbSMs6R0CH6DX5/hJcdFinow86RahvhXABHukytzPDp/odeffzQ1k8WRI0KjujFIeG8g=="
-  "resolved" "https://registry.npmjs.org/solace-sdk/-/solace-sdk-1.1.5.tgz"
-  "version" "1.1.5"
+"solace-sdk@^1.1.6":
+  "integrity" "sha512-NPcA5vKjP9HdpbE/0+hc+DGyAZ4+Cn+a4YdCnWiuLVAV3hio1K9jUw/ceHs4CQO7i0E1Agglq6rneevz16kO3w=="
+  "resolved" "https://registry.npmjs.org/solace-sdk/-/solace-sdk-1.1.6.tgz"
+  "version" "1.1.6"
   dependencies:
     "@project-serum/anchor" "^0.18.0"
 

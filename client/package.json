@@ -25,7 +25,7 @@
     "react-native-safe-area-context": "^4.2.5",
     "react-native-screens": "^3.13.1",
     "react-native-vector-icons": "^9.1.0",
-    "solace-sdk": "^1.1.5",
+    "solace-sdk": "^1.1.6",
     "util": "^0.12.4"
   },
   "devDependencies": {
