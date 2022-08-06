@@ -14,7 +14,7 @@ url = "https://anchor.projectserum.com"
 cluster = "localnet"
 # cluster = "http://127.0.0.1:8899"
 # cluster = "testnet"
-wallet = "/Users/ashwinprasad/.config/solana/id.json"
+wallet = "./wallet/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
