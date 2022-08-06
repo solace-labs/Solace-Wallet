@@ -11,11 +11,6 @@ export type Solace = {
           "isSigner": true
         },
         {
-          "name": "base",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "wallet",
           "isMut": true,
           "isSigner": false,
@@ -27,9 +22,9 @@ export type Solace = {
                 "value": "SOLACE"
               },
               {
-                "kind": "account",
-                "type": "publicKey",
-                "path": "base"
+                "kind": "arg",
+                "type": "string",
+                "path": "name"
               }
             ]
           }
@@ -54,6 +49,10 @@ export type Solace = {
         {
           "name": "recoveryThreshold",
           "type": "u8"
+        },
+        {
+          "name": "name",
+          "type": "string"
         }
       ]
     },
@@ -285,8 +284,8 @@ export type Solace = {
             "type": "publicKey"
           },
           {
-            "name": "base",
-            "type": "publicKey"
+            "name": "name",
+            "type": "string"
           },
           {
             "name": "bump",
@@ -406,11 +405,6 @@ export const IDL: Solace = {
           "isSigner": true
         },
         {
-          "name": "base",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "wallet",
           "isMut": true,
           "isSigner": false,
@@ -422,9 +416,9 @@ export const IDL: Solace = {
                 "value": "SOLACE"
               },
               {
-                "kind": "account",
-                "type": "publicKey",
-                "path": "base"
+                "kind": "arg",
+                "type": "string",
+                "path": "name"
               }
             ]
           }
@@ -449,6 +443,10 @@ export const IDL: Solace = {
         {
           "name": "recoveryThreshold",
           "type": "u8"
+        },
+        {
+          "name": "name",
+          "type": "string"
         }
       ]
     },
@@ -680,8 +678,8 @@ export const IDL: Solace = {
             "type": "publicKey"
           },
           {
-            "name": "base",
-            "type": "publicKey"
+            "name": "name",
+            "type": "string"
           },
           {
             "name": "bump",

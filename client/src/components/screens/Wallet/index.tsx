@@ -112,15 +112,18 @@ const WalletScreen: React.FC<Props> = ({navigation}) => {
             const keypair = SolaceSDK.newKeyPair();
             const sdk = new SolaceSDK({
               owner: keypair,
-              network: "testnet",
+              network: "local",
+              programAddress:
+      "8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U"
             })
             // Request airdrop
             console.log('requesting airdrop');
             const LAMPORTS_PER_SOL = 1000000000;
-            const tx = await SolaceSDK.testnetConnection.requestAirdrop(keypair.publicKey, 1 * LAMPORTS_PER_SOL);
-            await SolaceSDK.testnetConnection.confirmTransaction(tx);
+            const tx = await SolaceSDK.localConnection.requestAirdrop(keypair.publicKey, 1 * LAMPORTS_PER_SOL);
+            await SolaceSDK.localConnection.confirmTransaction(tx);
             console.log('airdrop confirmed');
-            await sdk.createWalletWithName(keypair, "name", true)
+            // Check if the name is valid with my API
+            await sdk.createWalletWithName(keypair, "name", false)
             console.log("NEW WALLET", sdk.wallet);
           }}>
             <View style={styles.iconBackground}>
