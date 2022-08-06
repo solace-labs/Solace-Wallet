@@ -1,16 +1,17 @@
-import * as anchor from "@project-serum/anchor";
-import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey";
+import * as anchor from "../src/anchor";
+import { Provider } from "@project-serum/anchor";
 import { assert } from "chai";
+import { Program, workspace } from "../src/anchor/src";
 import { SolaceSDK } from "../src/sdk";
 import { Solace } from "../src/solace/types";
+import { findProgramAddressSync } from "../src/anchor/src/utils/pubkey";
 
 const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
 const { BN } = anchor;
 
+const PROGRAM_ADDRESS = "8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U";
+
 describe("solace", () => {
-  // Configure the client to use the local cluster.
-  // anchor.setProvider(anchor.Provider.local());
-  // const solaceSdk.program = new solaceSdk.program(SolaceIdl, this.programId) as solaceSdk.program<Solace>;
   let owner: anchor.web3.Keypair;
   let signer: anchor.web3.Keypair;
   let seedBase: anchor.web3.Keypair;
@@ -50,7 +51,10 @@ describe("solace", () => {
     solaceSdk = new SolaceSDK({
       owner,
       network: "local",
+      programAddress: PROGRAM_ADDRESS,
     });
+
+    // Configure the client to use the local cluster.
     [walletAddress, walletBump] = findProgramAddressSync(
       [Buffer.from("SOLACE"), seedBase.publicKey.toBuffer()],
       solaceSdk.program.programId
@@ -58,8 +62,30 @@ describe("solace", () => {
   });
 
   it("should create a solace wallet", async () => {
-    await solaceSdk.createWalletWithName(signer, "name.solace.io", true);
+    solaceSdk = await SolaceSDK.createFromName("name.solace.io", {
+      owner,
+      network: "local",
+      programAddress: PROGRAM_ADDRESS,
+    });
     walletAddress = solaceSdk.wallet;
+  });
+
+  it("should fetch an existing wallet, and should have the same addr", async () => {
+    const _sdk = SolaceSDK.retrieveFromName("name.solace.io", {
+      programAddress: PROGRAM_ADDRESS,
+      owner,
+      network: "local",
+    });
+    assert((await _sdk).wallet.equals(solaceSdk.wallet));
+  });
+
+  it("should fetch an existing wallet, and should not have the same addr", async () => {
+    const _sdk = SolaceSDK.retrieveFromName("random.solace.io", {
+      programAddress: PROGRAM_ADDRESS,
+      owner,
+      network: "local",
+    });
+    assert(!(await _sdk).wallet.equals(solaceSdk.wallet));
   });
 
   it("should send 500 lamports to a random address", async () => {
@@ -121,6 +147,7 @@ describe("solace", () => {
     let sdk2 = new SolaceSDK({
       owner: guardian1,
       network: "local",
+      programAddress: "8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U",
     });
     let wallet = await getWallet();
     await sdk2.approveRecoveryByKeypair(walletAddress);

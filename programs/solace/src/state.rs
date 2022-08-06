@@ -9,7 +9,7 @@ pub struct Wallet {
     // The owner for the wallet
     pub owner: Pubkey,
     // The base key for deriving PDA's for this wallet
-    pub base: Pubkey,
+    pub name: String,
     // The bump for the PDA
     pub bump: u8,
     // Checks if the wallet is in recovery mode

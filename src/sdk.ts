@@ -1,7 +1,7 @@
 import { Program } from "@project-serum/anchor";
 import { Solace } from "./solace/types";
 import * as anchor from "./anchor";
-import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey";
+import { findProgramAddressSync } from "./anchor/dist/cjs/utils/pubkey";
 import { BN } from "bn.js";
 import IDL from "./solace/idl.json";
 const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
@@ -9,6 +9,7 @@ const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
 interface SolaceSDKData {
   owner: anchor.web3.Keypair;
   network: "local" | "testnet";
+  programAddress: string;
 }
 
 // The SDK to interface with the client
@@ -22,6 +23,7 @@ export class SolaceSDK {
   program: Program<Solace>;
   seed: anchor.web3.PublicKey;
 
+  /// Generate a new key pair
   static newKeyPair() {
     return anchor.web3.Keypair.generate();
   }
@@ -34,80 +36,107 @@ export class SolaceSDK {
     return this;
   }
 
+  /**
+   *
+   * @param {string} name UserName of the user, which was initialized while creating the wallet
+   * @param {SolaceSDKData} data Wallet meta data
+   * @returns {SolaceSDK} instance of the sdk
+   * Should be used only on users who have already created wallets. Features will fail if the user
+   * has not created a wallet under this name, but is trying to retrieve it
+   */
+  static async retrieveFromName(
+    name: string,
+    data: SolaceSDKData
+  ): Promise<SolaceSDK> {
+    const [walletAddress, _] = findProgramAddressSync(
+      [Buffer.from("SOLACE"), Buffer.from(name, "utf8")],
+      new anchor.web3.PublicKey(data.programAddress)
+    );
+    const sdk = new this(data);
+    sdk.wallet = walletAddress;
+    return sdk;
+  }
+
+  /**
+   * Create a wallet for the first time
+   * @param {string} name Name of the user
+   * @param {SolaceSDKData} data Wallet meta data
+   * @returns {SoalceSDK} return an instance of the SDK
+   */
+  static async createFromName(
+    name: string,
+    data: SolaceSDKData
+  ): Promise<SolaceSDK> {
+    const sdk = new this(data);
+    const [walletAddress, walletBump] = findProgramAddressSync(
+      [Buffer.from("SOLACE"), Buffer.from(name, "utf8")],
+      new anchor.web3.PublicKey(data.programAddress)
+    );
+
+    console.log("Owner Address", sdk.owner.publicKey.toString);
+
+    const tx = await sdk.program.rpc.createWallet(
+      sdk.owner.publicKey,
+      [],
+      0,
+      name,
+      {
+        accounts: {
+          signer: sdk.owner.publicKey,
+          wallet: walletAddress,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        },
+        signers: [sdk.owner],
+      }
+    );
+    sdk.wallet = walletAddress;
+    // Instead of confirming transaction here, send it via an API
+    // this.program.provider.connection.sendTransaction
+    await sdk.confirmTx(tx);
+    return sdk;
+  }
+
+  /**
+   * Create a wallet instance. Should be used in conjuncture with an initializer
+   * @param {SolaceSDKData} data
+   */
   constructor(data: SolaceSDKData) {
-    anchor.setProvider(
-      new anchor.Provider(
-        data.network == "local"
-          ? SolaceSDK.localConnection
-          : SolaceSDK.testnetConnection,
-        new anchor.Wallet(data.owner),
-        anchor.Provider.defaultOptions()
-      )
+    const provider = new anchor.Provider(
+      data.network == "local"
+        ? SolaceSDK.localConnection
+        : SolaceSDK.testnetConnection,
+      new anchor.Wallet(data.owner),
+      anchor.Provider.defaultOptions()
     );
-    this.program = anchor.workspace.Solace as Program<Solace>;
-    const programId = new anchor.web3.PublicKey(
-      "8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U"
-    );
+    anchor.setProvider(provider);
+    const programId = new anchor.web3.PublicKey(data.programAddress);
     this.program = new anchor.Program<Solace>(
       // @ts-ignore
       IDL,
       programId,
-      anchor.getProvider()
+      provider
     );
     this.owner = data.owner;
   }
 
-  fetchWalletData = () => this.fetchDataForWallet(this.wallet);
+  /**
+   * Return the wallet state for the user's wallet, if any
+   * @returns {Solace}
+   */
+  fetchWalletData = () => {
+    if (!this.wallet)
+      throw "Wallet not found. Please initialize the SDK with one of the given initializers, before using";
+    return this.fetchDataForWallet(this.wallet);
+  };
+
+  /**
+   * Fetch the state of any other given wallet
+   * @param {anchor.web3.PublicKey} wallet
+   * @returns {Solace}
+   */
   fetchDataForWallet = (wallet: anchor.web3.PublicKey) =>
     this.program.account.wallet.fetch(wallet);
   confirmTx = (tx) => this.program.provider.connection.confirmTransaction(tx);
-
-  /**
-   * Create a new Solace wallet
-   * @param {anchor.web3.Keypair} signer
-   */
-  async createWalletWithName(
-    signer: anchor.web3.Keypair,
-    name: string,
-    requestAirdrop: boolean
-  ) {
-    const seedBase = Keypair.generate();
-    const [walletAddress, walletBump] = findProgramAddressSync(
-      [Buffer.from("SOLACE"), seedBase.publicKey.toBuffer()],
-      this.program.programId
-    );
-
-    // await this.apiProvider.requestAirdrop(this.owner.publicKey);
-    if (requestAirdrop) {
-      await this.program.provider.connection.confirmTransaction(
-        await this.program.provider.connection.requestAirdrop(
-          this.owner.publicKey,
-          1 * LAMPORTS_PER_SOL
-        )
-      );
-    }
-
-    console.log("Owner Address", this.owner.publicKey.toString());
-
-    const tx = await this.program.rpc.createWallet(
-      this.owner.publicKey,
-      [],
-      0,
-      {
-        accounts: {
-          signer: this.owner.publicKey,
-          base: seedBase.publicKey,
-          wallet: walletAddress,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        },
-        signers: [this.owner],
-      }
-    );
-    this.wallet = walletAddress;
-    // Instead of confirming transaction here, send it via an API
-    // this.program.provider.connection.sendTransaction
-    await this.confirmTx(tx);
-  }
 
   /**
    * Should send some amount of SOL to the `toAddress`

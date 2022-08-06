@@ -11,11 +11,6 @@
           "isSigner": true
         },
         {
-          "name": "base",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "wallet",
           "isMut": true,
           "isSigner": false,
@@ -27,9 +22,9 @@
                 "value": "SOLACE"
               },
               {
-                "kind": "account",
-                "type": "publicKey",
-                "path": "base"
+                "kind": "arg",
+                "type": "string",
+                "path": "name"
               }
             ]
           }
@@ -54,6 +49,10 @@
         {
           "name": "recoveryThreshold",
           "type": "u8"
+        },
+        {
+          "name": "name",
+          "type": "string"
         }
       ]
     },
@@ -285,8 +284,8 @@
             "type": "publicKey"
           },
           {
-            "name": "base",
-            "type": "publicKey"
+            "name": "name",
+            "type": "string"
           },
           {
             "name": "bump",

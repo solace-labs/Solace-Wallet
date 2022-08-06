@@ -112,11 +112,11 @@ const WalletScreen: React.FC<Props> = ({navigation}) => {
             style={styles.buttonContainer}
             onPress={async () => {
               const keypair = SolaceSDK.newKeyPair();
-              const sdk = new SolaceSDK({
-                owner: keypair,
-                network: 'local',
-                programAddress: '3CvPZTk1PYMs6JzgiVNFtsAeijSNwbhrQTMYeFQKWpFw',
-              });
+              // const sdk = new SolaceSDK({
+              //   owner: keypair,
+              //   network: 'local',
+              //   programAddress: '3CvPZTk1PYMs6JzgiVNFtsAeijSNwbhrQTMYeFQKWpFw',
+              // });
               // Request airdrop
               console.log('requesting airdrop');
               const LAMPORTS_PER_SOL = 1000000000;
@@ -126,7 +126,14 @@ const WalletScreen: React.FC<Props> = ({navigation}) => {
               );
               await SolaceSDK.localConnection.confirmTransaction(tx);
               console.log('airdrop confirmed');
-              await sdk.createWalletWithName(keypair, 'name', false);
+              // Check if the name is valid with my API
+              // await sdk.createWalletWithName(keypair, 'name', false);
+              // const s = await SolaceSDK.createFromName(username, keypair);
+              const sdk = await SolaceSDK.createFromName(username, {
+                owner: keypair,
+                network: 'local',
+                programAddress: '3CvPZTk1PYMs6JzgiVNFtsAeijSNwbhrQTMYeFQKWpFw',
+              });
               console.log('NEW WALLET', sdk.wallet);
             }}>
             <View style={styles.iconBackground}>

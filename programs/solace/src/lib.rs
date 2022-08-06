@@ -24,11 +24,12 @@ pub mod solace {
         owner: Pubkey,
         guardian_keys: Vec<Pubkey>,
         recovery_threshold: u8,
+        name: String,
     ) -> Result<()> {
         let wallet = &mut ctx.accounts.wallet;
         wallet.owner = owner;
         wallet.bump = *ctx.bumps.get("wallet").unwrap();
-        wallet.base = ctx.accounts.base.key();
+        wallet.name = name;
         wallet.approved_guardians = vec![];
         wallet.pending_guardians = guardian_keys;
         wallet.recovery_mode = false;
@@ -204,18 +205,22 @@ pub struct Initialize {}
 #[derive(Accounts)]
 pub struct NoAccount {}
 
+// Access the name parameter passed to the txn
 #[derive(Accounts)]
+#[instruction(
+    owner: Pubkey,
+    guardian_keys: Vec<Pubkey>,
+    recovery_threshold: u8,
+    name: String,
+)]
 pub struct CreateWallet<'info> {
     #[account(mut)]
     signer: Signer<'info>,
-    /// CHECK: Ignoring checks
-    #[account()]
-    base: AccountInfo<'info>,
     #[account(
         init, 
         payer = signer,
         space = 1000,
-        seeds = [b"SOLACE".as_ref(), base.key().as_ref()],
+        seeds = [b"SOLACE".as_ref(), name.as_str().as_ref()],
         bump
     )]
     wallet: Account<'info, Wallet>,
