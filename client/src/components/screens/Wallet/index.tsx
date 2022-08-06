@@ -8,7 +8,7 @@ import {GlobalContext} from '../../../state/contexts/GlobalContext';
 import {changeUserName, setUser} from '../../../state/actions/global';
 import AssetScreen from './Asset';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SolaceSDK } from 'solace-sdk';
+import {SolaceSDK} from 'solace-sdk';
 
 export type Props = {
   navigation: any;
@@ -108,21 +108,27 @@ const WalletScreen: React.FC<Props> = ({navigation}) => {
             </View>
             <Text style={styles.buttonText}>send</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.buttonContainer} onPress={async () => {
-            const keypair = SolaceSDK.newKeyPair();
-            const sdk = new SolaceSDK({
-              owner: keypair,
-              network: "testnet",
-            })
-            // Request airdrop
-            console.log('requesting airdrop');
-            const LAMPORTS_PER_SOL = 1000000000;
-            const tx = await SolaceSDK.testnetConnection.requestAirdrop(keypair.publicKey, 1 * LAMPORTS_PER_SOL);
-            await SolaceSDK.testnetConnection.confirmTransaction(tx);
-            console.log('airdrop confirmed');
-            await sdk.createWalletWithName(keypair, "name", true)
-            console.log("NEW WALLET", sdk.wallet);
-          }}>
+          <TouchableOpacity
+            style={styles.buttonContainer}
+            onPress={async () => {
+              const keypair = SolaceSDK.newKeyPair();
+              const sdk = new SolaceSDK({
+                owner: keypair,
+                network: 'local',
+                programAddress: '3CvPZTk1PYMs6JzgiVNFtsAeijSNwbhrQTMYeFQKWpFw',
+              });
+              // Request airdrop
+              console.log('requesting airdrop');
+              const LAMPORTS_PER_SOL = 1000000000;
+              const tx = await SolaceSDK.localConnection.requestAirdrop(
+                keypair.publicKey,
+                1 * LAMPORTS_PER_SOL,
+              );
+              await SolaceSDK.localConnection.confirmTransaction(tx);
+              console.log('airdrop confirmed');
+              await sdk.createWalletWithName(keypair, 'name', false);
+              console.log('NEW WALLET', sdk.wallet);
+            }}>
             <View style={styles.iconBackground}>
               <MaterialCommunityIcons
                 name="line-scan"
