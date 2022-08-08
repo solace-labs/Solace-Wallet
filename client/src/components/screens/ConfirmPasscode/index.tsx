@@ -12,20 +12,22 @@ import {
   AccountStatus,
   GlobalContext,
 } from '../../../state/contexts/GlobalContext';
-import {setAccountStatus, setUser} from '../../../state/actions/global';
+import {setAccountStatus} from '../../../state/actions/global';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import useLocalStorage from '../../../hooks/useLocalStorage';
 
 export type Props = {
   navigation: any;
 };
 
 const ConfirmPasscodeScreen: React.FC<Props> = ({navigation}) => {
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState('123456');
   const textInputRef = useRef(null);
   const {state, dispatch} = useContext(GlobalContext);
   const [pinReady, setPinReady] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
-  const MAX_LENGTH = 5;
+  const [user, setUser] = useLocalStorage('user', {});
+  const MAX_LENGTH = 6;
 
   const tempArray = new Array(MAX_LENGTH).fill(0);
 
@@ -41,16 +43,12 @@ const ConfirmPasscodeScreen: React.FC<Props> = ({navigation}) => {
     textInput.focus();
   }, []);
 
-  const setToLocalStorage = async () => {
-    await AsyncStorage.setItem('user', JSON.stringify(state.onboardingUser));
-  };
-
   const checkPinReady = async () => {
     if (code.length === MAX_LENGTH) {
-      if (state.onboardingUser && state.onboardingUser.passcode === code) {
-        console.log('setting to local storage', state.onboardingUser);
-        await setToLocalStorage();
-        dispatch(setAccountStatus(AccountStatus.EXISITING));
+      if (state.user && state.user.pin === code) {
+        navigation.navigate('GoogleDrive');
+      } else {
+        Alert.alert('Passcode did not match');
       }
     } else {
       Alert.alert('Enter passcode');

@@ -23,6 +23,7 @@ import {
 } from '../../../state/contexts/GlobalContext';
 import {setAccountStatus} from '../../../state/actions/global';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import useLocalStorage from '../../../hooks/useLocalStorage';
 
 export type Props = {
   navigation: any;
@@ -31,16 +32,14 @@ export type Props = {
 const MainPasscodeScreen: React.FC<Props> = ({navigation}) => {
   const [code, setCode] = useState('');
   const textInputRef = useRef(null);
-  const [pinReady, setPinReady] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
-  const MAX_LENGTH = 5;
+  const [user] = useLocalStorage('user', {});
+  const MAX_LENGTH = 6;
 
   const {state, dispatch} = useContext(GlobalContext);
 
   const tempArray = new Array(MAX_LENGTH).fill(0);
 
   const focusMainInput = () => {
-    setIsFocused(true);
     const textInput = textInputRef.current! as TextInput;
     textInput.focus();
   };
@@ -55,21 +54,15 @@ const MainPasscodeScreen: React.FC<Props> = ({navigation}) => {
 
   const checkPinReady = useCallback(async () => {
     if (code.length === MAX_LENGTH) {
-      const response = await AsyncStorage.getItem('user');
-      let user;
-      console.log('PASSCODE CHECK', code, response);
-      if (response) {
-        user = JSON.parse(response);
-      }
-      if (user && code === user.passcode) {
+      if (user && code === user.pin) {
         dispatch(setAccountStatus(AccountStatus.ACTIVE));
       } else {
-        Alert.alert('incorret passcode');
+        Alert.alert('incorrect passcode');
         setCode('');
         focusMainInput();
       }
     }
-  }, [code, dispatch]);
+  }, [code, dispatch, user]);
 
   useEffect(() => {
     checkPinReady();

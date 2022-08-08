@@ -1,21 +1,29 @@
 import {View, Text, TouchableOpacity, ScrollView, Image} from 'react-native';
-import React from 'react';
+import React, {useContext} from 'react';
 import styles from './styles';
-// import * as solana from '@solana/web3.js';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {SolaceSDK} from 'solace-sdk';
+import {GlobalContext} from '../../../state/contexts/GlobalContext';
+import {setUser} from '../../../state/actions/global';
 
 export type Props = {
   navigation: any;
 };
 
 const HomeScreen: React.FC<Props> = ({navigation}) => {
-  // console.log(solana);
-  const getData = async () => {
-    const data = await AsyncStorage.getItem('passcode');
-    console.log('DATA: ', data);
-  };
+  const {state, dispatch} = useContext(GlobalContext);
 
-  getData();
+  const createNewWallet = async () => {
+    const keypair = SolaceSDK.newKeyPair();
+    dispatch(
+      setUser({
+        ...state.user,
+        keypair,
+        ownerPrivateKey: keypair.secretKey,
+      }),
+    );
+
+    navigation.navigate('Username');
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.contentContainer} bounces={false}>
@@ -28,12 +36,14 @@ const HomeScreen: React.FC<Props> = ({navigation}) => {
         </View>
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            onPress={() => navigation.navigate('Email')}
+            onPress={() => {
+              createNewWallet();
+            }}
             style={[styles.buttonStyle, styles.createButton]}>
             <Text style={styles.buttonTextStyle}>create new wallet</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => navigation.navigate('Email')}
+            onPress={() => navigation.navigate('Username')}
             style={[styles.buttonStyle, styles.secondButton]}>
             <Text style={[styles.buttonTextStyle, styles.secondButtonText]}>
               recover your wallet

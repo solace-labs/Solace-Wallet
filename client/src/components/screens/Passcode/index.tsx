@@ -9,16 +9,16 @@ import {
 import React, {useContext, useEffect, useRef, useState} from 'react';
 import styles from './styles';
 import {GlobalContext} from '../../../state/contexts/GlobalContext';
-import {setOnboardingUser} from '../../../state/actions/global';
+import {setUser} from '../../../state/actions/global';
 
 export type Props = {
   navigation: any;
 };
 
 const PasscodeScreen: React.FC<Props> = ({navigation}) => {
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState('123456');
   const textInputRef = useRef(null);
-  const MAX_LENGTH = 5;
+  const MAX_LENGTH = 6;
 
   const tempArray = new Array(MAX_LENGTH).fill(0);
 
@@ -36,7 +36,7 @@ const PasscodeScreen: React.FC<Props> = ({navigation}) => {
 
   const checkPinReady = async () => {
     if (code.length === MAX_LENGTH) {
-      dispatch(setOnboardingUser({...state.onboardingUser, passcode: code}));
+      dispatch(setUser({...state.user, pin: code}));
       navigation.navigate('ConfirmPasscode');
     } else {
       Alert.alert('Enter passcode');

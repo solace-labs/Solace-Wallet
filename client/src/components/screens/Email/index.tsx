@@ -8,7 +8,7 @@ import {
 import React, {useContext, useState} from 'react';
 import styles from './styles';
 import {GlobalContext} from '../../../state/contexts/GlobalContext';
-import {setOnboardingUser} from '../../../state/actions/global';
+import {setUser} from '../../../state/actions/global';
 
 export type Props = {
   navigation: any;
@@ -36,7 +36,7 @@ const EmailScreen: React.FC<Props> = ({navigation}) => {
   };
 
   const handleMailSubmit = () => {
-    dispatch(setOnboardingUser({...state.onboardingUser, email}));
+    dispatch(setUser({...state.user, email}));
   };
 
   return (

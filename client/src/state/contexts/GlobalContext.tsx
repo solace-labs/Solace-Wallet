@@ -1,29 +1,39 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {use} from 'chai';
 import React, {
   createContext,
   Dispatch,
+  useCallback,
   useEffect,
   useReducer,
   useState,
 } from 'react';
+import {unstable_batchedUpdates} from 'react-native';
 import {Contact} from '../../components/wallet/ContactItem';
+import useLocalStorage from '../../hooks/useLocalStorage';
 import {setAccountStatus, setUser} from '../actions/global';
 import globalReducer from '../reducers/global';
+import {SolaceSDK} from 'solace-sdk';
+import {
+  decryptData,
+  encryptData,
+  generateKey,
+  tryAes,
+} from '../../utils/aes_encryption';
 
 type InitialStateType = {
   accountStatus: AccountStatus;
   user?: User;
-  onboardingUser?: User;
   contact?: Contact;
   contacts?: Contact[];
 };
 
 export type User = {
-  username: string;
-  keyPair: string;
-  seed: string;
-  email: string;
-  passcode: string;
+  solaceName: string;
+  ownerPrivateKey: string;
+  keypair?: ReturnType<typeof SolaceSDK.newKeyPair>;
+  isWalletCreated: boolean;
+  pin: string;
 };
 
 export enum AccountStatus {
@@ -35,12 +45,11 @@ export enum AccountStatus {
 
 const initialState = {
   accountStatus: AccountStatus.NEW,
-  onboardingUser: {
-    username: '',
-    email: '',
-    keyPair: '',
-    seed: '',
-    passcode: '',
+  user: {
+    solaceName: '',
+    ownerPrivateKey: '',
+    isWalletCreated: false,
+    pin: '',
   },
   contacts: [
     {
@@ -49,12 +58,6 @@ const initialState = {
       username: 'ashwin.solace.money',
       address: '1231jkajsdkf02198487',
     },
-    // {
-    //   id: new Date().getTime().toString() + Math.random().toString(),
-    //   name: 'sarthak sharma',
-    //   username: 'sarthak.solace.money',
-    //   address: 'alkjsdfoi1093890123909',
-    // },
   ],
 };
 
@@ -65,19 +68,27 @@ export const GlobalContext = createContext<{
 
 const GlobalProvider = ({children}: {children: any}) => {
   const [state, dispatch] = useReducer(globalReducer, initialState);
+  const [storedUser, setStoredUser] = useLocalStorage('user', undefined);
+
+  const isUserValid = useCallback(() => {
+    return (
+      storedUser &&
+      storedUser.pin &&
+      storedUser.solaceName &&
+      storedUser.ownerPrivateKey &&
+      storedUser.isWalletCreated
+    );
+  }, [storedUser]);
+
+  // tryAes();
 
   useEffect(() => {
-    const getInitialData = async () => {
-      const response = await AsyncStorage.getItem('user');
-      if (response) {
-        console.log('response', response);
-        const user = JSON.parse(response);
-        dispatch(setUser(user));
-        dispatch(setAccountStatus(AccountStatus.EXISITING));
-      }
-    };
-    getInitialData();
-  }, []);
+    console.log({storedUser});
+    if (isUserValid()) {
+      dispatch(setUser(storedUser));
+      dispatch(setAccountStatus(AccountStatus.EXISITING));
+    }
+  }, [isUserValid, storedUser]);
 
   return (
     <GlobalContext.Provider value={{state, dispatch}}>

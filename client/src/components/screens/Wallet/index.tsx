@@ -9,6 +9,7 @@ import {changeUserName, setUser} from '../../../state/actions/global';
 import AssetScreen from './Asset';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {SolaceSDK} from 'solace-sdk';
+import useLocalStorage from '../../../hooks/useLocalStorage';
 
 export type Props = {
   navigation: any;
@@ -60,6 +61,7 @@ const WalletScreen: React.FC<Props> = ({navigation}) => {
   ];
 
   const [username, setUsername] = useState('');
+  const [storedUser, setStoredUser] = useLocalStorage('user', {});
 
   const {
     state: {user},
@@ -94,7 +96,7 @@ const WalletScreen: React.FC<Props> = ({navigation}) => {
           style={styles.image}
         />
         <Text style={styles.username}>
-          {user?.username ? user.username : username}.solace.money
+          {user?.solaceName ? user.solaceName : username}.solace.money
         </Text>
       </View>
       <View style={styles.headingContainer}>
@@ -111,30 +113,36 @@ const WalletScreen: React.FC<Props> = ({navigation}) => {
           <TouchableOpacity
             style={styles.buttonContainer}
             onPress={async () => {
-              const keypair = SolaceSDK.newKeyPair();
-              // const sdk = new SolaceSDK({
+              // const keypair = SolaceSDK.newKeyPair();
+              // // const sdk = new SolaceSDK({
+              // //   owner: keypair,
+              // //   network: 'local',
+              // //   programAddress: '3CvPZTk1PYMs6JzgiVNFtsAeijSNwbhrQTMYeFQKWpFw',
+              // // });
+              // // Request airdrop
+              // console.log('requesting airdrop');
+              // const LAMPORTS_PER_SOL = 1000000000;
+              // const tx = await SolaceSDK.localConnection.requestAirdrop(
+              //   keypair.publicKey,
+              //   1 * LAMPORTS_PER_SOL,
+              // );
+              // await SolaceSDK.localConnection.confirmTransaction(tx);
+              // console.log('airdrop confirmed');
+              // // Check if the name is valid with my API
+              // // await sdk.createWalletWithName(keypair, 'name', false);
+              // // const s = await SolaceSDK.createFromName(username, keypair);
+              // const sdk = await SolaceSDK.createFromName(username, {
               //   owner: keypair,
               //   network: 'local',
               //   programAddress: '3CvPZTk1PYMs6JzgiVNFtsAeijSNwbhrQTMYeFQKWpFw',
               // });
-              // Request airdrop
-              console.log('requesting airdrop');
-              const LAMPORTS_PER_SOL = 1000000000;
-              const tx = await SolaceSDK.localConnection.requestAirdrop(
-                keypair.publicKey,
-                1 * LAMPORTS_PER_SOL,
-              );
-              await SolaceSDK.localConnection.confirmTransaction(tx);
-              console.log('airdrop confirmed');
-              // Check if the name is valid with my API
-              // await sdk.createWalletWithName(keypair, 'name', false);
-              // const s = await SolaceSDK.createFromName(username, keypair);
-              const sdk = await SolaceSDK.createFromName(username, {
-                owner: keypair,
-                network: 'local',
-                programAddress: '3CvPZTk1PYMs6JzgiVNFtsAeijSNwbhrQTMYeFQKWpFw',
-              });
-              console.log('NEW WALLET', sdk.wallet);
+              // console.log({sdk});
+              // SolaceSDK.retrieveFromName(username, {
+              //   owner: keypair,
+              //   programAddress: '3CvPZTk1PYMs6JzgiVNFtsAeijSNwbhrQTMYeFQKWpFw',
+              //   network: 'local',
+              // });
+              // console.log('NEW WALLET', sdk.wallet);
             }}>
             <View style={styles.iconBackground}>
               <MaterialCommunityIcons
@@ -147,7 +155,10 @@ const WalletScreen: React.FC<Props> = ({navigation}) => {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.buttonContainer}
-            onPress={() => AsyncStorage.removeItem('user')}>
+            // onPress={() => AsyncStorage.removeItem('user')}>
+            onPress={() => {
+              setStoredUser(undefined);
+            }}>
             <View style={styles.iconBackground}>
               <AntDesign name="arrowdown" size={20} color="black" />
             </View>
