@@ -13,6 +13,11 @@ const reducer = (state: any, action: {type: string; payload: any}) => {
         ...state,
         accountStatus: payload,
       };
+    case 'SET_SDK':
+      return {
+        ...state,
+        sdk: payload,
+      };
     case 'CHANGE_NAME':
       return {...state, username: action.payload};
     case 'ADD_CONTACT':

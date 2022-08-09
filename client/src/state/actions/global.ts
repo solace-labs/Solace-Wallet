@@ -1,3 +1,4 @@
+import {SolaceSDK} from 'solace-sdk';
 import {Contact} from '../../components/wallet/ContactItem';
 import {AccountStatus, User} from '../contexts/GlobalContext';
 
@@ -12,6 +13,13 @@ export const setAccountStatus = (status: AccountStatus) => {
   return {
     type: 'SET_ACCOUNT_STATUS',
     payload: status,
+  };
+};
+
+export const setSDK = (sdk: SolaceSDK) => {
+  return {
+    type: 'SET_SDK',
+    payload: sdk,
   };
 };
 

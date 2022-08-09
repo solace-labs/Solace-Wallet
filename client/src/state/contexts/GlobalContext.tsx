@@ -24,6 +24,7 @@ import {
 type InitialStateType = {
   accountStatus: AccountStatus;
   user?: User;
+  sdk?: SolaceSDK;
   contact?: Contact;
   contacts?: Contact[];
 };
