@@ -10,11 +10,23 @@ const styles = StyleSheet.create({
     paddingTop: 30,
     backgroundColor: '#131313',
     flex: 1,
-    // height: '100%',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 10,
+  },
+  inputContainer: {
+    position: 'relative',
+  },
+  eyeIcon: {
+    position: 'absolute',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    right: 0,
+    top: 15,
+    bottom: 0,
+    width: 50,
   },
   textContainer: {
     display: 'flex',
@@ -40,6 +52,7 @@ const styles = StyleSheet.create({
     color: 'white',
     padding: 14,
     borderWidth: 1,
+    width: '100%',
     fontFamily: 'SpaceMono-Bold',
   },
   buttonStyle: {
@@ -54,6 +67,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'SpaceMono-Bold',
     textTransform: 'lowercase',
+  },
+  passwordHint: {
+    color: '#919BA6',
+    fontSize: 12,
+    paddingTop: 4,
+    fontFamily: 'SpaceMono-Regular',
   },
 });
 

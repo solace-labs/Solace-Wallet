@@ -9,6 +9,7 @@ const AuthStack = () => {
     <Stack.Navigator
       initialRouteName="MainPasscode"
       screenOptions={{headerShown: false}}>
+      {/* <Stack.Screen name="LoginIn" component={LoginScreen} /> */}
       <Stack.Screen name="MainPasscode" component={MainPasscodeScreen} />
       <Stack.Screen name="Fingerprint" component={FingerprintScreen} />
     </Stack.Navigator>

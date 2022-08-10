@@ -11,7 +11,6 @@ import styles from './styles';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {GlobalContext} from '../../../state/contexts/GlobalContext';
 import {setUser} from '../../../state/actions/global';
-import {SolaceSDK} from 'solace-sdk';
 
 export type Props = {
   navigation: any;
@@ -59,11 +58,11 @@ const UsernameScreen: React.FC<Props> = ({navigation}) => {
         });
       }
       setIsLoading(false);
-    }, 2000);
+    }, 200);
   };
 
   const handleUsernameSubmit = async () => {
-    navigation.navigate('Passcode');
+    navigation.navigate('Email');
   };
 
   const handleChange = (text: string) => {

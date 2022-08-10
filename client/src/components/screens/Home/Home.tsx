@@ -22,7 +22,7 @@ const HomeScreen: React.FC<Props> = ({navigation}) => {
       }),
     );
 
-    navigation.navigate('Email');
+    navigation.navigate('Username');
   };
 
   return (

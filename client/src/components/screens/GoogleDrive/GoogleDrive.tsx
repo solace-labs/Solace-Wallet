@@ -44,7 +44,6 @@ const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
   const [storedUser, setStoredUser] = useLocalStorage('user', {});
   const [created, setCreated] = useState(false);
   const [encryptedSecretKey, setEncryptedSecretKey] = useState('');
-  const [emailOtp, setEmailOtp] = useState('');
 
   const setToLocalStorage = useCallback(async () => {
     await setStoredUser(state.user);
@@ -72,6 +71,9 @@ const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
     // });
 
     try {
+      const awsCognito = state.awsCognito;
+
+      // awsCognito?.emailLogin('ankitonpar', 'aNK8n3G!#!!@');
       // console.log({response});
       // Sign in google
       // await GoogleSignin.signIn();
@@ -123,28 +125,29 @@ const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
     // setCreated(true);
   };
 
-  const verifyOTP = async () => {
-    try {
-      const awsCognito = state.awsCognito!;
-      const res = await awsCognito.verifyEmailVerificationCode('604882');
-      console.log({res});
-    } catch (e: any) {
-      Alert.alert(e.message);
-    }
-  };
+  // const verifyOTP = async () => {
+  //   try {
+  //     const awsCognito = state.awsCognito!;
+  //     console.log({emailOtp});
+  //     const res = await awsCognito.confirmRegistration(emailOtp);
+  //     console.log({res});
+  //   } catch (e: any) {
+  //     Alert.alert(e.message);
+  //   }
+  // };
 
   const signUp = async () => {
     try {
       const awsCognito = new AwsCognito();
-      awsCognito.setCognitoUser('ankitneg');
-      console.log({pool: awsCognito.userPool});
-      const response = await awsCognito.emailSignUp(
-        'ankitneg',
-        'ankitn1331@gmail.com',
-        'aNK8n3G!#!!@',
-      );
-      console.log({response});
-      dispatch(setAwsCognito(awsCognito));
+      awsCognito.setCognitoUser('ankitonpar');
+      // console.log({pool: awsCognito.userPool});
+      // const response = await awsCognito.emailSignUp(
+      //   'ankitonpar',
+      //   'ankit.negi@onpar.in',
+      //   'aNK8n3G!#!!@',
+      // );
+      // console.log({response});
+      // dispatch(setAwsCognito(awsCognito));
     } catch (e: any) {
       Alert.alert(e.message);
     }
@@ -211,30 +214,6 @@ const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
           </Text>
         </View>
 
-        <TextInput
-          style={styles.textInput}
-          placeholder="------"
-          placeholderTextColor="#fff6"
-          value={emailOtp}
-          onChangeText={text => setEmailOtp(text)}
-          autoCapitalize={'none'}
-          keyboardType="number-pad"
-          autoCorrect={false}
-        />
-        <TouchableOpacity
-          onPress={() => {
-            verifyOTP();
-          }}
-          style={styles.buttonStyle}>
-          <Text style={styles.buttonTextStyle}>verify otp</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => {
-            signUp();
-          }}
-          style={styles.buttonStyle}>
-          <Text style={styles.buttonTextStyle}>sign up</Text>
-        </TouchableOpacity>
         <TouchableOpacity
           onPress={() => {
             storeToGoogleDrive();

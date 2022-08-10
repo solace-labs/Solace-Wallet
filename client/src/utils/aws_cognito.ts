@@ -96,6 +96,27 @@ export class AwsCognito {
   };
 
   /**
+   * Confirm registration
+   * @param otp
+   * @returns
+   */
+  confirmRegistration = async (otp: string): Promise<string> => {
+    return await new Promise((resolve, reject) => {
+      this.cognitoUser!.confirmRegistration(
+        otp,
+        true,
+        (err: Error, result: string) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(result);
+          }
+        },
+      );
+    });
+  };
+
+  /**
    * Set a cognito user
    * @param Username
    */

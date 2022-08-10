@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import {useEffect, useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -12,10 +13,9 @@ export default function useLocalStorage(key: string, initialValue: any) {
       console.log(error);
     }
   };
+
   useEffect(() => {
-    console.log('CHECKING LOCAL STORAGE');
     getStoredItem();
-    // @ts-ignore
   }, []);
 
   const setValue = async (value: any) => {

@@ -26,6 +26,7 @@ type InitialStateType = {
 };
 
 export type User = {
+  email: string;
   solaceName: string;
   ownerPrivateKey: string;
   keypair?: ReturnType<typeof SolaceSDK.newKeyPair>;
@@ -44,6 +45,7 @@ export enum AccountStatus {
 const initialState = {
   accountStatus: AccountStatus.SIGNED_UP,
   user: {
+    email: '',
     solaceName: '',
     ownerPrivateKey: '',
     isWalletCreated: false,
@@ -78,10 +80,7 @@ const GlobalProvider = ({children}: {children: any}) => {
     );
   }, [storedUser]);
 
-  // tryAes();
-
   useEffect(() => {
-    console.log({storedUser});
     if (isUserValid()) {
       dispatch(setUser(storedUser));
       dispatch(setAccountStatus(AccountStatus.EXISITING));

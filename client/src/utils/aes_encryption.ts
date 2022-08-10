@@ -12,9 +12,7 @@ export const generateKey = (
 
 export const encryptData = (text: string, key: string) => {
   return Aes.randomKey(16).then((iv: string) => {
-    console.log('IV', iv, text, key);
     return Aes.encrypt(text, key, iv, 'aes-256-cbc').then((cipher: any) => {
-      console.log({cipher, iv});
       return {
         cipher,
         iv,
@@ -29,11 +27,8 @@ export const decryptData = (encryptedData: any, key: string) =>
 export const tryAes = () => {
   try {
     generateKey('Arnold', 'salt', 5000, 256).then((key: string) => {
-      console.log('Key:', key);
       encryptData('These violent delights have violent ends', key)
         .then(({cipher, iv}: {cipher: string; iv: string}) => {
-          console.log('Encrypted:', cipher);
-
           decryptData({cipher, iv}, key)
             .then((text: string) => {
               console.log('Decrypted:', text);
