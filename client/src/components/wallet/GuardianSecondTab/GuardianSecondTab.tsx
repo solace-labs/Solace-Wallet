@@ -2,9 +2,9 @@ import {View, Text, TouchableOpacity, Image} from 'react-native';
 import React from 'react';
 import moment from 'moment';
 import styles from './styles';
-import Navigation from '../../../navigation';
+import Navigation from '../../../navigation/Navigation';
 import {useNavigation} from '@react-navigation/native';
-import {Contact} from '../ContactItem';
+import {Contact} from '../ContactItem/ContactItem';
 
 export type Props = {
   guardians: Contact[];

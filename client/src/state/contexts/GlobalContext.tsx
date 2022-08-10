@@ -9,7 +9,7 @@ import React, {
   useState,
 } from 'react';
 import {unstable_batchedUpdates} from 'react-native';
-import {Contact} from '../../components/wallet/ContactItem';
+import {Contact} from '../../components/wallet/ContactItem/ContactItem';
 import useLocalStorage from '../../hooks/useLocalStorage';
 import {setAccountStatus, setUser} from '../actions/global';
 import globalReducer from '../reducers/global';
@@ -42,6 +42,7 @@ export enum AccountStatus {
   RECOVERY = 'RECOVERY',
   NEW = 'NEW',
   ACTIVE = 'ACTIVE',
+  SIGNED_UP = 'SIGNED_UP',
 }
 
 const initialState = {

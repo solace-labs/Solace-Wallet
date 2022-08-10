@@ -18,6 +18,7 @@
     "@react-navigation/native": "^6.0.10",
     "@react-navigation/native-stack": "^6.6.2",
     "@robinbobin/react-native-google-drive-api-wrapper": "^1.2.3",
+    "amazon-cognito-identity-js": "^5.2.10",
     "install": "^0.13.0",
     "moment": "^2.29.3",
     "npm": "^8.16.0",

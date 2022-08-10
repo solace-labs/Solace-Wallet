@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 import com.facebook.react.PackageList;
 import com.facebook.react.ReactApplication;
+import com.amazonaws.RNAWSCognitoPackage;
 import net.rhogan.rnsecurerandom.RNSecureRandomPackage;
 import net.rhogan.rnsecurerandom.RNSecureRandomPackage;
 import net.rhogan.rnsecurerandom.RNSecureRandomPackage;

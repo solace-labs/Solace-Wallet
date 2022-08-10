@@ -6,7 +6,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import styles from './styles';
 import {GlobalContext} from '../../../state/contexts/GlobalContext';
 import {changeUserName, setUser} from '../../../state/actions/global';
-import AssetScreen from './Asset';
+import AssetScreen from './Asset/Asset';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {SolaceSDK} from 'solace-sdk';
 import useLocalStorage from '../../../hooks/useLocalStorage';

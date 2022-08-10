@@ -1,5 +1,5 @@
 import React from 'react';
-import Navigation from './src/navigation';
+import Navigation from './src/navigation/Navigation';
 import GlobalProvider from './src/state/contexts/GlobalContext';
 import GlobalContext from './src/state/contexts/GlobalContext';
 

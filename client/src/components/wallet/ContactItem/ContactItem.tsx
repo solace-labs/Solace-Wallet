@@ -2,7 +2,7 @@ import {View, Text, TouchableOpacity} from 'react-native';
 import React from 'react';
 import moment from 'moment';
 import styles from './styles';
-import Navigation from '../../../navigation';
+import Navigation from '../../../navigation/Navigation';
 import {useNavigation} from '@react-navigation/native';
 
 export type Contact = {

@@ -1,5 +1,5 @@
 import {SolaceSDK} from 'solace-sdk';
-import {Contact} from '../../components/wallet/ContactItem';
+import {Contact} from '../../components/wallet/ContactItem/ContactItem';
 import {AccountStatus, User} from '../contexts/GlobalContext';
 
 export const setUser = (user: any) => {

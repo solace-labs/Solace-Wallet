@@ -11,7 +11,7 @@ import styles from './styles';
 
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {GlobalContext} from '../../../../state/contexts/GlobalContext';
-import ContactItem from '../../../wallet/ContactItem';
+import ContactItem from '../../../wallet/ContactItem/ContactItem';
 
 export type Props = {
   navigation: any;

@@ -12,7 +12,7 @@ export type Props = {
 const HomeScreen: React.FC<Props> = ({navigation}) => {
   const {state, dispatch} = useContext(GlobalContext);
 
-  const createNewWallet = async () => {
+  const createKeypair = async () => {
     const keypair = SolaceSDK.newKeyPair();
     dispatch(
       setUser({
@@ -22,7 +22,7 @@ const HomeScreen: React.FC<Props> = ({navigation}) => {
       }),
     );
 
-    navigation.navigate('Username');
+    navigation.navigate('Email');
   };
 
   return (
@@ -37,7 +37,7 @@ const HomeScreen: React.FC<Props> = ({navigation}) => {
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             onPress={() => {
-              createNewWallet();
+              createKeypair();
             }}
             style={[styles.buttonStyle, styles.createButton]}>
             <Text style={styles.buttonTextStyle}>create new wallet</Text>

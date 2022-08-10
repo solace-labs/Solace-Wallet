@@ -4,9 +4,9 @@ import styles from './styles';
 
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {GlobalContext} from '../../../../state/contexts/GlobalContext';
-import GuardianTab from '../../../wallet/GuardianTab';
-import {Contact} from '../../../wallet/ContactItem';
-import GuardianSecondTab from '../../../wallet/GuardianSecondTab';
+import GuardianTab from '../../../wallet/GuardianTab/GuardianTab';
+import {Contact} from '../../../wallet/ContactItem/ContactItem';
+import GuardianSecondTab from '../../../wallet/GuardianSecondTab/GuardianSecondTab';
 
 export type Props = {
   navigation: any;

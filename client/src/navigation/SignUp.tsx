@@ -9,16 +9,17 @@ import ConfirmPasscodeScreen from '../components/screens/ConfirmPasscode/Confirm
 import GoogleDriveScreen from '../components/screens/GoogleDrive/GoogleDrive';
 
 const Stack = createNativeStackNavigator();
-const OnboardingStack = () => {
+const SignUpStack = () => {
   return (
     <Stack.Navigator
-      initialRouteName="Passcode"
+      initialRouteName="Home"
       screenOptions={{headerShown: false}}>
-      <Stack.Screen name="Passcode" component={PasscodeScreen} />
-      <Stack.Screen name="ConfirmPasscode" component={ConfirmPasscodeScreen} />
-      <Stack.Screen name="GoogleDrive" component={GoogleDriveScreen} />
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Email" component={EmailScreen} />
+      <Stack.Screen name="CheckMail" component={CheckMailScreen} />
+      <Stack.Screen name="Username" component={UsernameScreen} />
     </Stack.Navigator>
   );
 };
 
-export default OnboardingStack;
+export default SignUpStack;

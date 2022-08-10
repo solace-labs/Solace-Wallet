@@ -5,7 +5,7 @@ import {
   TextInput,
   ScrollView,
 } from 'react-native';
-import React, {useContext, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import styles from './styles';
 import {GlobalContext} from '../../../state/contexts/GlobalContext';
 import {setUser} from '../../../state/actions/global';
@@ -15,7 +15,7 @@ export type Props = {
 };
 
 const EmailScreen: React.FC<Props> = ({navigation}) => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('ankit@gmail.com');
   const [isValid, setIsValid] = useState(false);
 
   const {state, dispatch} = useContext(GlobalContext);
@@ -34,6 +34,10 @@ const EmailScreen: React.FC<Props> = ({navigation}) => {
       console.log('Email is Correct');
     }
   };
+
+  useEffect(() => {
+    validate(email);
+  });
 
   const handleMailSubmit = () => {
     dispatch(setUser({...state.user, email}));
@@ -61,7 +65,7 @@ const EmailScreen: React.FC<Props> = ({navigation}) => {
           disabled={!isValid}
           onPress={() => {
             handleMailSubmit();
-            navigation.navigate('Username');
+            navigation.navigate('CheckMail');
           }}
           style={styles.buttonStyle}>
           <Text
