@@ -14,12 +14,7 @@ import useLocalStorage from '../../hooks/useLocalStorage';
 import {setAccountStatus, setUser} from '../actions/global';
 import globalReducer from '../reducers/global';
 import {SolaceSDK} from 'solace-sdk';
-import {
-  decryptData,
-  encryptData,
-  generateKey,
-  tryAes,
-} from '../../utils/aes_encryption';
+import {AwsCognito} from '../../utils/aws_cognito';
 
 type InitialStateType = {
   accountStatus: AccountStatus;
@@ -27,6 +22,7 @@ type InitialStateType = {
   sdk?: SolaceSDK;
   contact?: Contact;
   contacts?: Contact[];
+  awsCognito?: AwsCognito;
 };
 
 export type User = {
@@ -46,7 +42,7 @@ export enum AccountStatus {
 }
 
 const initialState = {
-  accountStatus: AccountStatus.NEW,
+  accountStatus: AccountStatus.SIGNED_UP,
   user: {
     solaceName: '',
     ownerPrivateKey: '',

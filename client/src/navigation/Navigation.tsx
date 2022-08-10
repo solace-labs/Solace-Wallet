@@ -11,7 +11,7 @@ const Navigation = () => {
   const {state, dispatch} = useContext(GlobalContext);
 
   useEffect(() => {
-    dispatch(setAccountStatus(AccountStatus.NEW));
+    dispatch(setAccountStatus(AccountStatus.SIGNED_UP));
   }, [dispatch]);
 
   const renderContent = () => {

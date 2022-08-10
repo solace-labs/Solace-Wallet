@@ -5,10 +5,16 @@ import {
   ScrollView,
   Image,
   Alert,
+  TextInput,
 } from 'react-native';
 import React, {useCallback, useContext, useEffect, useState} from 'react';
 import styles from './styles';
-import {setAccountStatus, setSDK, setUser} from '../../../state/actions/global';
+import {
+  setAccountStatus,
+  setAwsCognito,
+  setSDK,
+  setUser,
+} from '../../../state/actions/global';
 import {
   AccountStatus,
   GlobalContext,
@@ -38,6 +44,7 @@ const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
   const [storedUser, setStoredUser] = useLocalStorage('user', {});
   const [created, setCreated] = useState(false);
   const [encryptedSecretKey, setEncryptedSecretKey] = useState('');
+  const [emailOtp, setEmailOtp] = useState('');
 
   const setToLocalStorage = useCallback(async () => {
     await setStoredUser(state.user);
@@ -65,18 +72,6 @@ const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
     // });
 
     try {
-      const awsCognito = new AwsCognito();
-      awsCognito.setCognitoUser('ankitnegi');
-      console.log({pool: awsCognito.userPool});
-      // const response = await awsCognito.emailSignUp(
-      //   'ankitnegi',
-      //   'ankitn1331@gmail.com',
-      //   'aNK8n3G!#!!@',
-      // );
-      // console.log({response});
-
-      const res = await awsCognito.verifyEmailVerificationCode('020270');
-      console.log({res});
       // console.log({response});
       // Sign in google
       // await GoogleSignin.signIn();
@@ -126,6 +121,33 @@ const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
     console.log('CREATING WALLET');
     // dispatch(setUser({...state.user, isWalletCreated: true}));
     // setCreated(true);
+  };
+
+  const verifyOTP = async () => {
+    try {
+      const awsCognito = state.awsCognito!;
+      const res = await awsCognito.verifyEmailVerificationCode('604882');
+      console.log({res});
+    } catch (e: any) {
+      Alert.alert(e.message);
+    }
+  };
+
+  const signUp = async () => {
+    try {
+      const awsCognito = new AwsCognito();
+      awsCognito.setCognitoUser('ankitneg');
+      console.log({pool: awsCognito.userPool});
+      const response = await awsCognito.emailSignUp(
+        'ankitneg',
+        'ankitn1331@gmail.com',
+        'aNK8n3G!#!!@',
+      );
+      console.log({response});
+      dispatch(setAwsCognito(awsCognito));
+    } catch (e: any) {
+      Alert.alert(e.message);
+    }
   };
 
   const encryptSecretKey = async (secretKey: string, pin: string) => {
@@ -188,6 +210,31 @@ const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
             wallet if you lose your device
           </Text>
         </View>
+
+        <TextInput
+          style={styles.textInput}
+          placeholder="------"
+          placeholderTextColor="#fff6"
+          value={emailOtp}
+          onChangeText={text => setEmailOtp(text)}
+          autoCapitalize={'none'}
+          keyboardType="number-pad"
+          autoCorrect={false}
+        />
+        <TouchableOpacity
+          onPress={() => {
+            verifyOTP();
+          }}
+          style={styles.buttonStyle}>
+          <Text style={styles.buttonTextStyle}>verify otp</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            signUp();
+          }}
+          style={styles.buttonStyle}>
+          <Text style={styles.buttonTextStyle}>sign up</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           onPress={() => {
             storeToGoogleDrive();

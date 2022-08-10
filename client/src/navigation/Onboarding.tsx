@@ -12,7 +12,7 @@ const Stack = createNativeStackNavigator();
 const OnboardingStack = () => {
   return (
     <Stack.Navigator
-      initialRouteName="Passcode"
+      initialRouteName="GoogleDrive"
       screenOptions={{headerShown: false}}>
       <Stack.Screen name="Passcode" component={PasscodeScreen} />
       <Stack.Screen name="ConfirmPasscode" component={ConfirmPasscodeScreen} />

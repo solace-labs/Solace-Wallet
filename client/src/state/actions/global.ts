@@ -1,5 +1,6 @@
 import {SolaceSDK} from 'solace-sdk';
 import {Contact} from '../../components/wallet/ContactItem/ContactItem';
+import {AwsCognito} from '../../utils/aws_cognito';
 import {AccountStatus, User} from '../contexts/GlobalContext';
 
 export const setUser = (user: any) => {
@@ -20,6 +21,13 @@ export const setSDK = (sdk: SolaceSDK) => {
   return {
     type: 'SET_SDK',
     payload: sdk,
+  };
+};
+
+export const setAwsCognito = (awsCognito: AwsCognito) => {
+  return {
+    type: 'SET_AWS_COGNITO',
+    payload: awsCognito,
   };
 };
 
