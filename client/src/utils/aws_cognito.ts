@@ -104,7 +104,7 @@ export class AwsCognito {
     return await new Promise((resolve, reject) => {
       this.cognitoUser!.confirmRegistration(
         otp,
-        true,
+        false,
         (err: Error, result: string) => {
           if (err) {
             reject(err);
@@ -196,6 +196,29 @@ export class AwsCognito {
         console.log('res', res);
         resolve(res);
       });
+    });
+  };
+
+  getTokens = async (): Promise<{
+    accessToken: string;
+    idToken: string;
+    refreshToken: string;
+  }> => {
+    return await new Promise((resolve, reject) => {
+      this.cognitoUser!.getSession(
+        (err: Error | null, session: CognitoUserSession | null) => {
+          if (err) {
+            console.log('err', err);
+            reject(err);
+          }
+          console.log('session', session);
+          resolve({
+            accessToken: session!.getAccessToken().getJwtToken(),
+            idToken: session?.getIdToken().getJwtToken()!,
+            refreshToken: session?.getRefreshToken().getToken()!,
+          });
+        },
+      );
     });
   };
 }

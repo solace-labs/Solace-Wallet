@@ -2,7 +2,7 @@
 import {useEffect, useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function useLocalStorage(key: string, initialValue: any) {
+export default function useLocalStorage(key: string, initialValue?: any) {
   const [storedValue, setStoredValue] = useState(initialValue);
   const getStoredItem = async () => {
     try {

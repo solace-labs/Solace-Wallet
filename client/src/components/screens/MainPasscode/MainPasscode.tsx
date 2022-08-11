@@ -24,6 +24,7 @@ import {
 import {setAccountStatus} from '../../../state/actions/global';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import useLocalStorage from '../../../hooks/useLocalStorage';
+import {AwsCognito} from '../../../utils/aws_cognito';
 
 export type Props = {
   navigation: any;
@@ -32,6 +33,7 @@ export type Props = {
 const MainPasscodeScreen: React.FC<Props> = ({navigation}) => {
   const [code, setCode] = useState('');
   const textInputRef = useRef(null);
+  const [tokens] = useLocalStorage('tokens');
   const [user] = useLocalStorage('user', {});
   const MAX_LENGTH = 6;
 
@@ -43,6 +45,8 @@ const MainPasscodeScreen: React.FC<Props> = ({navigation}) => {
     const textInput = textInputRef.current! as TextInput;
     textInput.focus();
   };
+
+  // console.log({tokens});
 
   const handleOnPress = () => {
     focusMainInput();

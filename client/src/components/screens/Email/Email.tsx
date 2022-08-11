@@ -51,6 +51,9 @@ const EmailScreen: React.FC<Props> = ({navigation}) => {
   const {state, dispatch} = useContext(GlobalContext);
 
   const validateEmail = (text: string) => {
+    if (isOtpSent) {
+      setIsOtpSent(false);
+    }
     let reg = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w\w+)+$/;
     if (reg.test(text) === false) {
       setEmail({
@@ -82,6 +85,9 @@ const EmailScreen: React.FC<Props> = ({navigation}) => {
   };
 
   const validatePassword = (text: string) => {
+    if (isOtpSent) {
+      setIsOtpSent(false);
+    }
     let reg =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&#]{8,}$/;
     if (reg.test(text) === false) {
@@ -147,6 +153,7 @@ const EmailScreen: React.FC<Props> = ({navigation}) => {
       Alert.alert('Server Error. Try again later');
       return;
     }
+    console.log({value: otp.value});
     // if (!validateOtp(otp.value)) {
     //   Alert.alert('Otp is not valid');
     //   return;
