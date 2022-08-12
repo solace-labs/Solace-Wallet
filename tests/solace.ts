@@ -5,6 +5,7 @@ import { Program, workspace } from "../src/anchor/src";
 import { SolaceSDK } from "../src/sdk";
 import { Solace } from "../src/solace/types";
 import { findProgramAddressSync } from "../src/anchor/src/utils/pubkey";
+import { , relayTransaction } from "../src/relayer";
 
 const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
 const { BN } = anchor;
@@ -16,22 +17,21 @@ describe("solace", () => {
   let signer: anchor.web3.Keypair;
   let seedBase: anchor.web3.Keypair;
   let walletAddress: anchor.web3.PublicKey;
-  let walletBump: number;
 
   let guardian1: anchor.web3.Keypair;
   let guardian2: anchor.web3.Keypair;
   let newOwner: anchor.web3.Keypair;
+  let relayPair: anchor.web3.Keypair;
 
   const getWallet = () => solaceSdk.program.account.wallet.fetch(walletAddress);
   const getRecoveryAccount = (address: anchor.web3.PublicKey) =>
     solaceSdk.program.account.recoveryAttempt.fetch(address);
   const airdrop = async (address: anchor.web3.PublicKey) => {
-    const sg = await solaceSdk.program.provider.connection.requestAirdrop(
+    const sg = await SolaceSDK.localConnection.requestAirdrop(
       address,
       1 * LAMPORTS_PER_SOL
     );
-    const confirmation =
-      await solaceSdk.program.provider.connection.confirmTransaction(sg);
+    const confirmation = await SolaceSDK.localConnection.confirmTransaction(sg);
   };
 
   let solaceSdk: SolaceSDK;
@@ -43,31 +43,27 @@ describe("solace", () => {
     guardian1 = Keypair.generate();
     guardian2 = Keypair.generate();
     newOwner = Keypair.generate();
-    const sg = await SolaceSDK.localConnection.requestAirdrop(
-      signer.publicKey,
-      10 * LAMPORTS_PER_SOL
-    );
-    await SolaceSDK.localConnection.confirmTransaction(sg);
+    relayPair = Keypair.generate();
+    await Promise.all([
+      airdrop(signer.publicKey),
+      airdrop(relayPair.publicKey),
+    ]);
+    // Configure the client to use the local cluster.
+  });
+
+  it("should create a solace wallet", async () => {
     solaceSdk = new SolaceSDK({
-      owner,
+      owner: signer,
       network: "local",
       programAddress: PROGRAM_ADDRESS,
     });
-
-    // Configure the client to use the local cluster.
+    const tx = await solaceSdk.createFromName("name.solace.io");
+    const res = await relayTransaction(tx, relayPair, solaceSdk.);
+    walletAddress = solaceSdk.wallet;
     [walletAddress, walletBump] = findProgramAddressSync(
       [Buffer.from("SOLACE"), seedBase.publicKey.toBuffer()],
       solaceSdk.program.programId
     );
-  });
-
-  it("should create a solace wallet", async () => {
-    solaceSdk = await SolaceSDK.createFromName("name.solace.io", {
-      owner,
-      network: "local",
-      programAddress: PROGRAM_ADDRESS,
-    });
-    walletAddress = solaceSdk.wallet;
   });
 
   it("should fetch an existing wallet, and should have the same addr", async () => {
@@ -106,15 +102,6 @@ describe("solace", () => {
     );
 
     assert(afterBalance === beforeBalance + 10, "SOL Not transferred");
-  });
-
-  it("should add a guardian", async () => {
-    await solaceSdk.addGuardian(guardian1.publicKey);
-    const wallet = await solaceSdk.fetchWalletData();
-    assert(
-      wallet.approvedGuardians.length === 1,
-      "The number of approved guardians should be 1"
-    );
   });
 
   it("should remove an approved guardian", async () => {

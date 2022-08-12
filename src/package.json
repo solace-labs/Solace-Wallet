@@ -18,6 +18,7 @@
   "author": "Ashwin Prasad",
   "license": "MIT",
   "dependencies": {
-    "@project-serum/anchor": "^0.18.0"
+    "@project-serum/anchor": "^0.18.0",
+    "bs58": "^5.0.0"
   }
 }

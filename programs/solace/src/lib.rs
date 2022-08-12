@@ -74,7 +74,7 @@ pub mod solace {
     /// Access Control - Owner Only
     pub fn add_guardians(
         ctx: Context<AddGuardians>,
-        guardians: Vec<Pubkey>,
+    guardians: Vec<Pubkey>,
         recovery_threshold: u8,
     ) -> Result<()> {
         let wallet = &mut ctx.accounts.wallet;

@@ -1,78 +1,79 @@
-import {View, Text, TouchableOpacity, ScrollView, Image} from 'react-native';
-import React, {useContext, useEffect, useState} from 'react';
-import AntDesign from 'react-native-vector-icons/AntDesign';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { View, Text, TouchableOpacity, ScrollView, Image } from "react-native";
+import React, { useContext, useEffect, useState } from "react";
+import AntDesign from "react-native-vector-icons/AntDesign";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
-import styles from './styles';
-import {GlobalContext} from '../../../state/contexts/GlobalContext';
-import {changeUserName, setUser} from '../../../state/actions/global';
-import AssetScreen from './Asset';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SolaceSDK } from 'solace-sdk';
+import styles from "./styles";
+import { GlobalContext } from "../../../state/contexts/GlobalContext";
+import { changeUserName, setUser } from "../../../state/actions/global";
+import AssetScreen from "./Asset";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SolaceSDK } from "solace-sdk";
+import * as ACI from "amazon-cognito-identity-js";
 
 export type Props = {
   navigation: any;
 };
 
-const WalletScreen: React.FC<Props> = ({navigation}) => {
+const WalletScreen: React.FC<Props> = ({ navigation }) => {
   const DATA = [
     {
       id: 1,
       date: new Date(),
-      username: 'ashwin.solace.money',
+      username: "ashwin.solace.money",
     },
     {
       id: 2,
       date: new Date(),
-      username: 'ankit.solace.money',
+      username: "ankit.solace.money",
     },
     {
       id: 3,
       date: new Date(),
-      username: 'ashwin.solace.money',
+      username: "ashwin.solace.money",
     },
     {
       id: 4,
       date: new Date(),
-      username: 'ankit.solace.money',
+      username: "ankit.solace.money",
     },
     {
       id: 5,
       date: new Date(),
-      username: 'ashwin.solace.money',
+      username: "ashwin.solace.money",
     },
     {
       id: 6,
       date: new Date(),
-      username: 'ankit.solace.money',
+      username: "ankit.solace.money",
     },
     {
       id: 7,
       date: new Date(),
-      username: 'ashwin.solace.money',
+      username: "ashwin.solace.money",
     },
     {
       id: 8,
       date: new Date(),
-      username: 'ankit.solace.money',
+      username: "ankit.solace.money",
     },
-    {id: 9, username: 'sethi.solace.money', date: new Date()},
+    { id: 9, username: "sethi.solace.money", date: new Date() },
   ];
 
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState("");
 
   const {
-    state: {user},
+    state: { user },
     dispatch,
   } = useContext(GlobalContext);
 
   const handleSend = () => {
-    navigation.navigate('Send');
+    navigation.navigate("Send");
   };
 
   useEffect(() => {
     const getInitialData = async () => {
-      const userdata = await AsyncStorage.getItem('user');
+      const userdata = await AsyncStorage.getItem("user");
       if (userdata) {
         const _user = JSON.parse(userdata);
         dispatch(setUser(_user));
@@ -84,13 +85,13 @@ const WalletScreen: React.FC<Props> = ({navigation}) => {
   return (
     <ScrollView contentContainerStyle={styles.contentContainer} bounces={false}>
       <TouchableOpacity
-        onPress={() => navigation.navigate('Guardian')}
+        onPress={() => navigation.navigate("Guardian")}
         style={styles.iconContainer}>
         <AntDesign name="lock" style={styles.icon} />
       </TouchableOpacity>
       <View style={styles.headingContainer}>
         <Image
-          source={require('../../../../assets/images/solace/solace-icon.png')}
+          source={require("../../../../assets/images/solace/solace-icon.png")}
           style={styles.image}
         />
         <Text style={styles.username}>
@@ -108,24 +109,47 @@ const WalletScreen: React.FC<Props> = ({navigation}) => {
             </View>
             <Text style={styles.buttonText}>send</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.buttonContainer} onPress={async () => {
-            const keypair = SolaceSDK.newKeyPair();
-            const sdk = new SolaceSDK({
-              owner: keypair,
-              network: "local",
-              programAddress:
-      "8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U"
-            })
-            // Request airdrop
-            console.log('requesting airdrop');
-            const LAMPORTS_PER_SOL = 1000000000;
-            const tx = await SolaceSDK.localConnection.requestAirdrop(keypair.publicKey, 1 * LAMPORTS_PER_SOL);
-            await SolaceSDK.localConnection.confirmTransaction(tx);
-            console.log('airdrop confirmed');
-            // Check if the name is valid with my API
-            await sdk.createWalletWithName(keypair, "name", false)
-            console.log("NEW WALLET", sdk.wallet);
-          }}>
+          <TouchableOpacity
+            style={styles.buttonContainer}
+            onPress={async () => {
+              const poolData = {
+                UserPoolId: "ap-south-1_XjxTKqrzF",
+                ClientId: "tprl1r5eloalkdc65q12hq2ib",
+              };
+
+              var dataEmail = {
+                Name: "email",
+                Value: "ashwin@onpar.in",
+              };
+
+              const authenticationData = {
+                Username: "username",
+                Password: "@Fuckyou1234",
+              };
+
+              const authDetails = new ACI.AuthenticationDetails(
+                authenticationData,
+              );
+
+              const userPool = new ACI.CognitoUserPool(poolData);
+              const cognitoUser = new ACI.CognitoUser({
+                Username: "username",
+                Pool: userPool,
+              });
+              cognitoUser.getSession((err: any, session: any) => {
+                console.log({ err });
+                console.log({ session });
+              });
+
+              // cognitoUser.authenticateUser(authDetails, {
+              //   onSuccess: (res: any) => {
+              //     console.log("SUCCESS", res);
+              //   },
+              //   onFailure: (err: any) => {
+              //     console.log("ERROR", err);
+              //   },
+              // });
+            }}>
             <View style={styles.iconBackground}>
               <MaterialCommunityIcons
                 name="line-scan"
@@ -137,7 +161,7 @@ const WalletScreen: React.FC<Props> = ({navigation}) => {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.buttonContainer}
-            onPress={() => AsyncStorage.removeItem('user')}>
+            onPress={() => AsyncStorage.removeItem("user")}>
             <View style={styles.iconBackground}>
               <AntDesign name="arrowdown" size={20} color="black" />
             </View>
@@ -155,7 +179,7 @@ const WalletScreen: React.FC<Props> = ({navigation}) => {
         </View>
         <View style={styles.imageContainer}>
           <Image
-            source={require('../../../../assets/images/solace/contact-screen.png')}
+            source={require("../../../../assets/images/solace/contact-screen.png")}
             style={styles.contactImage}
           />
           <Text style={styles.buttonText}>

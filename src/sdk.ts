@@ -4,6 +4,8 @@ import * as anchor from "./anchor";
 import { findProgramAddressSync } from "./anchor/dist/cjs/utils/pubkey";
 import { BN } from "bn.js";
 import IDL from "./solace/idl.json";
+import { RelayerIxData } from "./relayer";
+import { bs58 } from "./anchor/src/utils/bytes";
 const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
 
 interface SolaceSDKData {
@@ -22,6 +24,26 @@ export class SolaceSDK {
   owner: anchor.web3.Keypair;
   program: Program<Solace>;
   seed: anchor.web3.PublicKey;
+  provider: anchor.Provider;
+
+  async signTransaction(
+    transaction: anchor.web3.Transaction,
+    payer: anchor.web3.PublicKey
+  ): Promise<RelayerIxData> {
+    const x = await anchor.getProvider().connection.getLatestBlockhash();
+    const tx = new anchor.web3.Transaction({
+      ...x,
+      feePayer: payer,
+    });
+    tx.add(transaction);
+    tx.partialSign(this.owner);
+    const signature = tx.signatures[1].signature;
+    return {
+      signature: bs58.encode(signature),
+      publicKey: this.owner.publicKey.toString(),
+      message: tx.compileMessage().serialize().toString("base64"),
+    };
+  }
 
   /// Generate a new key pair
   static newKeyPair() {
@@ -60,40 +82,34 @@ export class SolaceSDK {
   /**
    * Create a wallet for the first time
    * @param {string} name Name of the user
-   * @param {SolaceSDKData} data Wallet meta data
-   * @returns {SoalceSDK} return an instance of the SDK
+   * @returns {Promise<RelayerIxData>} return the transaction that can be relayed
    */
-  static async createFromName(
+  async createFromName(
     name: string,
-    data: SolaceSDKData
-  ): Promise<SolaceSDK> {
-    const sdk = new this(data);
-    const [walletAddress, walletBump] = findProgramAddressSync(
+    feePayer: anchor.web3.PublicKey
+  ): Promise<RelayerIxData> {
+    const [walletAddress, _] = findProgramAddressSync(
       [Buffer.from("SOLACE"), Buffer.from(name, "utf8")],
-      new anchor.web3.PublicKey(data.programAddress)
+      this.program.programId
     );
 
-    console.log("Owner Address", sdk.owner.publicKey.toString);
+    console.log("Owner Address", this.owner.publicKey.toString());
 
-    const tx = await sdk.program.rpc.createWallet(
-      sdk.owner.publicKey,
-      [],
-      0,
+    const tx = this.program.transaction.createWallet(
+      this.owner.publicKey, // Owner
+      [], // Guardian
+      0, // Guardian Approval Threshold
       name,
       {
         accounts: {
-          signer: sdk.owner.publicKey,
+          signer: this.owner.publicKey,
           wallet: walletAddress,
           systemProgram: anchor.web3.SystemProgram.programId,
         },
-        signers: [sdk.owner],
       }
     );
-    sdk.wallet = walletAddress;
-    // Instead of confirming transaction here, send it via an API
-    // this.program.provider.connection.sendTransaction
-    await sdk.confirmTx(tx);
-    return sdk;
+    this.wallet = walletAddress;
+    return this.signTransaction(tx, feePayer);
   }
 
   /**
@@ -109,6 +125,7 @@ export class SolaceSDK {
       anchor.Provider.defaultOptions()
     );
     anchor.setProvider(provider);
+    this.provider = provider;
     const programId = new anchor.web3.PublicKey(data.programAddress);
     this.program = new anchor.Program<Solace>(
       // @ts-ignore
