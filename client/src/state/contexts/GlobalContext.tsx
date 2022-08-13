@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {use} from 'chai';
 import React, {
@@ -35,15 +36,17 @@ export type User = {
 };
 
 export enum AccountStatus {
+  LOADING = 'LOADING',
   EXISITING = 'EXISITING',
   RECOVERY = 'RECOVERY',
   NEW = 'NEW',
   ACTIVE = 'ACTIVE',
   SIGNED_UP = 'SIGNED_UP',
+  LOGGED_ID = 'LOGGED_ID',
 }
 
 const initialState = {
-  accountStatus: AccountStatus.SIGNED_UP,
+  accountStatus: AccountStatus.LOADING,
   user: {
     email: '',
     solaceName: '',
@@ -81,11 +84,23 @@ const GlobalProvider = ({children}: {children: any}) => {
   }, [storedUser]);
 
   useEffect(() => {
+    console.log({storedUser});
     if (isUserValid()) {
       dispatch(setUser(storedUser));
       dispatch(setAccountStatus(AccountStatus.EXISITING));
+    } else {
+      dispatch(setAccountStatus(AccountStatus.NEW));
     }
-  }, [isUserValid, storedUser]);
+  }, [storedUser]);
+
+  // useEffect(() => {
+  //   setStoredUser({
+  //     pin: '123456',
+  //     solaceName: 'username',
+  //     ownerPrivateKey: 'privateKey',
+  //     isWalletCreated: true,
+  //   });
+  // }, []);
 
   return (
     <GlobalContext.Provider value={{state, dispatch}}>

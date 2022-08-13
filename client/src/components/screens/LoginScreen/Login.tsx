@@ -11,8 +11,15 @@ import {
 } from 'react-native';
 import React, {useContext, useEffect, useState} from 'react';
 import styles from './styles';
-import {GlobalContext} from '../../../state/contexts/GlobalContext';
-import {setAwsCognito, setUser} from '../../../state/actions/global';
+import {
+  AccountStatus,
+  GlobalContext,
+} from '../../../state/contexts/GlobalContext';
+import {
+  setAccountStatus,
+  setAwsCognito,
+  setUser,
+} from '../../../state/actions/global';
 import {useTogglePasswordVisibility} from '../../../hooks/useTogglePasswordVisibility';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {AwsCognito} from '../../../utils/aws_cognito';
@@ -39,15 +46,14 @@ const Login: React.FC<Props> = ({navigation}) => {
 
   const {state, dispatch} = useContext(GlobalContext);
   const [tokens, setTokens] = useLocalStorage('tokens');
+  const [storedUser, setStoredUser] = useLocalStorage('user');
 
   useEffect(() => {
+    console.log({storedUser});
     if (tokens) {
-      // navigation.navigate('MainPasscode');
-      console.log({
-        accessToken: tokens.idtoken,
-      });
+      navigation.navigate('MainPasscode');
     }
-  }, [tokens]);
+  }, [tokens, storedUser]);
 
   const validateUsername = (text: string) => {
     setUsername({

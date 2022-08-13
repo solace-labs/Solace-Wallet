@@ -8,8 +8,8 @@ import {
 } from 'react-native';
 import React, {useContext, useEffect, useRef, useState} from 'react';
 import styles from './styles';
-import {GlobalContext} from '../../../state/contexts/GlobalContext';
-import {setUser} from '../../../state/actions/global';
+import {GlobalContext} from '../../../../state/contexts/GlobalContext';
+import {setUser} from '../../../../state/actions/global';
 
 export type Props = {
   navigation: any;

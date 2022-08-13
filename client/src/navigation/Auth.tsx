@@ -1,14 +1,19 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import FingerprintScreen from '../components/screens/Figerprint/Fingerprint';
 import MainPasscodeScreen from '../components/screens/MainPasscode/MainPasscode';
 import LoginScreen from '../components/screens/LoginScreen/Login';
+import {AccountStatus, GlobalContext} from '../state/contexts/GlobalContext';
 
 const Stack = createNativeStackNavigator();
 const AuthStack = () => {
+  const {state, dispatch} = useContext(GlobalContext);
+
+  const route = 'Login';
+
   return (
     <Stack.Navigator
-      initialRouteName={'Login'}
+      initialRouteName={route}
       screenOptions={{headerShown: false}}>
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="MainPasscode" component={MainPasscodeScreen} />

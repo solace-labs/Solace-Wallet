@@ -30,11 +30,11 @@ export type Props = {
 
 const EmailScreen: React.FC<Props> = ({navigation}) => {
   const [email, setEmail] = useState({
-    value: 'ankit.negi@onpar.in',
+    value: 'ankitn1311@gmail.com',
     isValid: false,
   });
   const [password, setPassword] = useState({
-    value: 'ankitN3@G',
+    value: 'ankitN1311@',
     isValid: false,
   });
   const [otp, setOtp] = useState({
@@ -47,6 +47,11 @@ const EmailScreen: React.FC<Props> = ({navigation}) => {
   const [isLoading, setIsLoading] = useState(false);
   const {passwordVisibility, rightIcon, handlePasswordVisibility} =
     useTogglePasswordVisibility();
+
+  useEffect(() => {
+    validateEmail(email.value);
+    validatePassword(password.value);
+  }, []);
 
   const {state, dispatch} = useContext(GlobalContext);
 

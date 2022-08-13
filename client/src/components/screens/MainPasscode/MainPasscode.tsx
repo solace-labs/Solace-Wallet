@@ -8,6 +8,7 @@ import {
   Pressable,
   Alert,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import React, {
   useCallback,
@@ -21,10 +22,12 @@ import {
   AccountStatus,
   GlobalContext,
 } from '../../../state/contexts/GlobalContext';
-import {setAccountStatus} from '../../../state/actions/global';
+import {setAccountStatus, setSDK} from '../../../state/actions/global';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import useLocalStorage from '../../../hooks/useLocalStorage';
 import {AwsCognito} from '../../../utils/aws_cognito';
+import {check} from 'prettier';
+import {SolaceSDK} from 'solace-sdk';
 
 export type Props = {
   navigation: any;
@@ -38,6 +41,10 @@ const MainPasscodeScreen: React.FC<Props> = ({navigation}) => {
   const MAX_LENGTH = 6;
 
   const {state, dispatch} = useContext(GlobalContext);
+  const [loading, setLoading] = useState({
+    value: false,
+    message: '',
+  });
 
   const tempArray = new Array(MAX_LENGTH).fill(0);
 
@@ -56,17 +63,39 @@ const MainPasscodeScreen: React.FC<Props> = ({navigation}) => {
     focusMainInput();
   }, []);
 
+  const retrieveAccount = useCallback(async () => {
+    const {solaceName, keypair} = state.user!;
+    setLoading({
+      value: true,
+      message: 'logging you in',
+    });
+    setTimeout(async () => {
+      const sdk = await SolaceSDK.retrieveFromName(solaceName, {
+        network: 'local',
+        owner: keypair!,
+        programAddress: '3CvPZTk1PYMs6JzgiVNFtsAeijSNwbhrQTMYeFQKWpFw',
+      });
+      console.log({sdk});
+      dispatch(setSDK(sdk));
+      setLoading({
+        value: false,
+        message: '',
+      });
+      dispatch(setAccountStatus(AccountStatus.ACTIVE));
+    }, 2000);
+  }, [dispatch, state.user]);
+
   const checkPinReady = useCallback(async () => {
     if (code.length === MAX_LENGTH) {
       if (user && code === user.pin) {
-        dispatch(setAccountStatus(AccountStatus.ACTIVE));
+        await retrieveAccount();
       } else {
         Alert.alert('incorrect passcode');
         setCode('');
         focusMainInput();
       }
     }
-  }, [code, dispatch, user]);
+  }, [code, user, retrieveAccount]);
 
   useEffect(() => {
     checkPinReady();
@@ -106,6 +135,28 @@ const MainPasscodeScreen: React.FC<Props> = ({navigation}) => {
           <TouchableOpacity onPress={() => navigation.navigate('Fingerprint')}>
             <Text style={styles.fingerprint}>use fingerprint</Text>
           </TouchableOpacity>
+
+          {loading.value && (
+            <View
+              style={{
+                marginTop: 5,
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <ActivityIndicator size="small" />
+              <Text
+                style={{
+                  fontSize: 12,
+                  color: 'white',
+                  marginLeft: 5,
+                  fontFamily: 'SpaceMono-Regular',
+                }}>
+                {loading.message}
+              </Text>
+            </View>
+          )}
 
           <View>
             <TextInput

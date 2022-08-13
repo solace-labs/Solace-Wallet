@@ -46,7 +46,7 @@ const HomeScreen: React.FC<Props> = ({navigation}) => {
             onPress={() => navigation.navigate('Username')}
             style={[styles.buttonStyle, styles.secondButton]}>
             <Text style={[styles.buttonTextStyle, styles.secondButtonText]}>
-              recover your wallet
+              retrieve your wallet
             </Text>
           </TouchableOpacity>
         </View>
