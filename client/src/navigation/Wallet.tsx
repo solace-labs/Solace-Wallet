@@ -1,6 +1,6 @@
 import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import WalletScreen from '../components/screens/wallet/WalletHome/WalletHome';
+import WalletHomeScreen from '../components/screens/wallet/WalletHome/WalletHome';
 import SendScreen from '../components/screens/wallet/Send/Send';
 import AddContactScreen from '../components/screens/wallet/AddContact/AddContact';
 import ContactScreen from '../components/screens/wallet/Contact/Contact';
@@ -15,7 +15,7 @@ const WalletStack = () => {
     <Stack.Navigator
       initialRouteName="Wallet"
       screenOptions={{headerShown: false}}>
-      <Stack.Screen name="Wallet" component={WalletScreen} />
+      <Stack.Screen name="Wallet" component={WalletHomeScreen} />
       <Stack.Screen name="Send" component={SendScreen} />
       <Stack.Screen name="AddContact" component={AddContactScreen} />
       <Stack.Screen name="Contact" component={ContactScreen} />
