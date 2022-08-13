@@ -4,18 +4,18 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import styles from './styles';
-import {GlobalContext} from '../../../state/contexts/GlobalContext';
-import {changeUserName, setUser} from '../../../state/actions/global';
-import AssetScreen from './Asset/Asset';
+import {GlobalContext} from '../../../../state/contexts/GlobalContext';
+import {changeUserName, setUser} from '../../../../state/actions/global';
+import AssetScreen from '../Asset/Asset';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {SolaceSDK} from 'solace-sdk';
-import useLocalStorage from '../../../hooks/useLocalStorage';
+import useLocalStorage from '../../../../hooks/useLocalStorage';
 
 export type Props = {
   navigation: any;
 };
 
-const WalletScreen: React.FC<Props> = ({navigation}) => {
+const WalletHomeScreen: React.FC<Props> = ({navigation}) => {
   const DATA = [
     {
       id: 1,
@@ -92,7 +92,7 @@ const WalletScreen: React.FC<Props> = ({navigation}) => {
       </TouchableOpacity>
       <View style={styles.headingContainer}>
         <Image
-          source={require('../../../../assets/images/solace/solace-icon.png')}
+          source={require('../../../../../assets/images/solace/solace-icon.png')}
           style={styles.image}
         />
         <Text style={styles.username}>
@@ -176,7 +176,7 @@ const WalletScreen: React.FC<Props> = ({navigation}) => {
         </View>
         <View style={styles.imageContainer}>
           <Image
-            source={require('../../../../assets/images/solace/contact-screen.png')}
+            source={require('../../../../../assets/images/solace/contact-screen.png')}
             style={styles.contactImage}
           />
           <Text style={styles.buttonText}>
@@ -194,4 +194,4 @@ const WalletScreen: React.FC<Props> = ({navigation}) => {
   );
 };
 
-export default WalletScreen;
+export default WalletHomeScreen;

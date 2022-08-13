@@ -21,11 +21,11 @@ import styles from './styles';
 import {
   AccountStatus,
   GlobalContext,
-} from '../../../state/contexts/GlobalContext';
-import {setAccountStatus, setSDK} from '../../../state/actions/global';
+} from '../../../../state/contexts/GlobalContext';
+import {setAccountStatus, setSDK} from '../../../../state/actions/global';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import useLocalStorage from '../../../hooks/useLocalStorage';
-import {AwsCognito} from '../../../utils/aws_cognito';
+import useLocalStorage from '../../../../hooks/useLocalStorage';
+import {AwsCognito} from '../../../../utils/aws_cognito';
 import {check} from 'prettier';
 import {SolaceSDK} from 'solace-sdk';
 
@@ -106,7 +106,7 @@ const MainPasscodeScreen: React.FC<Props> = ({navigation}) => {
       <View style={styles.container}>
         <View style={styles.headingContainer}>
           <Image
-            source={require('../../../../assets/images/solace/solace-icon.png')}
+            source={require('../../../../../assets/images/solace/solace-icon.png')}
             style={styles.image}
           />
           <Text style={styles.username}>solace</Text>

@@ -1,8 +1,8 @@
 import React, {useContext} from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import FingerprintScreen from '../components/screens/Figerprint/Fingerprint';
-import MainPasscodeScreen from '../components/screens/MainPasscode/MainPasscode';
-import LoginScreen from '../components/screens/LoginScreen/Login';
+import FingerprintScreen from '../components/screens/auth/Figerprint/Fingerprint';
+import MainPasscodeScreen from '../components/screens/auth/MainPasscode/MainPasscode';
+import LoginScreen from '../components/screens/auth/LoginScreen/Login';
 import {AccountStatus, GlobalContext} from '../state/contexts/GlobalContext';
 
 const Stack = createNativeStackNavigator();

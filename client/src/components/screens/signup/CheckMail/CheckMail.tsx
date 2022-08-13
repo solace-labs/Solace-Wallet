@@ -10,8 +10,8 @@ import styles from './styles';
 import {
   AccountStatus,
   GlobalContext,
-} from '../../../state/contexts/GlobalContext';
-import {setAccountStatus} from '../../../state/actions/global';
+} from '../../../../state/contexts/GlobalContext';
+import {setAccountStatus} from '../../../../state/actions/global';
 
 export type Props = {
   navigation: any;

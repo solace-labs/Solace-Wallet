@@ -11,10 +11,10 @@ import styles from './styles';
 import {
   AccountStatus,
   GlobalContext,
-} from '../../../state/contexts/GlobalContext';
-import {setAccountStatus} from '../../../state/actions/global';
+} from '../../../../state/contexts/GlobalContext';
+import {setAccountStatus} from '../../../../state/actions/global';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import useLocalStorage from '../../../hooks/useLocalStorage';
+import useLocalStorage from '../../../../hooks/useLocalStorage';
 
 export type Props = {
   navigation: any;

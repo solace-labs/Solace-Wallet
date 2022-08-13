@@ -22,14 +22,14 @@ const FingerprintScreen: React.FC<Props> = ({navigation}) => {
       <View style={styles.container}>
         <View style={styles.headingContainer}>
           <Image
-            source={require('../../../../assets/images/solace/solace-icon.png')}
+            source={require('../../../../../assets/images/solace/solace-icon.png')}
             style={styles.image}
           />
           <Text style={styles.username}>solace</Text>
         </View>
         <View style={styles.textContainer}>
           <Image
-            source={require('../../../../assets/images/solace/light-fingerprint.png')}
+            source={require('../../../../../assets/images/solace/light-fingerprint.png')}
             style={styles.fingerprint}
           />
           <Text style={styles.heading}>unlock with fingerprint</Text>

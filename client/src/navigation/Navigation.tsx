@@ -1,20 +1,14 @@
-import React, {useContext, useEffect} from 'react';
+import React, {useContext} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {AccountStatus, GlobalContext} from '../state/contexts/GlobalContext';
 import AuthStack from './Auth';
 import WalletStack from './Wallet';
 import OnboardingStack from './Onboarding';
-import {setAccountStatus} from '../state/actions/global';
 import SignUpStack from './SignUp';
-import {ActivityIndicator} from 'react-native';
 import LoadingStack from './Loading';
 
 const Navigation = () => {
-  const {state, dispatch} = useContext(GlobalContext);
-
-  // useEffect(() => {
-  //   dispatch(setAccountStatus(AccountStatus.NEW));
-  // }, [dispatch]);
+  const {state} = useContext(GlobalContext);
 
   const renderContent = () => {
     switch (state.accountStatus) {

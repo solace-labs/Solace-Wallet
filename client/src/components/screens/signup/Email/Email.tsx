@@ -14,15 +14,15 @@ import styles from './styles';
 import {
   AccountStatus,
   GlobalContext,
-} from '../../../state/contexts/GlobalContext';
+} from '../../../../state/contexts/GlobalContext';
 import {
   setAccountStatus,
   setAwsCognito,
   setUser,
-} from '../../../state/actions/global';
-import {useTogglePasswordVisibility} from '../../../hooks/useTogglePasswordVisibility';
+} from '../../../../state/actions/global';
+import {useTogglePasswordVisibility} from '../../../../hooks/useTogglePasswordVisibility';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {AwsCognito} from '../../../utils/aws_cognito';
+import {AwsCognito} from '../../../../utils/aws_cognito';
 
 export type Props = {
   navigation: any;
@@ -124,12 +124,12 @@ const EmailScreen: React.FC<Props> = ({navigation}) => {
     }
     try {
       setIsLoading(true);
-      const response = await awsCognito?.emailSignUp(
-        username,
-        email.value,
-        password.value,
-      );
-      console.log({response});
+      // const response = await awsCognito?.emailSignUp(
+      //   username,
+      //   email.value,
+      //   password.value,
+      // );
+      // console.log({response});
       dispatch(setUser({...state.user, email: email.value}));
       setIsOtpSent(true);
       Alert.alert('OTP sent to the provided mail');
@@ -147,8 +147,8 @@ const EmailScreen: React.FC<Props> = ({navigation}) => {
     }
     try {
       setIsLoading(true);
-      const response = await awsCognito?.confirmRegistration(otp.value);
-      console.log({response});
+      // const response = await awsCognito?.confirmRegistration(otp.value);
+      // console.log({response});
       setOtp({...otp, isVerified: true});
       setIsLoading(false);
       dispatch(setAccountStatus(AccountStatus.SIGNED_UP));

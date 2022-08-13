@@ -14,17 +14,17 @@ import styles from './styles';
 import {
   AccountStatus,
   GlobalContext,
-} from '../../../state/contexts/GlobalContext';
+} from '../../../../state/contexts/GlobalContext';
 import {
   setAccountStatus,
   setAwsCognito,
   setUser,
-} from '../../../state/actions/global';
-import {useTogglePasswordVisibility} from '../../../hooks/useTogglePasswordVisibility';
+} from '../../../../state/actions/global';
+import {useTogglePasswordVisibility} from '../../../../hooks/useTogglePasswordVisibility';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {AwsCognito} from '../../../utils/aws_cognito';
-import {signinResponse} from '../../../utils/response';
-import useLocalStorage from '../../../hooks/useLocalStorage';
+import {AwsCognito} from '../../../../utils/aws_cognito';
+import {signinResponse} from '../../../../utils/response';
+import useLocalStorage from '../../../../hooks/useLocalStorage';
 
 export type Props = {
   navigation: any;

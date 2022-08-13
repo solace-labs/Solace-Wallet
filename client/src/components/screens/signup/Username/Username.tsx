@@ -9,8 +9,8 @@ import {
 import React, {useContext, useState} from 'react';
 import styles from './styles';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import {GlobalContext} from '../../../state/contexts/GlobalContext';
-import {setUser} from '../../../state/actions/global';
+import {GlobalContext} from '../../../../state/contexts/GlobalContext';
+import {setUser} from '../../../../state/actions/global';
 
 export type Props = {
   navigation: any;
