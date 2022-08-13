@@ -18,6 +18,11 @@ const reducer = (state: any, action: {type: string; payload: any}) => {
         ...state,
         sdk: payload,
       };
+    case 'SET_GOOGLE_API':
+      return {
+        ...state,
+        googleApi: payload,
+      };
     case 'SET_AWS_COGNITO':
       return {
         ...state,

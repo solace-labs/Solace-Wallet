@@ -13,6 +13,7 @@ import styles from './styles';
 import {
   setAccountStatus,
   setAwsCognito,
+  setGoogleApi,
   setSDK,
   setUser,
 } from '../../../../state/actions/global';
@@ -56,14 +57,15 @@ const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
   }, [setStoredUser, state.user, dispatch]);
 
   const storeToGoogleDrive = async () => {
-    const googleApi = new GoogleApi();
     try {
+      const googleApi: GoogleApi = new GoogleApi();
       setLoading({
         value: true,
         message: 'storing...',
       });
       await googleApi.signIn();
       await googleApi.setDrive();
+      dispatch(setGoogleApi(googleApi));
       const secretKey = state?.user?.ownerPrivateKey!;
       const pin = state?.user?.pin!;
       const username = state?.user?.solaceName!;
@@ -115,9 +117,14 @@ const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
       await createWallet();
       console.log('CREATING WALLET');
     } catch (e: any) {
-      await googleApi.deleteFile('solace_pk.solace');
-      await googleApi.deleteFile('solace_n.solace');
-      Alert.alert(e.message);
+      const googleApi = state.googleApi;
+      if (googleApi) {
+        await googleApi.deleteFile('solace_pk.solace');
+        await googleApi.deleteFile('solace_n.solace');
+      }
+      if (!e.message.startsWith('RNGoogleSignInError')) {
+        Alert.alert(e.message);
+      }
       setLoading({
         value: false,
         message: 'enable now',

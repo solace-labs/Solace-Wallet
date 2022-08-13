@@ -16,11 +16,13 @@ import {setAccountStatus, setUser} from '../actions/global';
 import globalReducer from '../reducers/global';
 import {SolaceSDK} from 'solace-sdk';
 import {AwsCognito} from '../../utils/aws_cognito';
+import {GoogleApi} from '../../utils/google_apis';
 
 type InitialStateType = {
   accountStatus: AccountStatus;
   user?: User;
   sdk?: SolaceSDK;
+  googleApi?: GoogleApi;
   contact?: Contact;
   contacts?: Contact[];
   awsCognito?: AwsCognito;
