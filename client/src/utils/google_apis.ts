@@ -5,6 +5,7 @@ import {
   MimeTypes,
 } from '@robinbobin/react-native-google-drive-api-wrapper';
 import {Alert} from 'react-native';
+import {showMessage} from 'react-native-flash-message';
 
 export class GoogleApi {
   gdrive = new GDrive();
@@ -29,7 +30,10 @@ export class GoogleApi {
       });
     } catch (e: any) {
       console.log(e);
-      Alert.alert(e.message);
+      showMessage({
+        message: e.message,
+        type: 'danger',
+      });
     }
   }
 

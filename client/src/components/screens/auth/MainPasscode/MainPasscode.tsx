@@ -28,6 +28,7 @@ import useLocalStorage from '../../../../hooks/useLocalStorage';
 import {AwsCognito} from '../../../../utils/aws_cognito';
 import {check} from 'prettier';
 import {SolaceSDK} from 'solace-sdk';
+import {showMessage} from 'react-native-flash-message';
 
 export type Props = {
   navigation: any;
@@ -90,7 +91,10 @@ const MainPasscodeScreen: React.FC<Props> = ({navigation}) => {
       if (user && code === user.pin) {
         await retrieveAccount();
       } else {
-        Alert.alert('incorrect passcode');
+        showMessage({
+          message: 'incorrect passcode',
+          type: 'danger',
+        });
         setCode('');
         focusMainInput();
       }

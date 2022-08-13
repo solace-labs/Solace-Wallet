@@ -4,8 +4,6 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-  TextInputComponent,
-  Pressable,
   Alert,
   Image,
   ActivityIndicator,
@@ -27,12 +25,9 @@ import {
   setRetrieveData,
   setSDK,
 } from '../../../../state/actions/global';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import useLocalStorage from '../../../../hooks/useLocalStorage';
-import {AwsCognito} from '../../../../utils/aws_cognito';
-import {check} from 'prettier';
 import {SolaceSDK} from 'solace-sdk';
 import {decryptData, generateKey} from '../../../../utils/aes_encryption';
+import {showMessage} from 'react-native-flash-message';
 
 export type Props = {
   navigation: any;
@@ -41,7 +36,6 @@ export type Props = {
 const PasscodeScreen: React.FC<Props> = ({navigation}) => {
   const [code, setCode] = useState('');
   const textInputRef = useRef(null);
-  const [tokens] = useLocalStorage('tokens');
   const MAX_LENGTH = 6;
 
   const {state, dispatch} = useContext(GlobalContext);
@@ -56,8 +50,6 @@ const PasscodeScreen: React.FC<Props> = ({navigation}) => {
     const textInput = textInputRef.current! as TextInput;
     textInput.focus();
   };
-
-  // console.log({tokens});
 
   const handleOnPress = () => {
     focusMainInput();
@@ -118,14 +110,18 @@ const PasscodeScreen: React.FC<Props> = ({navigation}) => {
   const checkPinReady = useCallback(async () => {
     if (code.length === MAX_LENGTH) {
       if (await decryptStoredData()) {
-        console.log('coming here');
-        setCode('');
-        Alert.alert('Successfully retrieved account');
+        showMessage({
+          message: 'successfully retrieved account',
+          type: 'success',
+        });
         dispatch(setAccountStatus(AccountStatus.EXISITING));
       } else {
         setCode('');
         focusMainInput();
-        Alert.alert('Incorrect passcode. Please try again.');
+        showMessage({
+          message: 'Incorrect passcode. Please try again.',
+          type: 'danger',
+        });
       }
     }
   }, [code, decryptStoredData, dispatch]);

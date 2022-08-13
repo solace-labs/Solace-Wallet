@@ -23,6 +23,7 @@ import {
 import {useTogglePasswordVisibility} from '../../../../hooks/useTogglePasswordVisibility';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {AwsCognito} from '../../../../utils/aws_cognito';
+import {showMessage} from 'react-native-flash-message';
 
 export type Props = {
   navigation: any;
@@ -115,11 +116,17 @@ const EmailScreen: React.FC<Props> = ({navigation}) => {
     awsCognito.setCognitoUser(username);
     dispatch(setAwsCognito(awsCognito));
     if (!username) {
-      Alert.alert('Username not provided');
+      showMessage({
+        message: 'Username not provided',
+        type: 'info',
+      });
       return;
     }
     if (!awsCognito) {
-      Alert.alert('Server Error. Try again later');
+      showMessage({
+        message: 'Server Error. Try again later',
+        type: 'danger',
+      });
       return;
     }
     try {
@@ -132,9 +139,15 @@ const EmailScreen: React.FC<Props> = ({navigation}) => {
       // console.log({response});
       dispatch(setUser({...state.user, email: email.value}));
       setIsOtpSent(true);
-      Alert.alert('OTP sent to the provided mail');
+      showMessage({
+        message: 'OTP sent to the provided mail',
+        type: 'success',
+      });
     } catch (e: any) {
-      Alert.alert(e.message);
+      showMessage({
+        message: e.message,
+        type: 'danger',
+      });
     }
     setIsLoading(false);
   };
@@ -142,7 +155,10 @@ const EmailScreen: React.FC<Props> = ({navigation}) => {
   const handleVerifyOtp = async () => {
     const awsCognito = state.awsCognito;
     if (!awsCognito) {
-      Alert.alert('Server Error. Try again later');
+      showMessage({
+        message: 'Server Error. Try again later',
+        type: 'danger',
+      });
       return;
     }
     try {
@@ -154,7 +170,10 @@ const EmailScreen: React.FC<Props> = ({navigation}) => {
       dispatch(setAccountStatus(AccountStatus.SIGNED_UP));
     } catch (e: any) {
       setIsLoading(false);
-      Alert.alert(e.message);
+      showMessage({
+        message: e.message,
+        type: 'danger',
+      });
     }
   };
 

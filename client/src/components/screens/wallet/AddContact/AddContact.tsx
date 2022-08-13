@@ -14,6 +14,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {GlobalContext} from '../../../../state/contexts/GlobalContext';
 import {addNewContact} from '../../../../state/actions/global';
+import {showMessage} from 'react-native-flash-message';
 
 export type Props = {
   navigation: any;
@@ -35,7 +36,10 @@ const AddContactScreen: React.FC<Props> = ({navigation}) => {
       dispatch(addNewContact(newContact));
       navigation.navigate('Send');
     } else {
-      Alert.alert('Please enter all the details');
+      showMessage({
+        message: 'Please enter all the details',
+        type: 'info',
+      });
     }
   };
 

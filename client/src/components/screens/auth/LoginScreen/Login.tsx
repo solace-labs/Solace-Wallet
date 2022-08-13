@@ -25,6 +25,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import {AwsCognito} from '../../../../utils/aws_cognito';
 import {signinResponse} from '../../../../utils/response';
 import useLocalStorage from '../../../../hooks/useLocalStorage';
+import {showMessage} from 'react-native-flash-message';
 
 export type Props = {
   navigation: any;
@@ -104,7 +105,10 @@ const Login: React.FC<Props> = ({navigation}) => {
       dispatch(setUser({...state.user, email: username.value}));
       navigation.navigate('MainPasscode');
     } catch (e: any) {
-      Alert.alert(e.message);
+      showMessage({
+        message: e.message,
+        type: 'danger',
+      });
     }
     setIsLoading(false);
   };

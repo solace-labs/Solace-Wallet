@@ -15,6 +15,7 @@ import {
 import {setAccountStatus} from '../../../../state/actions/global';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import useLocalStorage from '../../../../hooks/useLocalStorage';
+import {showMessage} from 'react-native-flash-message';
 
 export type Props = {
   navigation: any;
@@ -48,10 +49,16 @@ const ConfirmPasscodeScreen: React.FC<Props> = ({navigation}) => {
       if (state.user && state.user.pin === code) {
         navigation.navigate('GoogleDrive');
       } else {
-        Alert.alert('Passcode did not match');
+        showMessage({
+          message: 'Passcode did not match',
+          type: 'danger',
+        });
       }
     } else {
-      Alert.alert('Enter passcode');
+      showMessage({
+        message: 'Enter passcode',
+        type: 'info',
+      });
     }
   };
   return (

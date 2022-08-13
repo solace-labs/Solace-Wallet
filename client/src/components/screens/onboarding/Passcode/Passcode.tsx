@@ -10,6 +10,7 @@ import React, {useContext, useEffect, useRef, useState} from 'react';
 import styles from './styles';
 import {GlobalContext} from '../../../../state/contexts/GlobalContext';
 import {setUser} from '../../../../state/actions/global';
+import {showMessage} from 'react-native-flash-message';
 
 export type Props = {
   navigation: any;
@@ -39,7 +40,10 @@ const PasscodeScreen: React.FC<Props> = ({navigation}) => {
       dispatch(setUser({...state.user, pin: code}));
       navigation.navigate('ConfirmPasscode');
     } else {
-      Alert.alert('Enter passcode');
+      showMessage({
+        message: 'Enter passcode',
+        type: 'info',
+      });
     }
   };
 

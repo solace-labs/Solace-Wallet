@@ -39,6 +39,7 @@ import {
 import {FetchResultType} from '@robinbobin/react-native-google-drive-api-wrapper/api/aux/Fetcher';
 import {AwsCognito} from '../../../../utils/aws_cognito';
 import {GoogleApi} from '../../../../utils/google_apis';
+import {showMessage} from 'react-native-flash-message';
 export type Props = {
   navigation: any;
 };
@@ -97,10 +98,16 @@ const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
           value: false,
           message: 'retrieve now',
         });
-        Alert.alert('Successfully retrieved from google drive');
+        showMessage({
+          message: 'Successfully retrieved from google drive',
+          type: 'success',
+        });
         navigation.navigate('Passcode');
       } else {
-        Alert.alert('There is no solace backup found in google drive');
+        showMessage({
+          message: 'There is no solace backup found in google drive',
+          type: 'info',
+        });
         setLoading({
           value: false,
           message: 'retrieve now',
@@ -109,7 +116,10 @@ const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
       }
     } catch (e: any) {
       if (!e.message.startsWith('RNGoogleSignInError')) {
-        Alert.alert(e.message);
+        showMessage({
+          message: e.message,
+          type: 'danger',
+        });
       }
       setLoading({
         value: false,

@@ -38,6 +38,7 @@ import {
 import {FetchResultType} from '@robinbobin/react-native-google-drive-api-wrapper/api/aux/Fetcher';
 import {AwsCognito} from '../../../../utils/aws_cognito';
 import {GoogleApi} from '../../../../utils/google_apis';
+import {showMessage} from 'react-native-flash-message';
 export type Props = {
   navigation: any;
 };
@@ -93,11 +94,16 @@ const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
           isWalletCreated: false,
           ownerPrivateKey: secretKey,
         });
-        Alert.alert('Successfully uploaded to google drive');
+        showMessage({
+          message: 'Successfully uploaded to google drive',
+          type: 'success',
+        });
       } else {
-        Alert.alert(
-          'Solace backup already exists. Please login to the account assosiated with this backup',
-        );
+        showMessage({
+          message:
+            'Solace backup already exists. Please login to the account assosiated with this backup',
+          type: 'info',
+        });
         setLoading({
           value: false,
           message: 'create another account?',
@@ -123,7 +129,10 @@ const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
         await googleApi.deleteFile('solace_n.solace');
       }
       if (!e.message.startsWith('RNGoogleSignInError')) {
-        Alert.alert(e.message);
+        showMessage({
+          message: e.message,
+          type: 'danger',
+        });
       }
       setLoading({
         value: false,
