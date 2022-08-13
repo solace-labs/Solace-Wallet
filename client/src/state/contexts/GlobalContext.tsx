@@ -26,6 +26,14 @@ type InitialStateType = {
   contact?: Contact;
   contacts?: Contact[];
   awsCognito?: AwsCognito;
+  retrieveData?: RetrieveData;
+};
+
+export type RetrieveData = {
+  encryptedSecretKey?: any;
+  encryptedSolaceName?: any;
+  decryptedSecretKey?: any;
+  decryptedSolaceName?: any;
 };
 
 export type User = {
@@ -45,6 +53,7 @@ export enum AccountStatus {
   ACTIVE = 'ACTIVE',
   SIGNED_UP = 'SIGNED_UP',
   LOGGED_ID = 'LOGGED_ID',
+  RETRIEVE = 'RETRIEVE',
 }
 
 const initialState = {

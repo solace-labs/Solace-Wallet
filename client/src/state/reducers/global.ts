@@ -28,6 +28,11 @@ const reducer = (state: any, action: {type: string; payload: any}) => {
         ...state,
         awsCognito: payload,
       };
+    case 'SET_RETRIEVE_DATA':
+      return {
+        ...state,
+        retrieveData: payload,
+      };
     case 'CHANGE_NAME':
       return {...state, username: action.payload};
     case 'ADD_CONTACT':

@@ -2,8 +2,11 @@ import {View, Text, TouchableOpacity, ScrollView, Image} from 'react-native';
 import React, {useContext} from 'react';
 import styles from './styles';
 import {SolaceSDK} from 'solace-sdk';
-import {GlobalContext} from '../../../../state/contexts/GlobalContext';
-import {setUser} from '../../../../state/actions/global';
+import {
+  AccountStatus,
+  GlobalContext,
+} from '../../../../state/contexts/GlobalContext';
+import {setAccountStatus, setUser} from '../../../../state/actions/global';
 
 export type Props = {
   navigation: any;
@@ -43,7 +46,7 @@ const HomeScreen: React.FC<Props> = ({navigation}) => {
             <Text style={styles.buttonTextStyle}>create new wallet</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => navigation.navigate('Username')}
+            onPress={() => dispatch(setAccountStatus(AccountStatus.RETRIEVE))}
             style={[styles.buttonStyle, styles.secondButton]}>
             <Text style={[styles.buttonTextStyle, styles.secondButtonText]}>
               retrieve your wallet

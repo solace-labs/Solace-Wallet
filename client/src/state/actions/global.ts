@@ -2,7 +2,7 @@ import {SolaceSDK} from 'solace-sdk';
 import {Contact} from '../../components/wallet/ContactItem/ContactItem';
 import {AwsCognito} from '../../utils/aws_cognito';
 import {GoogleApi} from '../../utils/google_apis';
-import {AccountStatus, User} from '../contexts/GlobalContext';
+import {AccountStatus, RetrieveData, User} from '../contexts/GlobalContext';
 
 export const setUser = (user: any) => {
   return {
@@ -36,6 +36,13 @@ export const setAwsCognito = (awsCognito: AwsCognito) => {
   return {
     type: 'SET_AWS_COGNITO',
     payload: awsCognito,
+  };
+};
+
+export const setRetrieveData = (retrieveData: RetrieveData) => {
+  return {
+    type: 'SET_RETRIEVE_DATA',
+    payload: retrieveData,
   };
 };
 

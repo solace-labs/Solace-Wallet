@@ -6,6 +6,7 @@ import WalletStack from './Wallet';
 import OnboardingStack from './Onboarding';
 import SignUpStack from './SignUp';
 import LoadingStack from './Loading';
+import RetrieveStack from './Retrieve';
 
 const Navigation = () => {
   const {state} = useContext(GlobalContext);
@@ -22,6 +23,10 @@ const Navigation = () => {
         return <AuthStack />;
       case AccountStatus.ACTIVE:
         return <WalletStack />;
+      case AccountStatus.RETRIEVE:
+        return <RetrieveStack />;
+      default:
+        return <SignUpStack />;
     }
   };
 
