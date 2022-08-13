@@ -109,24 +109,11 @@ const EmailScreen: React.FC<Props> = ({navigation}) => {
     }
   };
 
-  const setUpCognito = useCallback(() => {
-    console.log('HERE');
-    if (!state.awsCognito) {
-      console.log('setUpCognito', state.user!.solaceName);
-      const username = state.user!.solaceName;
-      const awsCognito = new AwsCognito();
-      awsCognito.setCognitoUser(username);
-      dispatch(setAwsCognito(awsCognito));
-    }
-  }, []);
-
-  useEffect(() => {
-    setUpCognito();
-  }, [setUpCognito]);
-
   const handleMailSubmit = async () => {
-    const awsCognito = state.awsCognito;
-    const username = state.user?.solaceName;
+    const username = state.user!.solaceName;
+    const awsCognito = new AwsCognito();
+    awsCognito.setCognitoUser(username);
+    dispatch(setAwsCognito(awsCognito));
     if (!username) {
       Alert.alert('Username not provided');
       return;
@@ -158,11 +145,6 @@ const EmailScreen: React.FC<Props> = ({navigation}) => {
       Alert.alert('Server Error. Try again later');
       return;
     }
-    console.log({value: otp.value});
-    // if (!validateOtp(otp.value)) {
-    //   Alert.alert('Otp is not valid');
-    //   return;
-    // }
     try {
       setIsLoading(true);
       const response = await awsCognito?.confirmRegistration(otp.value);
