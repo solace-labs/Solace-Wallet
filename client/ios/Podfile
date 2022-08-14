@@ -21,7 +21,6 @@ target 'solace' do
 
 
 
-  pod 'RNAWSCognito', :path => '../node_modules/amazon-cognito-identity-js'
 
   target 'solaceTests' do
     inherit! :complete

@@ -22,7 +22,7 @@ export type Props = {
 };
 
 const ConfirmPasscodeScreen: React.FC<Props> = ({navigation}) => {
-  const [code, setCode] = useState('123456');
+  const [code, setCode] = useState('');
   const textInputRef = useRef(null);
   const {state, dispatch} = useContext(GlobalContext);
   const [pinReady, setPinReady] = useState(false);

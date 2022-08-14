@@ -33,11 +33,11 @@ export type Props = {
 
 const Login: React.FC<Props> = ({navigation}) => {
   const [username, setUsername] = useState({
-    value: 'username',
+    value: '',
     isValid: false,
   });
   const [password, setPassword] = useState({
-    value: '@Fuckyou1234',
+    value: '',
     isValid: true,
   });
   const [active, setActive] = useState('username');

@@ -106,7 +106,7 @@ const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
         });
         setLoading({
           value: false,
-          message: 'create another account?',
+          message: 'use another account?',
         });
         return;
       }
@@ -124,15 +124,15 @@ const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
       console.log('CREATING WALLET');
     } catch (e: any) {
       const googleApi = state.googleApi;
-      if (googleApi) {
-        await googleApi.deleteFile('solace_pk.solace');
-        await googleApi.deleteFile('solace_n.solace');
-      }
       if (!e.message.startsWith('RNGoogleSignInError')) {
         showMessage({
           message: e.message,
           type: 'danger',
         });
+        if (googleApi) {
+          await googleApi.deleteFile('solace_pk.solace');
+          await googleApi.deleteFile('solace_n.solace');
+        }
       }
       setLoading({
         value: false,
