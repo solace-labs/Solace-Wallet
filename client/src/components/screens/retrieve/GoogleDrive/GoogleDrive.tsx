@@ -102,7 +102,9 @@ const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
           message: 'Successfully retrieved from google drive',
           type: 'success',
         });
-        navigation.navigate('Passcode');
+        setTimeout(() => {
+          navigation.navigate('Passcode');
+        }, 1000);
       } else {
         showMessage({
           message: 'There is no solace backup found in google drive',

@@ -4,12 +4,20 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import styles from './styles';
-import {GlobalContext} from '../../../../state/contexts/GlobalContext';
-import {changeUserName, setUser} from '../../../../state/actions/global';
+import {
+  AccountStatus,
+  GlobalContext,
+} from '../../../../state/contexts/GlobalContext';
+import {
+  changeUserName,
+  setAccountStatus,
+  setUser,
+} from '../../../../state/actions/global';
 import AssetScreen from '../Asset/Asset';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {SolaceSDK} from 'solace-sdk';
 import useLocalStorage from '../../../../hooks/useLocalStorage';
+import {accountSize} from '@project-serum/anchor/dist/cjs/coder';
 
 export type Props = {
   navigation: any;
@@ -83,13 +91,30 @@ const WalletHomeScreen: React.FC<Props> = ({navigation}) => {
     getInitialData();
   }, [dispatch]);
 
+  const logout = () => {
+    setStoredUser({});
+    dispatch(setUser({}));
+    dispatch(setAccountStatus(AccountStatus.NEW));
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.contentContainer} bounces={false}>
-      <TouchableOpacity
-        onPress={() => navigation.navigate('Guardian')}
-        style={styles.iconContainer}>
-        <AntDesign name="lock" style={styles.icon} />
-      </TouchableOpacity>
+      <View style={styles.headerIcons}>
+        <View>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Guardian')}
+            style={styles.iconContainer}>
+            <AntDesign name="lock" style={styles.icon} />
+          </TouchableOpacity>
+        </View>
+        <View>
+          <TouchableOpacity
+            onPress={() => logout()}
+            style={styles.iconContainer}>
+            <AntDesign name="logout" style={styles.icon} />
+          </TouchableOpacity>
+        </View>
+      </View>
       <View style={styles.headingContainer}>
         <Image
           source={require('../../../../../assets/images/solace/solace-icon.png')}

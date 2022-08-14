@@ -24,7 +24,7 @@ export enum Status {
 }
 
 const UsernameScreen: React.FC<Props> = ({navigation}) => {
-  const [username, setUsername] = useState('ankit');
+  const [username, setUsername] = useState('');
   const [borderColor, setBorderColor] = useState('#fff3');
   const [isLoading, setIsLoading] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState(false);

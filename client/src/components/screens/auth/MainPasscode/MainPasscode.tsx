@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import {
   View,
   Text,
@@ -64,29 +65,29 @@ const MainPasscodeScreen: React.FC<Props> = ({navigation}) => {
     focusMainInput();
   }, []);
 
-  const retrieveAccount = useCallback(async () => {
-    const {solaceName, keypair} = state.user!;
+  const retrieveAccount = async () => {
+    // const {solaceName, keypair} = state.user!;
     setLoading({
       value: true,
       message: 'logging you in',
     });
-    setTimeout(async () => {
-      const sdk = await SolaceSDK.retrieveFromName(solaceName, {
-        network: 'local',
-        owner: keypair!,
-        programAddress: '3CvPZTk1PYMs6JzgiVNFtsAeijSNwbhrQTMYeFQKWpFw',
-      });
-      console.log({sdk});
-      dispatch(setSDK(sdk));
+    setTimeout(() => {
+      // const sdk = await SolaceSDK.retrieveFromName(solaceName, {
+      //   network: 'local',
+      //   owner: keypair!,
+      //   programAddress: '3CvPZTk1PYMs6JzgiVNFtsAeijSNwbhrQTMYeFQKWpFw',
+      // });
+      // console.log({sdk});
+      // dispatch(setSDK(sdk));
       setLoading({
         value: false,
         message: '',
       });
       dispatch(setAccountStatus(AccountStatus.ACTIVE));
     }, 2000);
-  }, [dispatch, state.user]);
+  };
 
-  const checkPinReady = useCallback(async () => {
+  const checkPinReady = async () => {
     if (code.length === MAX_LENGTH) {
       if (user && code === user.pin) {
         await retrieveAccount();
@@ -99,11 +100,11 @@ const MainPasscodeScreen: React.FC<Props> = ({navigation}) => {
         focusMainInput();
       }
     }
-  }, [code, user, retrieveAccount]);
+  };
 
   useEffect(() => {
     checkPinReady();
-  }, [code, checkPinReady]);
+  }, [code]);
 
   return (
     <ScrollView contentContainerStyle={styles.contentContainer} bounces={false}>

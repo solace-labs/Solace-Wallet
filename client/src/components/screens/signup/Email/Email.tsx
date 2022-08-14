@@ -31,7 +31,7 @@ export type Props = {
 
 const EmailScreen: React.FC<Props> = ({navigation}) => {
   const [email, setEmail] = useState({
-    value: 'ankitn1311@gmail.com',
+    value: 'ankit.negi@onpar.in',
     isValid: false,
   });
   const [password, setPassword] = useState({
@@ -131,12 +131,12 @@ const EmailScreen: React.FC<Props> = ({navigation}) => {
     }
     try {
       setIsLoading(true);
-      // const response = await awsCognito?.emailSignUp(
-      //   username,
-      //   email.value,
-      //   password.value,
-      // );
-      // console.log({response});
+      const response = await awsCognito?.emailSignUp(
+        username,
+        email.value,
+        password.value,
+      );
+      console.log({response});
       dispatch(setUser({...state.user, email: email.value}));
       setIsOtpSent(true);
       showMessage({
@@ -163,8 +163,8 @@ const EmailScreen: React.FC<Props> = ({navigation}) => {
     }
     try {
       setIsLoading(true);
-      // const response = await awsCognito?.confirmRegistration(otp.value);
-      // console.log({response});
+      const response = await awsCognito?.confirmRegistration(otp.value);
+      console.log({response});
       setOtp({...otp, isVerified: true});
       setIsLoading(false);
       dispatch(setAccountStatus(AccountStatus.SIGNED_UP));

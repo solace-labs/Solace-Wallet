@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import {
   View,
   Text,
@@ -24,10 +25,12 @@ import {
   setAccountStatus,
   setRetrieveData,
   setSDK,
+  setUser,
 } from '../../../../state/actions/global';
 import {SolaceSDK} from 'solace-sdk';
 import {decryptData, generateKey} from '../../../../utils/aes_encryption';
 import {showMessage} from 'react-native-flash-message';
+import useLocalStorage from '../../../../hooks/useLocalStorage';
 
 export type Props = {
   navigation: any;
@@ -43,6 +46,8 @@ const PasscodeScreen: React.FC<Props> = ({navigation}) => {
     value: false,
     message: '',
   });
+
+  const [storedUser, setStoredUser] = useLocalStorage('user', {});
 
   const tempArray = new Array(MAX_LENGTH).fill(0);
 
@@ -100,6 +105,10 @@ const PasscodeScreen: React.FC<Props> = ({navigation}) => {
           decryptedSolaceName: solaceName,
         }),
       );
+      dispatch(
+        setUser({...state.user, solaceName, ownerPrivateKey: secretKey}),
+      );
+      setStoredUser({...storedUser, solaceName, ownerPrivateKey: secretKey});
       return true;
     } catch (e: any) {
       console.log(e.message);
@@ -107,14 +116,18 @@ const PasscodeScreen: React.FC<Props> = ({navigation}) => {
     }
   }, [code, state.retrieveData, dispatch]);
 
-  const checkPinReady = useCallback(async () => {
+  const checkPinReady = async () => {
     if (code.length === MAX_LENGTH) {
       if (await decryptStoredData()) {
         showMessage({
           message: 'successfully retrieved account',
           type: 'success',
         });
-        dispatch(setAccountStatus(AccountStatus.EXISITING));
+        setStoredUser({...storedUser, pin: code});
+        dispatch(setUser({...state.user, pin: code}));
+        setTimeout(() => {
+          dispatch(setAccountStatus(AccountStatus.EXISITING));
+        }, 1000);
       } else {
         setCode('');
         focusMainInput();
@@ -124,11 +137,11 @@ const PasscodeScreen: React.FC<Props> = ({navigation}) => {
         });
       }
     }
-  }, [code, decryptStoredData, dispatch]);
+  };
 
   useEffect(() => {
     checkPinReady();
-  }, [code, checkPinReady]);
+  }, [code]);
 
   return (
     <ScrollView contentContainerStyle={styles.contentContainer} bounces={false}>
