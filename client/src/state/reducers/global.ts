@@ -13,10 +13,25 @@ const reducer = (state: any, action: {type: string; payload: any}) => {
         ...state,
         accountStatus: payload,
       };
-    case 'SET_ONBOARDING_USER':
+    case 'SET_SDK':
       return {
         ...state,
-        onboardingUser: payload,
+        sdk: payload,
+      };
+    case 'SET_GOOGLE_API':
+      return {
+        ...state,
+        googleApi: payload,
+      };
+    case 'SET_AWS_COGNITO':
+      return {
+        ...state,
+        awsCognito: payload,
+      };
+    case 'SET_RETRIEVE_DATA':
+      return {
+        ...state,
+        retrieveData: payload,
       };
     case 'CHANGE_NAME':
       return {...state, username: action.payload};

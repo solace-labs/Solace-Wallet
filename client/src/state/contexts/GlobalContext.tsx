@@ -1,46 +1,69 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {use} from 'chai';
 import React, {
   createContext,
   Dispatch,
+  useCallback,
   useEffect,
   useReducer,
   useState,
 } from 'react';
-import {Contact} from '../../components/wallet/ContactItem';
+import {unstable_batchedUpdates} from 'react-native';
+import {Contact} from '../../components/wallet/ContactItem/ContactItem';
+import useLocalStorage from '../../hooks/useLocalStorage';
 import {setAccountStatus, setUser} from '../actions/global';
 import globalReducer from '../reducers/global';
+import {SolaceSDK} from 'solace-sdk';
+import {AwsCognito} from '../../utils/aws_cognito';
+import {GoogleApi} from '../../utils/google_apis';
 
 type InitialStateType = {
   accountStatus: AccountStatus;
   user?: User;
-  onboardingUser?: User;
+  sdk?: SolaceSDK;
+  googleApi?: GoogleApi;
   contact?: Contact;
   contacts?: Contact[];
+  awsCognito?: AwsCognito;
+  retrieveData?: RetrieveData;
+};
+
+export type RetrieveData = {
+  encryptedSecretKey?: any;
+  encryptedSolaceName?: any;
+  decryptedSecretKey?: any;
+  decryptedSolaceName?: any;
 };
 
 export type User = {
-  username: string;
-  keyPair: string;
-  seed: string;
   email: string;
-  passcode: string;
+  solaceName: string;
+  ownerPrivateKey: string;
+  keypair?: ReturnType<typeof SolaceSDK.newKeyPair>;
+  isWalletCreated: boolean;
+  pin: string;
 };
 
 export enum AccountStatus {
+  LOADING = 'LOADING',
   EXISITING = 'EXISITING',
   RECOVERY = 'RECOVERY',
   NEW = 'NEW',
   ACTIVE = 'ACTIVE',
+  SIGNED_UP = 'SIGNED_UP',
+  LOGGED_ID = 'LOGGED_ID',
+  RETRIEVE = 'RETRIEVE',
 }
 
 const initialState = {
-  accountStatus: AccountStatus.NEW,
-  onboardingUser: {
-    username: '',
+  accountStatus: AccountStatus.LOADING,
+  user: {
     email: '',
-    keyPair: '',
-    seed: '',
-    passcode: '',
+    solaceName: '',
+    ownerPrivateKey: '',
+    isWalletCreated: false,
+    pin: '',
   },
   contacts: [
     {
@@ -49,12 +72,6 @@ const initialState = {
       username: 'ashwin.solace.money',
       address: '1231jkajsdkf02198487',
     },
-    // {
-    //   id: new Date().getTime().toString() + Math.random().toString(),
-    //   name: 'sarthak sharma',
-    //   username: 'sarthak.solace.money',
-    //   address: 'alkjsdfoi1093890123909',
-    // },
   ],
 };
 
@@ -65,19 +82,36 @@ export const GlobalContext = createContext<{
 
 const GlobalProvider = ({children}: {children: any}) => {
   const [state, dispatch] = useReducer(globalReducer, initialState);
+  const [storedUser, setStoredUser] = useLocalStorage('user', undefined);
+
+  const isUserValid = useCallback(() => {
+    return (
+      storedUser &&
+      storedUser.pin &&
+      storedUser.solaceName &&
+      storedUser.ownerPrivateKey &&
+      storedUser.isWalletCreated
+    );
+  }, [storedUser]);
 
   useEffect(() => {
-    const getInitialData = async () => {
-      const response = await AsyncStorage.getItem('user');
-      if (response) {
-        console.log('response', response);
-        const user = JSON.parse(response);
-        dispatch(setUser(user));
-        dispatch(setAccountStatus(AccountStatus.EXISITING));
-      }
-    };
-    getInitialData();
-  }, []);
+    console.log({storedUser});
+    if (isUserValid()) {
+      dispatch(setUser(storedUser));
+      dispatch(setAccountStatus(AccountStatus.EXISITING));
+    } else {
+      dispatch(setAccountStatus(AccountStatus.NEW));
+    }
+  }, [storedUser]);
+
+  // useEffect(() => {
+  //   setStoredUser({
+  //     pin: '123456',
+  //     solaceName: 'username',
+  //     ownerPrivateKey: 'privateKey',
+  //     isWalletCreated: true,
+  //   });
+  // }, []);
 
   return (
     <GlobalContext.Provider value={{state, dispatch}}>
