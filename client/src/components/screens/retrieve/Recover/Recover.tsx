@@ -44,7 +44,7 @@ export type Props = {
   navigation: any;
 };
 
-const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
+const RecoverScreen: React.FC<Props> = ({navigation}) => {
   const {state, dispatch} = useContext(GlobalContext);
   const [storedUser, setStoredUser] = useLocalStorage('user', {});
   const [created, setCreated] = useState(false);
@@ -183,41 +183,24 @@ const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
     <ScrollView contentContainerStyle={styles.contentContainer} bounces={false}>
       <View style={styles.container}>
         <View style={styles.textContainer}>
-          <Image
+          {/* <Image
             source={require('../../../../../assets/images/solace/google-drive.png')}
             style={styles.image}
-          />
-          <Text style={styles.heading}>retrieve your wallet</Text>
+          /> */}
+          <Text style={styles.heading}>recover your wallet</Text>
           <Text style={styles.subHeading}>
-            retrieve your encrypted key from google drive so you can access your
-            wallet
+            please request your guardians to approve your solace wallet
+            recovery. in the mean time, your funds will be protected by the
           </Text>
+          <Text style={styles.safeMode}>safe mode</Text>
+          <Image
+            source={require('../../../../../assets/images/solace/secrurity.png')}
+            style={styles.contactImage}
+          />
         </View>
-
-        {loading.value && <ActivityIndicator size="small" />}
-
-        {loading.message === 'recover by guardians?' ? (
-          <TouchableOpacity
-            disabled={loading.value}
-            onPress={() => {
-              recoverUsingGuardians();
-            }}
-            style={styles.buttonStyle}>
-            <Text style={styles.buttonTextStyle}>{loading.message}</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            disabled={loading.value}
-            onPress={() => {
-              retrieveFromGoogleDrive();
-            }}
-            style={styles.buttonStyle}>
-            <Text style={styles.buttonTextStyle}>{loading.message}</Text>
-          </TouchableOpacity>
-        )}
       </View>
     </ScrollView>
   );
 };
 
-export default GoogleDriveScreen;
+export default RecoverScreen;

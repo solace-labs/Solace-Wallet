@@ -14,8 +14,8 @@ export class AwsCognito {
 
   constructor() {
     this.userPool = new CognitoUserPool({
-      UserPoolId: 'ap-south-1_XjxTKqrzF',
-      ClientId: 'tprl1r5eloalkdc65q12hq2ib',
+      UserPoolId: 'ap-south-1_8Ylepg5f1',
+      ClientId: '5p5t8mcggrifoftsc6ufe4467l',
     });
   }
 
