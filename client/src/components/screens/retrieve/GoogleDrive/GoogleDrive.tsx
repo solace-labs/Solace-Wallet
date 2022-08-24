@@ -4,40 +4,20 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
-  Alert,
-  TextInput,
   ActivityIndicator,
 } from 'react-native';
 import React, {useCallback, useContext, useEffect, useState} from 'react';
 import styles from './styles';
 import {
   setAccountStatus,
-  setAwsCognito,
   setGoogleApi,
   setRetrieveData,
-  setSDK,
-  setUser,
 } from '../../../../state/actions/global';
 import {
   AccountStatus,
   GlobalContext,
 } from '../../../../state/contexts/GlobalContext';
 import useLocalStorage from '../../../../hooks/useLocalStorage';
-import {SolaceSDK} from 'solace-sdk';
-
-import {GoogleSignin} from '@react-native-google-signin/google-signin';
-import {
-  GDrive,
-  ListQueryBuilder,
-  MimeTypes,
-} from '@robinbobin/react-native-google-drive-api-wrapper';
-import {
-  decryptData,
-  encryptData,
-  generateKey,
-} from '../../../../utils/aes_encryption';
-import {FetchResultType} from '@robinbobin/react-native-google-drive-api-wrapper/api/aux/Fetcher';
-import {AwsCognito} from '../../../../utils/aws_cognito';
 import {GoogleApi} from '../../../../utils/google_apis';
 import {showMessage} from 'react-native-flash-message';
 export type Props = {
@@ -103,7 +83,11 @@ const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
           type: 'success',
         });
         setTimeout(() => {
-          navigation.navigate('Passcode');
+          // navigation.navigate('Passcode');
+          navigation.reset({
+            index: 0,
+            routes: [{name: 'Passcode'}],
+          });
         }, 1000);
       } else {
         showMessage({
@@ -128,45 +112,6 @@ const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
         message: 'enable now',
       });
     }
-  };
-
-  const encryptSecretKey = async (secretKey: string, pin: string) => {
-    const key = await generateKey(pin, 'salt', 5000, 256);
-    const encryptedData = await encryptData(secretKey, key);
-    return encryptedData;
-  };
-
-  const decryptSecretKey = async (encryptedData: any, pin: string) => {
-    const key = await generateKey(pin, 'salt', 5000, 256);
-    const decryptedData = await decryptData(encryptedData, key);
-    return decryptedData;
-  };
-
-  const requestAirdrop = async () => {
-    console.log('requesting airdrop');
-    const keypair = state?.user?.keypair!;
-    const LAMPORTS_PER_SOL = 1000000000;
-    const tx = await SolaceSDK.localConnection.requestAirdrop(
-      keypair.publicKey,
-      1 * LAMPORTS_PER_SOL,
-    );
-    await SolaceSDK.localConnection.confirmTransaction(tx);
-    console.log('airdrop confirmed');
-  };
-
-  const createWallet = async () => {
-    console.log('creating wallet');
-    const username = state?.user?.solaceName!;
-    const keypair = state?.user?.keypair!;
-    // const sdk = await SolaceSDK.createFromName(username, {
-    //   network: 'local',
-    //   owner: keypair,
-    //   programAddress: '3CvPZTk1PYMs6JzgiVNFtsAeijSNwbhrQTMYeFQKWpFw',
-    // });
-    // console.log('wallet created');
-    // dispatch(setSDK(sdk));
-    dispatch(setUser({...state.user, isWalletCreated: true}));
-    setCreated(true);
   };
 
   const recoverUsingGuardians = () => {

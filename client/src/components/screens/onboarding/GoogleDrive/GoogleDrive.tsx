@@ -24,63 +24,40 @@ import {GoogleApi} from '../../../../utils/google_apis';
 import {showMessage} from 'react-native-flash-message';
 import {airdrop, getMeta, relayTransaction} from '../../../../utils/relayer';
 
-const enum status {
-  AIRDROP_REQUESTED = 'AIRDROP_REQUESTED',
-  AIRDROP_COMPLETED = 'AIRDROP_COMPLETED',
-  AIRDROP_CONFIRMAION = 'AIRDROP_CONFIRMATION',
-  CONFIRMATION_TIMEOUT = 'CONFIRMATION_TIMEOUT',
-  RETRY_CONFIRMATION = 'RETRY_CONFIRMATION',
-  WALLET_CREATION = 'WALLET_CREATION',
-  WALLET_CONFIRMED = 'WALLET_CONFIRMED',
-}
+export type Props = {
+  navigation: any;
+};
 
-const GoogleDriveScreen: React.FC = () => {
+const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
   const {state, dispatch} = useContext(GlobalContext);
   const [storedUser, setStoredUser] = useLocalStorage('user', {});
   const [tokens, setTokens] = useLocalStorage('tokens', {});
   const [created, setCreated] = useState(false);
-  const [currentStatus, setCurrentStatus] = useState(status.AIRDROP_REQUESTED);
-  const [airdropConfirmed, setAirdropConfirmed] = useState(false);
   const [loading, setLoading] = useState({
     value: false,
     message: 'enable now',
   });
 
-  /**
-   * Setting to local storage
-   */
-  const setToLocalStorage = useCallback(async () => {
-    await setStoredUser(state.user);
-    dispatch(setAccountStatus(AccountStatus.EXISITING));
-  }, [setStoredUser, state.user, dispatch]);
-
   const handleClick = async () => {
     try {
       const keypair = SolaceSDK.newKeyPair();
-      const {secretKey, publicKey} = keypair;
+      const {secretKey} = keypair;
       const secretKeyString = secretKey.toString();
-      const publicKeyString = publicKey.toString();
-      const accessToken = tokens.accesstoken;
       /** Google Drive Storage of Private Key and Solace Name */
       console.log('STORING');
-      // await storeToGoogleDrive(secretKeyString);
-      console.log('STORED');
-      /** Requesting Airdrop */
-      console.log('REQUESTING');
-      const data = await requestAirdrop(publicKeyString, accessToken);
-      console.log('REQUESTED');
-      console.log('AIRDROP CONFIRMATION');
-      /** Airdrop confirmation */
-      await confirmTransaction(data);
-      console.log('AIRDROP CONFIRMED');
-      /** Getting Fee Payer */
-      console.log('GETTING FEE PAYER');
-      const feePayer = new PublicKey(await getFeePayer(accessToken));
-      console.log('FEE PAYER FETCHED');
-      /** Creating wallet for the user */
-      console.log('CREATING WALLET');
-      await createWallet(keypair, feePayer, accessToken);
-      console.log('WALLET CREATED');
+      await storeToGoogleDrive(secretKeyString);
+      // dispatch(
+      //   setUser({
+      //     ...state.user,
+      //     isWalletCreated: false,
+      //     ownerPrivateKey: secretKeyString,
+      //   }),
+      // );
+      // console.log('STORED');
+      // navigation.reset({
+      //   index: 0,
+      //   routes: [{name: 'Airdrop'}],
+      // });
     } catch (e) {
       console.log(e);
     }
@@ -123,6 +100,10 @@ const GoogleDriveScreen: React.FC = () => {
           message: 'Successfully uploaded to google drive',
           type: 'success',
         });
+        navigation.reset({
+          index: 0,
+          routes: [{name: 'Airdrop'}],
+        });
       } else {
         showMessage({
           message:
@@ -154,134 +135,6 @@ const GoogleDriveScreen: React.FC = () => {
       throw e;
     }
   };
-
-  const requestAirdrop = async (publicKey: string, accessToken: string) => {
-    console.log({publicKey, accessToken});
-    setLoading({
-      value: true,
-      message: 'requesting air drop...',
-    });
-    try {
-      const data: any = await airdrop(publicKey, accessToken);
-      return data.data;
-      // await SolaceSDK.testnetConnection.confirmTransaction(data.data);
-      // showMessage({
-      //   message: 'Airdrop complete',
-      //   type: 'success',
-      // });
-    } catch (e) {
-      console.log('Airdrop error', e);
-      setLoading({
-        value: false,
-        message: 'enable now',
-      });
-      showMessage({
-        message: 'Error requesting airdrop. Try again!',
-        type: 'danger',
-      });
-      throw e;
-    }
-  };
-
-  const confirmTransaction = async (data: string) => {
-    setLoading({
-      value: true,
-      message: 'confirming transaction...',
-    });
-    console.log({data});
-    let confirm = false;
-    let retry = 0;
-    while (!confirm) {
-      if (retry > 0) {
-        setLoading({
-          value: true,
-          message: 'retrying confirmation...',
-        });
-      }
-      try {
-        const res = await SolaceSDK.testnetConnection.confirmTransaction(data);
-        showMessage({
-          message: `Transaction confirmed, ${JSON.stringify(res)}`,
-          type: 'success',
-        });
-        confirm = true;
-      } catch (e: any) {
-        if (
-          e.message.startsWith(
-            'Transaction was not confirmed in 60.00 seconds.',
-          )
-        ) {
-          console.log('Timeout');
-          retry++;
-        } else {
-          confirm = true;
-          console.log('OTHER ERROR: ', e.message);
-          throw e;
-        }
-      }
-    }
-  };
-
-  const getFeePayer = async (accessToken: string) => {
-    setLoading({
-      message: 'creating wallet...',
-      value: true,
-    });
-    try {
-      const response = await getMeta(accessToken);
-      return response.feePayer;
-    } catch (e) {
-      setLoading({
-        message: 'enable now',
-        value: false,
-      });
-      console.log('FEE PAYER', e);
-      throw e;
-    }
-  };
-
-  const createWallet = async (
-    keypair: ReturnType<typeof SolaceSDK.newKeyPair>,
-    payer: InstanceType<typeof PublicKey>,
-    accessToken: string,
-  ) => {
-    try {
-      const sdk = new SolaceSDK({
-        network: 'testnet',
-        owner: keypair,
-        programAddress: '8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U',
-      });
-      const username = state.user?.solaceName!;
-      const tx = await sdk.createFromName('ankit5', payer);
-      const res = await relayTransaction(tx, accessToken);
-      const transactionId = res.data;
-      await confirmTransaction(transactionId);
-      // await SolaceSDK.testnetConnection.confirmTransaction(res.data);
-      // const awsCognito = state.awsCognito!;
-      // await awsCognito.updateAttribute('address', sdk.wallet.toString());
-      dispatch(setUser({...state.user, isWalletCreated: true}));
-      setLoading({
-        message: 'created',
-        value: false,
-      });
-      setCreated(true);
-    } catch (e) {
-      setLoading({
-        message: 'enable now',
-        value: false,
-      });
-      showMessage({
-        message: 'there is already a account with this username',
-      });
-      throw e;
-    }
-  };
-
-  useEffect(() => {
-    if (created) {
-      setToLocalStorage();
-    }
-  }, [created, setToLocalStorage]);
 
   return (
     <ScrollView contentContainerStyle={styles.contentContainer} bounces={false}>

@@ -28,7 +28,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import useLocalStorage from '../../../../hooks/useLocalStorage';
 import {AwsCognito} from '../../../../utils/aws_cognito';
 import {check} from 'prettier';
-import {SolaceSDK} from 'solace-sdk';
+import {KeyPair, SolaceSDK} from 'solace-sdk';
 import {showMessage} from 'react-native-flash-message';
 
 export type Props = {
@@ -38,7 +38,7 @@ export type Props = {
 const MainPasscodeScreen: React.FC<Props> = ({navigation}) => {
   const [code, setCode] = useState('');
   const textInputRef = useRef(null);
-  const [tokens] = useLocalStorage('tokens');
+  // const [tokens] = useLocalStorage('tokens');
   const [user] = useLocalStorage('user', {});
   const MAX_LENGTH = 6;
 
@@ -66,25 +66,29 @@ const MainPasscodeScreen: React.FC<Props> = ({navigation}) => {
   }, []);
 
   const retrieveAccount = async () => {
-    // const {solaceName, keypair} = state.user!;
+    console.log('RETRIEVE ACCOUNT', user);
+    const privateKey = state.user?.ownerPrivateKey!;
+    const solaceName = state.user?.solaceName!;
+    console.log(privateKey);
+    const keypair = KeyPair.fromSecretKey(
+      Uint8Array.from(privateKey.split(',').map(e => +e)),
+    );
     setLoading({
       value: true,
       message: 'logging you in',
     });
-    setTimeout(() => {
-      // const sdk = await SolaceSDK.retrieveFromName(solaceName, {
-      //   network: 'local',
-      //   owner: keypair!,
-      //   programAddress: '3CvPZTk1PYMs6JzgiVNFtsAeijSNwbhrQTMYeFQKWpFw',
-      // });
-      // console.log({sdk});
-      // dispatch(setSDK(sdk));
-      setLoading({
-        value: false,
-        message: '',
-      });
-      dispatch(setAccountStatus(AccountStatus.ACTIVE));
-    }, 2000);
+    const sdk = await SolaceSDK.retrieveFromName(solaceName, {
+      network: 'testnet',
+      owner: keypair,
+      programAddress: '8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U',
+    });
+    console.log({sdk});
+    dispatch(setSDK(sdk));
+    setLoading({
+      value: false,
+      message: '',
+    });
+    dispatch(setAccountStatus(AccountStatus.ACTIVE));
   };
 
   const checkPinReady = async () => {

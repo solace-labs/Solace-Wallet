@@ -100,19 +100,10 @@ const GlobalProvider = ({children}: {children: any}) => {
       dispatch(setUser(storedUser));
       dispatch(setAccountStatus(AccountStatus.EXISITING));
     } else {
-      // dispatch(setUser({}));
-      dispatch(setAccountStatus(AccountStatus.SIGNED_UP));
+      dispatch(setUser(undefined));
+      dispatch(setAccountStatus(AccountStatus.NEW));
     }
   }, [storedUser]);
-
-  // useEffect(() => {
-  //   setStoredUser({
-  //     pin: '123456',
-  //     solaceName: 'username',
-  //     ownerPrivateKey: 'privateKey',
-  //     isWalletCreated: true,
-  //   });
-  // }, []);
 
   return (
     <GlobalContext.Provider value={{state, dispatch}}>

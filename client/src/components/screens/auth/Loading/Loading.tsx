@@ -1,16 +1,28 @@
 import {View, Text, ScrollView, Image, ActivityIndicator} from 'react-native';
-import React, {useContext, useEffect} from 'react';
+import React, {useEffect} from 'react';
 import styles from './styles';
-import {GlobalContext} from '../../../../state/contexts/GlobalContext';
+import useLocalStorage from '../../../../hooks/useLocalStorage';
 
 export type Props = {
   navigation: any;
 };
 
 const Loading: React.FC<Props> = ({navigation}) => {
-  const {state, dispatch} = useContext(GlobalContext);
+  const [tokens] = useLocalStorage('tokens');
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    if (tokens) {
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'MainPasscode'}],
+      });
+    } else {
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'Login'}],
+      });
+    }
+  }, [tokens, navigation]);
 
   return (
     <ScrollView contentContainerStyle={styles.contentContainer} bounces={false}>

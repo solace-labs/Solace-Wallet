@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-  Alert,
   Image,
   ActivityIndicator,
 } from 'react-native';
@@ -24,10 +23,8 @@ import {
 import {
   setAccountStatus,
   setRetrieveData,
-  setSDK,
   setUser,
 } from '../../../../state/actions/global';
-import {SolaceSDK} from 'solace-sdk';
 import {decryptData, generateKey} from '../../../../utils/aes_encryption';
 import {showMessage} from 'react-native-flash-message';
 import useLocalStorage from '../../../../hooks/useLocalStorage';
@@ -64,83 +61,46 @@ const PasscodeScreen: React.FC<Props> = ({navigation}) => {
     focusMainInput();
   }, []);
 
-  const retrieveAccount = useCallback(async () => {
-    const {solaceName, keypair} = state.user!;
-    setLoading({
-      value: true,
-      message: 'logging you in',
-    });
-    setTimeout(async () => {
-      const sdk = await SolaceSDK.retrieveFromName(solaceName, {
-        network: 'local',
-        owner: keypair!,
-        programAddress: '3CvPZTk1PYMs6JzgiVNFtsAeijSNwbhrQTMYeFQKWpFw',
-      });
-      console.log({sdk});
-      dispatch(setSDK(sdk));
-      setLoading({
-        value: false,
-        message: '',
-      });
-      dispatch(setAccountStatus(AccountStatus.ACTIVE));
-    }, 2000);
-  }, [dispatch, state.user]);
-
   const decryptSecretKey = async (encryptedData: any, pin: string) => {
     const key = await generateKey(pin, 'salt', 5000, 256);
     const decryptedData = await decryptData(encryptedData, key);
     return decryptedData;
   };
 
-  const decryptStoredData = useCallback(async () => {
+  const decryptStoredData = async () => {
     const {encryptedSecretKey, encryptedSolaceName} = state.retrieveData!;
     try {
       const secretKey = await decryptSecretKey(encryptedSecretKey, code);
       const solaceName = await decryptSecretKey(encryptedSolaceName, code);
-      console.log({secretKey, solaceName});
-      dispatch(
-        setRetrieveData({
-          ...state.retrieveData,
-          decryptedSecretKey: secretKey,
-          decryptedSolaceName: solaceName,
-        }),
-      );
-      dispatch(
-        setUser({...state.user, solaceName, ownerPrivateKey: secretKey}),
-      );
-      setStoredUser({...storedUser, solaceName, ownerPrivateKey: secretKey});
-      return true;
+      const user = {
+        solaceName,
+        ownerPrivateKey: secretKey,
+        pin: code,
+        isWalletCreated: true,
+      };
+      console.log({user});
+      dispatch(setUser(user));
+      setStoredUser(user);
+      showMessage({
+        message: 'successfully retrieved account',
+        type: 'success',
+      });
+      dispatch(setAccountStatus(AccountStatus.EXISITING));
     } catch (e: any) {
       console.log(e.message);
-      return false;
-    }
-  }, [code, state.retrieveData, dispatch]);
-
-  const checkPinReady = async () => {
-    if (code.length === MAX_LENGTH) {
-      if (await decryptStoredData()) {
-        showMessage({
-          message: 'successfully retrieved account',
-          type: 'success',
-        });
-        setStoredUser({...storedUser, pin: code});
-        dispatch(setUser({...state.user, pin: code}));
-        setTimeout(() => {
-          dispatch(setAccountStatus(AccountStatus.EXISITING));
-        }, 1000);
-      } else {
-        setCode('');
-        focusMainInput();
-        showMessage({
-          message: 'Incorrect passcode. Please try again.',
-          type: 'danger',
-        });
-      }
+      setCode('');
+      focusMainInput();
+      showMessage({
+        message: 'Incorrect passcode. Please try again.',
+        type: 'danger',
+      });
     }
   };
 
   useEffect(() => {
-    checkPinReady();
+    if (code.length === MAX_LENGTH) {
+      decryptStoredData();
+    }
   }, [code]);
 
   return (

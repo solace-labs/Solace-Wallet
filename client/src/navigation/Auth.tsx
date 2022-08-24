@@ -4,17 +4,19 @@ import FingerprintScreen from '../components/screens/auth/Figerprint/Fingerprint
 import MainPasscodeScreen from '../components/screens/auth/MainPasscode/MainPasscode';
 import LoginScreen from '../components/screens/auth/LoginScreen/Login';
 import {AccountStatus, GlobalContext} from '../state/contexts/GlobalContext';
+import Loading from '../components/screens/auth/Loading/Loading';
 
 const Stack = createNativeStackNavigator();
 const AuthStack = () => {
   const {state, dispatch} = useContext(GlobalContext);
 
-  const route = 'Login';
+  const route = 'Loading';
 
   return (
     <Stack.Navigator
       initialRouteName={route}
       screenOptions={{headerShown: false}}>
+      <Stack.Screen name="Loading" component={Loading} />
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="MainPasscode" component={MainPasscodeScreen} />
       <Stack.Screen name="Fingerprint" component={FingerprintScreen} />

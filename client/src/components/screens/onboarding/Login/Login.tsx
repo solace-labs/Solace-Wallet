@@ -32,7 +32,7 @@ export type Props = {
 
 const Login: React.FC<Props> = ({navigation}) => {
   const [username, setUsername] = useState({
-    value: 'ankit',
+    value: 'ankit2',
     isValid: false,
   });
   const [password, setPassword] = useState({
@@ -90,13 +90,9 @@ const Login: React.FC<Props> = ({navigation}) => {
         username.value,
         password.value,
       );
-      console.log({response});
       const {
-        // @ts-ignore
         accessToken: {jwtToken: accesstoken},
-        // @ts-ignore
         idToken: {jwtToken: idtoken},
-        // @ts-ignore
         refreshToken: {token: refreshtoken},
       } = response;
       setTokens({
@@ -104,8 +100,13 @@ const Login: React.FC<Props> = ({navigation}) => {
         idtoken,
         refreshtoken,
       });
-      dispatch(setUser({...state.user, email: username.value}));
-      navigation.navigate('GoogleDrive');
+      dispatch(setUser({...state.user, solaceName: username.value}));
+      setIsLoading(false);
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'GoogleDrive'}],
+      });
+      return;
     } catch (e: any) {
       showMessage({
         message: e.message,

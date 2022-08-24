@@ -8,6 +8,7 @@ import {
   ICognitoUserAttributeData,
   ISignUpResult,
 } from 'amazon-cognito-identity-js';
+import {resolveConfig} from 'prettier';
 
 export class AwsCognito {
   userPool: CognitoUserPool;
@@ -164,7 +165,6 @@ export class AwsCognito {
     return await new Promise((resolve, reject) => {
       this.cognitoUser!.authenticateUser(authDetails, {
         onSuccess: (session: CognitoUserSession) => {
-          console.log('SUCCESS', session);
           resolve(session);
         },
         onFailure: (err: any) => {
@@ -227,13 +227,13 @@ export class AwsCognito {
       Value: value,
     });
     attributeList.push(attribute);
-    return await new Promise(() => {
+    return await new Promise((resolve, reject) => {
       this.cognitoUser?.updateAttributes(attributeList, function (err, result) {
         if (err) {
           console.log(err.message || JSON.stringify(err));
-          return;
+          reject(err);
         }
-        console.log('call result: ' + result);
+        resolve(result);
       });
     });
   };
