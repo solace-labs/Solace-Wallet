@@ -1,14 +1,9 @@
 import * as anchor from "../src/anchor";
-import { Provider } from "@project-serum/anchor";
 import { assert } from "chai";
-import { Program, workspace } from "../src/anchor/src";
 import { SolaceSDK } from "../src/sdk";
-import { Solace } from "../src/solace/types";
-import { findProgramAddressSync } from "../src/anchor/src/utils/pubkey";
-import { , relayTransaction } from "../src/relayer";
+import { relayTransaction } from "../src/relayer";
 
 const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
-const { BN } = anchor;
 
 const PROGRAM_ADDRESS = "8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U";
 
@@ -29,7 +24,8 @@ describe("solace", () => {
   const airdrop = async (address: anchor.web3.PublicKey) => {
     const sg = await SolaceSDK.localConnection.requestAirdrop(
       address,
-      1 * LAMPORTS_PER_SOL
+
+      10 * LAMPORTS_PER_SOL
     );
     const confirmation = await SolaceSDK.localConnection.confirmTransaction(sg);
   };
@@ -57,13 +53,16 @@ describe("solace", () => {
       network: "local",
       programAddress: PROGRAM_ADDRESS,
     });
-    const tx = await solaceSdk.createFromName("name.solace.io");
-    const res = await relayTransaction(tx, relayPair, solaceSdk.);
-    walletAddress = solaceSdk.wallet;
-    [walletAddress, walletBump] = findProgramAddressSync(
-      [Buffer.from("SOLACE"), seedBase.publicKey.toBuffer()],
-      solaceSdk.program.programId
+    const tx = await solaceSdk.createFromName(
+      "name.solace.io",
+      relayPair.publicKey
     );
+    const res = await relayTransaction(
+      tx,
+      relayPair,
+      SolaceSDK.localConnection
+    );
+    walletAddress = solaceSdk.wallet;
   });
 
   it("should fetch an existing wallet, and should have the same addr", async () => {
@@ -84,50 +83,73 @@ describe("solace", () => {
     assert(!(await _sdk).wallet.equals(solaceSdk.wallet));
   });
 
-  it("should send 500 lamports to a random address", async () => {
-    let randomWallet = anchor.web3.Keypair.generate();
-    await airdrop(randomWallet.publicKey);
-    await airdrop(walletAddress);
+  // it("should send 500 lamports to a random address", async () => {
+  //   let randomWallet = anchor.web3.Keypair.generate();
+  //   await airdrop(randomWallet.publicKey);
+  //   await airdrop(walletAddress);
+  //
+  //   let beforeBalance = await solaceSdk.program.provider.connection.getBalance(
+  //     randomWallet.publicKey
+  //   );
+  //
+  //   const tx = await solaceSdk.sendSol(
+  //     randomWallet.publicKey,
+  //     10,
+  //     relayPair.publicKey
+  //   );
+  //   await relayTransaction(tx, relayPair, SolaceSDK.localConnection);
+  //   let afterBalance = await solaceSdk.program.provider.connection.getBalance(
+  //     randomWallet.publicKey
+  //   );
+  //
+  //   assert(afterBalance === beforeBalance + 10, "SOL Not transferred");
+  // });
 
-    let walletBalance = await solaceSdk.program.provider.connection.getBalance(
-      randomWallet.publicKey
+  it("should request for guardianship", async () => {
+    let wallet = await getWallet();
+    const tx = await solaceSdk.addGuardian(
+      guardian1.publicKey,
+      relayPair.publicKey
     );
-
-    let beforeBalance = await solaceSdk.program.provider.connection.getBalance(
-      randomWallet.publicKey
-    );
-    await solaceSdk.sendSol(randomWallet.publicKey, 10);
-    let afterBalance = await solaceSdk.program.provider.connection.getBalance(
-      randomWallet.publicKey
-    );
-
-    assert(afterBalance === beforeBalance + 10, "SOL Not transferred");
+    await relayTransaction(tx, relayPair, SolaceSDK.localConnection);
+    assert(wallet.owner.equals(signer.publicKey), "Wallet not owned by owner");
+    await airdrop(guardian1.publicKey);
+    // await solaceSdk.createWalletToRequestRecovery(newOwner, walletAddress);
+    // wallet = await getWallet();
+    // assert(wallet.recoveryMode, "The wallet should be in recovery mode");
   });
 
+  it("should accept the request for guardianship", async () => {
+    let wallet = await solaceSdk.fetchWalletData();
+    assert(wallet.approvedGuardians.length === 0);
+    assert(wallet.pendingGuardians.length === 1);
+    assert(wallet.pendingGuardians[0].equals(guardian1.publicKey));
+    const tx = SolaceSDK.approveGuardianshipTx({
+      guardianAddress: guardian1.publicKey.toString(),
+      solaceWalletAddress: solaceSdk.wallet.toString(),
+      programAddress: solaceSdk.program.programId.toString(),
+      network: "local",
+    });
+    const confs = await solaceSdk.program.provider.connection.sendTransaction(
+      tx,
+      [guardian1]
+    );
+    await solaceSdk.program.provider.connection.confirmTransaction(confs);
+    wallet = await solaceSdk.fetchWalletData();
+    assert(wallet.approvedGuardians.length === 1);
+    assert(wallet.pendingGuardians.length === 0);
+    assert(wallet.approvedGuardians[0].equals(guardian1.publicKey));
+  });
+
+  /**
+
   it("should remove an approved guardian", async () => {
-    await solaceSdk.removeGuardian(guardian1.publicKey);
+    await solaceSdk.removeGuardian(guardian1.publicKey, relayPair.publicKey);
     const wallet = await getWallet();
     assert(
       wallet.approvedGuardians.length === 0,
       "The number of approved guardians should be 0"
     );
-  });
-
-  it("should add guardian and initiate wallet recovery", async () => {
-    let wallet = await getWallet();
-    await solaceSdk.addGuardian(guardian1.publicKey);
-    assert(wallet.owner.equals(owner.publicKey), "Wallet not owned by owner");
-    await airdrop(guardian1.publicKey);
-    const [recoveryAddress, bump] = findProgramAddressSync(
-      [
-        walletAddress.toBuffer(),
-        new BN(wallet.walletRecoverySequence).toBuffer("le", 8),
-      ],
-      solaceSdk.program.programId
-    );
-    await solaceSdk.createWalletToRequestRecovery(newOwner, walletAddress);
-    wallet = await getWallet();
-    assert(wallet.recoveryMode, "The wallet should be in recovery mode");
   });
 
   it("guardian should approve the recovery, and the wallet should be recovered to the new owner", async () => {
@@ -144,4 +166,5 @@ describe("solace", () => {
       "The owner of the wallet should be the new owner"
     );
   });
+  */
 });

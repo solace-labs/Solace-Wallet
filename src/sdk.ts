@@ -5,14 +5,24 @@ import { findProgramAddressSync } from "./anchor/dist/cjs/utils/pubkey";
 import { BN } from "bn.js";
 import IDL from "./solace/idl.json";
 import { RelayerIxData } from "./relayer";
-import { bs58 } from "./anchor/src/utils/bytes";
-const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
+import * as bs58 from "bs58";
+const { LAMPORTS_PER_SOL } = anchor.web3;
+
+interface ApproveGuardianshipData {
+  network: "local" | "testnet";
+  programAddress: string;
+  solaceWalletAddress: string;
+  guardianAddress: string;
+}
 
 interface SolaceSDKData {
   owner: anchor.web3.Keypair;
   network: "local" | "testnet";
   programAddress: string;
 }
+
+export const PublicKey = anchor.web3.PublicKey;
+export const KeyPair = anchor.web3.Keypair;
 
 // The SDK to interface with the client
 export class SolaceSDK {
@@ -25,6 +35,30 @@ export class SolaceSDK {
   program: Program<Solace>;
   seed: anchor.web3.PublicKey;
   provider: anchor.Provider;
+
+  /**
+   * Create a wallet instance. Should be used in conjuncture with an initializer
+   * @param {SolaceSDKData} data
+   */
+  constructor(data: SolaceSDKData) {
+    const provider = new anchor.Provider(
+      data.network == "local"
+        ? SolaceSDK.localConnection
+        : SolaceSDK.testnetConnection,
+      new anchor.Wallet(data.owner),
+      anchor.Provider.defaultOptions()
+    );
+    anchor.setProvider(provider);
+    this.provider = provider;
+    const programId = new anchor.web3.PublicKey(data.programAddress);
+    this.program = new anchor.Program<Solace>(
+      // @ts-ignore
+      IDL,
+      programId,
+      provider
+    );
+    this.owner = data.owner;
+  }
 
   async signTransaction(
     transaction: anchor.web3.Transaction,
@@ -42,6 +76,10 @@ export class SolaceSDK {
       signature: bs58.encode(signature),
       publicKey: this.owner.publicKey.toString(),
       message: tx.compileMessage().serialize().toString("base64"),
+      blockHash: {
+        blockhash: x.blockhash,
+        lastValidBlockHeight: x.lastValidBlockHeight,
+      },
     };
   }
 
@@ -113,30 +151,6 @@ export class SolaceSDK {
   }
 
   /**
-   * Create a wallet instance. Should be used in conjuncture with an initializer
-   * @param {SolaceSDKData} data
-   */
-  constructor(data: SolaceSDKData) {
-    const provider = new anchor.Provider(
-      data.network == "local"
-        ? SolaceSDK.localConnection
-        : SolaceSDK.testnetConnection,
-      new anchor.Wallet(data.owner),
-      anchor.Provider.defaultOptions()
-    );
-    anchor.setProvider(provider);
-    this.provider = provider;
-    const programId = new anchor.web3.PublicKey(data.programAddress);
-    this.program = new anchor.Program<Solace>(
-      // @ts-ignore
-      IDL,
-      programId,
-      provider
-    );
-    this.owner = data.owner;
-  }
-
-  /**
    * Return the wallet state for the user's wallet, if any
    * @returns {Solace}
    */
@@ -158,8 +172,12 @@ export class SolaceSDK {
   /**
    * Should send some amount of SOL to the `toAddress`
    */
-  async sendSol(toAddress: anchor.web3.PublicKey, lamports: number) {
-    await this.program.rpc.sendSol(new anchor.BN(lamports), {
+  async sendSol(
+    toAddress: anchor.web3.PublicKey,
+    lamports: number,
+    feePayer: anchor.web3.PublicKey
+  ) {
+    const tx = this.program.transaction.sendSol(new anchor.BN(lamports), {
       accounts: {
         toAccount: toAddress,
         wallet: this.wallet,
@@ -167,6 +185,7 @@ export class SolaceSDK {
       },
       signers: [this.owner],
     });
+    return this.signTransaction(tx, feePayer);
   }
 
   /**
@@ -174,50 +193,71 @@ export class SolaceSDK {
    * @param {anchor.web3.PublicKey} guardianPublicKey
    */
   async addGuardian(
-    guardianPublicKey: anchor.web3.PublicKey
-  ): Promise<boolean> {
-    try {
-      const walletData = await this.fetchWalletData();
-      const tx = await this.program.rpc.addGuardians(
-        [guardianPublicKey],
-        walletData.approvedGuardians.length + 1,
-        {
-          accounts: {
-            wallet: this.wallet,
-            owner: this.owner.publicKey,
-          },
-          signers: [this.owner],
-        }
-      );
+    guardianPublicKey: anchor.web3.PublicKey,
+    payer: anchor.web3.PublicKey
+  ): Promise<RelayerIxData> {
+    const walletData = await this.fetchWalletData();
+    const tx = this.program.transaction.addGuardians(
+      [guardianPublicKey],
+      walletData.approvedGuardians.length + 1,
+      {
+        accounts: {
+          wallet: this.wallet,
+          owner: this.owner.publicKey,
+        },
+        signers: [this.owner],
+      }
+    );
 
-      await this.confirmTx(tx);
-      return true;
-    } catch (e) {
-      return false;
-    }
+    return await this.signTransaction(tx, payer);
+  }
+
+  /**
+   * Use this method to create a transaction which can be signed by the guardian, to approve guardianship to a specific wallet
+   * @param data {ApproveGuardianshipData} data required to create a approve guardianship transaction
+   */
+  static approveGuardianshipTx(
+    data: ApproveGuardianshipData
+  ): anchor.web3.Transaction {
+    const provider = new anchor.Provider(
+      data.network == "local"
+        ? SolaceSDK.localConnection
+        : SolaceSDK.testnetConnection,
+      new anchor.Wallet(KeyPair.generate()),
+      anchor.Provider.defaultOptions()
+    );
+    const programId = new anchor.web3.PublicKey(data.programAddress);
+    const program = new anchor.Program<Solace>(
+      // @ts-ignore
+      IDL,
+      programId,
+      provider
+    );
+    return program.transaction.approveGuardianship({
+      accounts: {
+        wallet: new PublicKey(data.solaceWalletAddress),
+        guardian: new PublicKey(data.guardianAddress),
+      },
+    });
+    // In this case, the owner is assumed to be the guardian
   }
 
   /**
    * FOR - User to remove a guardian
    */
   async removeGuardian(
-    guardianAdress: anchor.web3.PublicKey
-  ): Promise<boolean> {
-    try {
-      const tx = await this.program.rpc.removeGuardians({
-        accounts: {
-          wallet: this.wallet,
-          guardian: guardianAdress,
-          owner: this.owner.publicKey,
-        },
-        signers: [this.owner],
-      });
-      await this.confirmTx(tx);
-      // await this.apiProvider.removeGuardian(this.wallet, guardianAdress);
-      return true;
-    } catch (e) {
-      return false;
-    }
+    guardianAdress: anchor.web3.PublicKey,
+    payer: anchor.web3.PublicKey
+  ): Promise<RelayerIxData> {
+    const tx = this.program.transaction.removeGuardians({
+      accounts: {
+        wallet: this.wallet,
+        guardian: guardianAdress,
+        owner: this.owner.publicKey,
+      },
+      signers: [this.owner],
+    });
+    return await this.signTransaction(tx, payer);
   }
 
   /**
@@ -262,7 +302,7 @@ export class SolaceSDK {
   /**
    * Create an account, just to recover an existing one
    * @param newOwner
-   * @param addressToRecovery
+   * @param addressToRecover
    */
   async createWalletToRequestRecovery(
     newOwner: anchor.web3.Keypair,

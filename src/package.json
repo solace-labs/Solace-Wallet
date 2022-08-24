@@ -1,6 +1,6 @@
 {
   "name": "solace-sdk",
-  "version": "1.2.0",
+  "version": "1.2.4",
   "description": "SDK to interact with the Solace Program",
   "main": "sdk.ts",
   "scripts": {

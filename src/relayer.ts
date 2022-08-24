@@ -8,6 +8,10 @@ export interface RelayerIxData {
   message: string;
   signature: string;
   publicKey: string;
+  blockHash: {
+    lastValidBlockHeight: number;
+    blockhash: string;
+  };
 }
 
 /**
@@ -18,6 +22,7 @@ export const relayTransaction = async (
   payer: anchor.web3.Keypair,
   connection: anchor.web3.Connection
 ) => {
+  console.log("Relaying");
   const transaction = anchor.web3.Transaction.populate(
     anchor.web3.Message.from(Buffer.from(data.message, "base64"))
   );
@@ -31,5 +36,6 @@ export const relayTransaction = async (
   );
   // TODO: Update to the latest API
   const confirmation = await connection.confirmTransaction(res);
+  console.log("Confirmed", confirmation);
   return confirmation;
 };
