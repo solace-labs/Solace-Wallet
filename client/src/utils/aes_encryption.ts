@@ -24,6 +24,18 @@ export const encryptData = (text: string, key: string) => {
 export const decryptData = (encryptedData: any, key: string) =>
   Aes.decrypt(encryptedData.cipher, key, encryptedData.iv, 'aes-256-cbc');
 
+export const encryptKey = async (secretKey: string, pin: string) => {
+  const key = await generateKey(pin, 'salt', 5000, 256);
+  const encryptedData = await encryptData(secretKey, key);
+  return encryptedData;
+};
+
+export const decryptKey = async (encryptedData: any, pin: string) => {
+  const key = await generateKey(pin, 'salt', 5000, 256);
+  const decryptedData = await decryptData(encryptedData, key);
+  return decryptedData;
+};
+
 export const tryAes = () => {
   try {
     generateKey('Arnold', 'salt', 5000, 256).then((key: string) => {

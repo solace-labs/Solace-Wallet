@@ -40,7 +40,7 @@ export type User = {
   email: string;
   solaceName: string;
   ownerPrivateKey: string;
-  keypair?: ReturnType<typeof SolaceSDK.newKeyPair>;
+  publicKey?: string;
   isWalletCreated: boolean;
   pin: string;
 };
@@ -100,7 +100,8 @@ const GlobalProvider = ({children}: {children: any}) => {
       dispatch(setUser(storedUser));
       dispatch(setAccountStatus(AccountStatus.EXISITING));
     } else {
-      dispatch(setAccountStatus(AccountStatus.NEW));
+      // dispatch(setUser({}));
+      dispatch(setAccountStatus(AccountStatus.SIGNED_UP));
     }
   }, [storedUser]);
 

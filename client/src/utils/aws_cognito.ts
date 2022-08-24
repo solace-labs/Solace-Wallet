@@ -5,6 +5,7 @@ import {
   CognitoUserAttribute,
   CognitoUserPool,
   CognitoUserSession,
+  ICognitoUserAttributeData,
   ISignUpResult,
 } from 'amazon-cognito-identity-js';
 
@@ -154,10 +155,7 @@ export class AwsCognito {
    * @param Password
    * @returns
    */
-  emailLogin = async (
-    Username: string,
-    Password: string,
-  ): Promise<CognitoUserSession> => {
+  emailLogin = async (Username: string, Password: string): Promise<any> => {
     const authDetails = new AuthenticationDetails({
       Username,
       Password,
@@ -219,6 +217,24 @@ export class AwsCognito {
           });
         },
       );
+    });
+  };
+
+  updateAttribute = async (name: string, value: string) => {
+    const attributeList: ICognitoUserAttributeData[] = [];
+    const attribute = new CognitoUserAttribute({
+      Name: name,
+      Value: value,
+    });
+    attributeList.push(attribute);
+    return await new Promise(() => {
+      this.cognitoUser?.updateAttributes(attributeList, function (err, result) {
+        if (err) {
+          console.log(err.message || JSON.stringify(err));
+          return;
+        }
+        console.log('call result: ' + result);
+      });
     });
   };
 }

@@ -32,11 +32,11 @@ export type Props = {
 
 const Login: React.FC<Props> = ({navigation}) => {
   const [username, setUsername] = useState({
-    value: '',
+    value: 'ankit',
     isValid: false,
   });
   const [password, setPassword] = useState({
-    value: '',
+    value: 'ankitN1311@',
     isValid: true,
   });
   const [active, setActive] = useState('username');
@@ -48,12 +48,12 @@ const Login: React.FC<Props> = ({navigation}) => {
   const [tokens, setTokens] = useLocalStorage('tokens');
   const [storedUser, setStoredUser] = useLocalStorage('user');
 
-  useEffect(() => {
-    console.log({storedUser, tokens});
-    if (tokens) {
-      navigation.navigate('MainPasscode');
-    }
-  }, [tokens, storedUser]);
+  // useEffect(() => {
+  //   console.log({storedUser, tokens});
+  //   if (tokens) {
+  //     navigation.navigate('MainPasscode');
+  //   }
+  // }, [tokens, storedUser]);
 
   const validateUsername = (text: string) => {
     setUsername({
@@ -92,11 +92,11 @@ const Login: React.FC<Props> = ({navigation}) => {
       );
       console.log({response});
       const {
-        //@ts-ignore
+        // @ts-ignore
         accessToken: {jwtToken: accesstoken},
-        //@ts-ignore
+        // @ts-ignore
         idToken: {jwtToken: idtoken},
-        //@ts-ignore
+        // @ts-ignore
         refreshToken: {token: refreshtoken},
       } = response;
       setTokens({
@@ -105,7 +105,7 @@ const Login: React.FC<Props> = ({navigation}) => {
         refreshtoken,
       });
       dispatch(setUser({...state.user, email: username.value}));
-      navigation.navigate('MainPasscode');
+      navigation.navigate('GoogleDrive');
     } catch (e: any) {
       showMessage({
         message: e.message,
@@ -129,7 +129,7 @@ const Login: React.FC<Props> = ({navigation}) => {
           <Text style={styles.subHeading}>sign in to your account</Text>
           <TextInput
             style={styles.textInput}
-            placeholder="email username"
+            placeholder="username"
             placeholderTextColor="#fff6"
             value={username.value}
             onChangeText={text => validateUsername(text)}

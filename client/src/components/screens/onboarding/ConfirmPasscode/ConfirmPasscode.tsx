@@ -47,7 +47,7 @@ const ConfirmPasscodeScreen: React.FC<Props> = ({navigation}) => {
   const checkPinReady = async () => {
     if (code.length === MAX_LENGTH) {
       if (state.user && state.user.pin === code) {
-        navigation.navigate('GoogleDrive');
+        navigation.navigate('Login');
       } else {
         showMessage({
           message: 'Passcode did not match',

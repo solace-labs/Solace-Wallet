@@ -16,14 +16,15 @@ const HomeScreen: React.FC<Props> = ({navigation}) => {
   const {state, dispatch} = useContext(GlobalContext);
 
   const createKeypair = async () => {
-    const keypair = SolaceSDK.newKeyPair();
-    dispatch(
-      setUser({
-        ...state.user,
-        keypair,
-        ownerPrivateKey: keypair.secretKey,
-      }),
-    );
+    // const keypair = SolaceSDK.newKeyPair();
+    // const publicKey = keypair.publicKey.toString();
+    // dispatch(
+    //   setUser({
+    //     ...state.user,
+    //     publicKey,
+    //     ownerPrivateKey: keypair.secretKey,
+    //   }),
+    // );
 
     navigation.navigate('Username');
   };

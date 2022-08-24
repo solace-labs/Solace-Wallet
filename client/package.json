@@ -19,6 +19,8 @@
     "@react-navigation/native-stack": "^6.6.2",
     "@robinbobin/react-native-google-drive-api-wrapper": "^1.2.3",
     "amazon-cognito-identity-js": "^5.2.10",
+    "axios": "^0.27.2",
+    "fastestsmallesttextencoderdecoder-encodeinto": "^1.0.22",
     "install": "^0.13.0",
     "moment": "^2.29.3",
     "npm": "^8.16.0",
@@ -33,7 +35,7 @@
     "react-native-safe-area-context": "^4.2.5",
     "react-native-screens": "^3.13.1",
     "react-native-vector-icons": "^9.1.0",
-    "solace-sdk": "^1.2.0",
+    "solace-sdk": "^1.2.3",
     "util": "^0.12.4"
   },
   "devDependencies": {

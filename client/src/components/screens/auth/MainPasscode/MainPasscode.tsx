@@ -137,9 +137,9 @@ const MainPasscodeScreen: React.FC<Props> = ({navigation}) => {
               );
             })}
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('Fingerprint')}>
+          {/* <TouchableOpacity onPress={() => navigation.navigate('Fingerprint')}>
             <Text style={styles.fingerprint}>use fingerprint</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           {loading.value && (
             <View
