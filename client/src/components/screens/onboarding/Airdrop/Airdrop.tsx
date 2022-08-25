@@ -92,6 +92,14 @@ const AirdropScreen: React.FC<Props> = ({navigation}) => {
           message: 'retrying confirmation...',
         });
       }
+      if (retry === 3) {
+        setLoading({
+          value: false,
+          message: 'some error. try again?',
+        });
+        confirm = true;
+        continue;
+      }
       try {
         await SolaceSDK.testnetConnection.confirmTransaction(transactionId);
         showMessage({
@@ -114,11 +122,12 @@ const AirdropScreen: React.FC<Props> = ({navigation}) => {
         } else {
           confirm = true;
           console.log('OTHER ERROR: ', e.message);
-          showMessage({
-            message: 'some error verifying transaction',
-            type: 'danger',
-          });
-          throw e;
+          retry++;
+          // showMessage({
+          //   message: 'some error verifying transaction',
+          //   type: 'danger',
+          // });
+          // throw e;
         }
       }
     }

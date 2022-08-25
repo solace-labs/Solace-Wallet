@@ -1,8 +1,14 @@
 import {StyleSheet} from 'react-native';
 
 const styles = StyleSheet.create({
+  contentContainer: {
+    // backgroundColor: '#131313',
+    // paddingTop: 50,
+    // flex: 1,
+    // alignItems: 'center',
+  },
   mainContainer: {
-    flex: 1,
+    // flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
     marginVertical: 10,
@@ -80,6 +86,11 @@ const styles = StyleSheet.create({
   acceptButton: {
     color: '#00AC64',
     fontFamily: 'Poppins-Bold',
+    letterSpacing: 0.5,
+  },
+  copyButton: {
+    color: '#06C',
+    fontFamily: 'SpaceMono-Bold',
     letterSpacing: 0.5,
   },
 });

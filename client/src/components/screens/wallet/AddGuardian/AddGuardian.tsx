@@ -31,6 +31,7 @@ import {
 import useLocalStorage from '../../../../hooks/useLocalStorage';
 import {showMessage} from 'react-native-flash-message';
 import EncryptedStorage from 'react-native-encrypted-storage';
+import {NavigationProp} from '@react-navigation/native';
 
 export type Props = {
   navigation: any;
@@ -108,10 +109,18 @@ const AddGuardian: React.FC<Props> = ({navigation}) => {
           message: 'retrying confirmation...',
         });
       }
+      if (retry === 3) {
+        setLoading({
+          value: false,
+          message: 'some error. try again?',
+        });
+        confirm = true;
+        continue;
+      }
       try {
         const res = await SolaceSDK.testnetConnection.confirmTransaction(data);
         showMessage({
-          message: 'transaction confirmed - wallet created',
+          message: 'transaction confirmed - guardian added',
           type: 'success',
         });
         confirm = true;
@@ -124,9 +133,10 @@ const AddGuardian: React.FC<Props> = ({navigation}) => {
           console.log('Timeout');
           retry++;
         } else {
-          confirm = true;
+          // confirm = true;
           console.log('OTHER ERROR: ', e.message);
-          throw e;
+          retry++;
+          // throw e;
         }
       }
     }

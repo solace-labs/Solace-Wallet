@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import React, {useContext} from 'react';
 import styles from './styles';
@@ -20,7 +21,11 @@ export type Props = {
 };
 
 const GuardianTab: React.FC<Props> = ({guardians, loading}) => {
-  const renderGuardian = (guardian: PublicKeyType, index: number) => {
+  const renderGuardian = (
+    guardian: PublicKeyType,
+    index: number,
+    type: 'approved' | 'pending',
+  ) => {
     return (
       <View key={index} style={styles.container}>
         <View style={styles.item}>
@@ -37,18 +42,22 @@ const GuardianTab: React.FC<Props> = ({guardians, loading}) => {
             </View>
             <View>
               <Text style={styles.securityText}>
-                {guardian.toString().slice(0, 25)}...
+                {guardian.toString().slice(0, 10)}...
               </Text>
-              <Text style={[styles.responseText, {color: '#D27D00'}]}>
-                awaiting response
+              <Text
+                style={[
+                  styles.responseText,
+                  {color: type === 'approved' ? '#00AC64' : '#D27D00'},
+                ]}>
+                {type === 'approved' ? 'approved' : 'awaiting response'}
               </Text>
             </View>
           </View>
-          {/* <View style={styles.rightSide}>
+          <View style={styles.rightSide}>
             <TouchableOpacity>
-              <Text style={styles.acceptButton}>tap to confirm</Text>
+              <Text style={styles.copyButton}>copy</Text>
             </TouchableOpacity>
-          </View> */}
+          </View>
         </View>
       </View>
     );
@@ -65,45 +74,47 @@ const GuardianTab: React.FC<Props> = ({guardians, loading}) => {
     );
   }
   return (
-    <View style={styles.mainContainer}>
-      {
-        /*guardians */ guardians.pending.length > 0 ? (
-          <View style={styles.guardiansContainer}>
-            <View style={styles.container}>
-              <View style={styles.item}>
-                <View style={styles.leftSide}>
-                  <View style={styles.guardianImageContainer}>
-                    <Text style={styles.guardianImageText}>S</Text>
-                  </View>
-                  <View>
-                    <Text style={styles.securityText}>solace security</Text>
-                    <Text style={styles.dateText}>coming soon...</Text>
+    <ScrollView bounces={true}>
+      <View style={styles.mainContainer}>
+        {
+          /*guardians */ guardians.pending.length > 0 ? (
+            <View style={styles.guardiansContainer}>
+              <View style={styles.container}>
+                <View style={styles.item}>
+                  <View style={styles.leftSide}>
+                    <View style={styles.guardianImageContainer}>
+                      <Text style={styles.guardianImageText}>S</Text>
+                    </View>
+                    <View>
+                      <Text style={styles.securityText}>solace security</Text>
+                      <Text style={styles.dateText}>coming soon...</Text>
+                    </View>
                   </View>
                 </View>
               </View>
-            </View>
 
-            {guardians.pending.map((guardian, index) => {
-              return renderGuardian(guardian, index);
-            })}
-            {guardians.approved.map((guardian, index) => {
-              return renderGuardian(guardian, index);
-            })}
-          </View>
-        ) : (
-          <View style={styles.imageContainer}>
-            <Image
-              source={require('../../../../assets/images/solace/secrurity.png')}
-              style={styles.contactImage}
-            />
-            <Text style={styles.buttonText}>
-              you need 1 guardian approval for solace wallet recovery or to
-              approve an untrusted transaction
-            </Text>
-          </View>
-        )
-      }
-    </View>
+              {guardians.pending.map((guardian, index) => {
+                return renderGuardian(guardian, index, 'pending');
+              })}
+              {guardians.approved.map((guardian, index) => {
+                return renderGuardian(guardian, index, 'approved');
+              })}
+            </View>
+          ) : (
+            <View style={styles.imageContainer}>
+              <Image
+                source={require('../../../../assets/images/solace/secrurity.png')}
+                style={styles.contactImage}
+              />
+              <Text style={styles.buttonText}>
+                you need 1 guardian approval for solace wallet recovery or to
+                approve an untrusted transaction
+              </Text>
+            </View>
+          )
+        }
+      </View>
+    </ScrollView>
   );
 };
 

@@ -45,7 +45,10 @@ const Guardian: React.FC<Props> = ({navigation}) => {
   };
 
   useEffect(() => {
-    getGuardians();
+    const willFocusSubscription = navigation.addListener('focus', () => {
+      getGuardians();
+    });
+    return willFocusSubscription;
   }, [navigation]);
 
   const renderTab = () => {

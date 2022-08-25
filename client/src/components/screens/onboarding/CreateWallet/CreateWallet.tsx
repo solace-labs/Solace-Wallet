@@ -112,6 +112,14 @@ const CreateWalletScreen: React.FC = () => {
           message: 'retrying confirmation...',
         });
       }
+      if (retry === 3) {
+        setLoading({
+          value: false,
+          message: 'some error. try again?',
+        });
+        confirm = true;
+        continue;
+      }
       try {
         const res = await SolaceSDK.testnetConnection.confirmTransaction(data);
         showMessage({
@@ -128,9 +136,8 @@ const CreateWalletScreen: React.FC = () => {
           console.log('Timeout');
           retry++;
         } else {
-          confirm = true;
           console.log('OTHER ERROR: ', e.message);
-          throw e;
+          retry++;
         }
       }
     }
