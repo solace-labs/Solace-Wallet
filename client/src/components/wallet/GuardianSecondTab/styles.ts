@@ -7,6 +7,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 10,
   },
+  guardiansContainer: {width: '100%'},
   username: {
     color: 'white',
     textTransform: 'lowercase',
@@ -20,6 +21,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  leftSide: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  securityText: {
+    color: 'white',
+    fontFamily: 'SpaceMono-Bold',
+  },
+  dateText: {
+    color: '#9999a5',
+    fontFamily: 'SpaceMono-Bold',
+  },
+  guardianImageContainer: {
+    height: 40,
+    width: 40,
+    backgroundColor: '#9999A5',
+    borderRadius: 20,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  responseText: {
+    color: '#9999a5',
+    fontFamily: 'SpaceMono-Bold',
+  },
+  guardianImageText: {fontFamily: 'Poppins-Bold', color: 'white'},
   contactImage: {
     width: '100%',
     height: 200,
@@ -30,6 +59,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 12,
     fontFamily: 'SpaceMono-Bold',
+  },
+  rightSide: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  acceptButton: {
+    color: '#00AC64',
+    fontFamily: 'Poppins-Bold',
+    letterSpacing: 0.5,
   },
 });
 

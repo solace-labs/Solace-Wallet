@@ -93,7 +93,7 @@ const CreateWalletScreen: React.FC = () => {
       });
       setCreated(true);
     } catch (e) {
-      console.log(e);
+      console.log('MAIN ERROR: ', e);
     }
   };
 

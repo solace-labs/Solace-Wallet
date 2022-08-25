@@ -8793,10 +8793,10 @@
     "ip" "^1.1.5"
     "smart-buffer" "^4.2.0"
 
-"solace-sdk@^1.2.3":
-  "integrity" "sha512-2kfdMWlkUW4kboPoKa8pmV+aRMw5iYhS5yN/fZnjz/pLCVDWneuH4xZDGlwHMkffEwpwBlWM1cqKHFlb/4upWQ=="
-  "resolved" "https://registry.npmjs.org/solace-sdk/-/solace-sdk-1.2.3.tgz"
-  "version" "1.2.3"
+"solace-sdk@^1.2.5":
+  "integrity" "sha512-WG/OrZ6Zf+v3lcdJVn62lj/iPO3bcFQ1HRfNDXjvbro0w18o3vcb6KpTkLIleUFGANDw9PC3pgaOOZiXTPhZJA=="
+  "resolved" "https://registry.npmjs.org/solace-sdk/-/solace-sdk-1.2.5.tgz"
+  "version" "1.2.5"
   dependencies:
     "@project-serum/anchor" "^0.18.0"
     "bs58" "^5.0.0"

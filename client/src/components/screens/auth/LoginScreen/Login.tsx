@@ -47,13 +47,14 @@ const Login: React.FC<Props> = ({navigation}) => {
   const {state, dispatch} = useContext(GlobalContext);
   const [tokens, setTokens] = useLocalStorage('tokens');
   const [storedUser, setStoredUser] = useLocalStorage('user');
+  console.log('INSIDE LOGIN');
 
-  useEffect(() => {
-    console.log({storedUser, tokens});
-    if (tokens) {
-      navigation.navigate('MainPasscode');
-    }
-  }, [tokens, storedUser]);
+  // useEffect(() => {
+  //   console.log({storedUser, tokens});
+  //   if (tokens) {
+  //     navigation.navigate('MainPasscode');
+  //   }
+  // }, [tokens, storedUser]);
 
   const validateUsername = (text: string) => {
     setUsername({

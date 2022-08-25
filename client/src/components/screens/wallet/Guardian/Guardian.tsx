@@ -1,5 +1,6 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import {View, Text, TouchableOpacity, ScrollView} from 'react-native';
-import React, {useContext, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import styles from './styles';
 
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -7,29 +8,52 @@ import {GlobalContext} from '../../../../state/contexts/GlobalContext';
 import GuardianTab from '../../../wallet/GuardianTab/GuardianTab';
 import {Contact} from '../../../wallet/ContactItem/ContactItem';
 import GuardianSecondTab from '../../../wallet/GuardianSecondTab/GuardianSecondTab';
+import {PublicKey, SolaceSDK} from 'solace-sdk';
 
 export type Props = {
   navigation: any;
 };
 
+export type PublicKeyType = InstanceType<typeof PublicKey>;
+
 const Guardian: React.FC<Props> = ({navigation}) => {
   const [activeTab, setActiveTab] = useState(1);
   const {state, dispatch} = useContext(GlobalContext);
-  const guardians: Contact[] = [
-    {
-      name: 'john doe',
-      address: '0x0',
-      id: '12341235',
-      username: 'john.solace.money',
-    },
-  ];
+  const [loading, setLoading] = useState(false);
+  const [guardians, setGuardians] = useState<{
+    approved: PublicKeyType[];
+    pending: PublicKeyType[];
+  }>({approved: [], pending: []});
+  const [guarding, setGuarding] = useState<PublicKeyType[]>([]);
+
+  const getGuardians = async () => {
+    console.log('here');
+    setLoading(true);
+    const sdk = state.sdk!;
+    const {
+      pendingGuardians,
+      approvedGuardians,
+      guarding: whoIProtect,
+    } = await sdk.fetchWalletData();
+    console.log({pendingGuardians, approvedGuardians, guarding});
+    setGuardians({
+      approved: approvedGuardians,
+      pending: pendingGuardians,
+    });
+    setGuarding(whoIProtect);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    getGuardians();
+  }, [navigation]);
 
   const renderTab = () => {
     switch (activeTab) {
       case 1:
-        return <GuardianTab guardians={guardians} />;
+        return <GuardianTab guardians={guardians} loading={loading} />;
       case 2:
-        return <GuardianSecondTab guardians={guardians} />;
+        return <GuardianSecondTab guarding={guarding} />;
       default:
         return <Text style={{color: 'white'}}>404 not found</Text>;
     }

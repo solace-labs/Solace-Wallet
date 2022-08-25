@@ -1,16 +1,20 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import {View, Text, ScrollView, Image, ActivityIndicator} from 'react-native';
 import React, {useEffect} from 'react';
 import styles from './styles';
 import useLocalStorage from '../../../../hooks/useLocalStorage';
+import EncryptedStorage from 'react-native-encrypted-storage';
 
 export type Props = {
   navigation: any;
 };
 
 const Loading: React.FC<Props> = ({navigation}) => {
-  const [tokens] = useLocalStorage('tokens');
+  // const [tokens] = useLocalStorage('tokens');
 
-  useEffect(() => {
+  const getTokens = async () => {
+    const tokens = await EncryptedStorage.getItem('tokens');
+    console.log({tokens});
     if (tokens) {
       navigation.reset({
         index: 0,
@@ -22,7 +26,11 @@ const Loading: React.FC<Props> = ({navigation}) => {
         routes: [{name: 'Login'}],
       });
     }
-  }, [tokens, navigation]);
+  };
+
+  useEffect(() => {
+    getTokens();
+  }, []);
 
   return (
     <ScrollView contentContainerStyle={styles.contentContainer} bounces={false}>

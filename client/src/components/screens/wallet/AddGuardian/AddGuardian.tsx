@@ -6,14 +6,31 @@ import {
   Image,
   TextInput,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import React, {useContext, useState} from 'react';
 import styles from './styles';
 
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {GlobalContext} from '../../../../state/contexts/GlobalContext';
-import {addNewContact} from '../../../../state/actions/global';
+import {
+  AccountStatus,
+  GlobalContext,
+} from '../../../../state/contexts/GlobalContext';
+import {
+  addNewContact,
+  setAccountStatus,
+  setSDK,
+} from '../../../../state/actions/global';
+import {KeyPair, PublicKey, SolaceSDK} from 'solace-sdk';
+import {
+  getMeta,
+  relayTransaction,
+  requestGuardian,
+} from '../../../../utils/relayer';
+import useLocalStorage from '../../../../hooks/useLocalStorage';
+import {showMessage} from 'react-native-flash-message';
+import EncryptedStorage from 'react-native-encrypted-storage';
 
 export type Props = {
   navigation: any;
@@ -21,8 +38,15 @@ export type Props = {
 
 const AddGuardian: React.FC<Props> = ({navigation}) => {
   const [name, setName] = useState('');
-  const [address, setAddress] = useState('');
-  const {dispatch} = useContext(GlobalContext);
+  const [address, setAddress] = useState(
+    'G9PfPVfBuKF4xr4yLt4LjfDezwunPsezCvdjfVBJnHk2',
+  );
+  const {state, dispatch} = useContext(GlobalContext);
+  const [tokens, setTokens] = useLocalStorage('tokens', {});
+  const [loading, setLoading] = useState({
+    value: false,
+    message: '',
+  });
 
   // const addContact = () => {
   //   if (name && address) {
@@ -39,6 +63,101 @@ const AddGuardian: React.FC<Props> = ({navigation}) => {
   //   }
   // };
 
+  const addGuardian = async () => {
+    const sdk = state.sdk!;
+    const walletName = state.user?.solaceName!;
+    const solaceWalletAddress = sdk.wallet.toString();
+    const accessToken = tokens.accesstoken;
+    try {
+      const feePayer = new PublicKey(await getFeePayer(accessToken));
+      const guardianPublicKey = new PublicKey(address);
+      const tx = await sdk.addGuardian(guardianPublicKey, feePayer);
+      const res = await relayTransaction(tx, accessToken);
+      const transactionId = res.data;
+      await confirmTransaction(transactionId);
+      await requestGuardian(
+        {
+          guardianAddress: guardianPublicKey.toString(),
+          solaceWalletAddress,
+          walletName,
+        },
+        accessToken,
+      );
+      setLoading({
+        message: '',
+        value: false,
+      });
+      navigation.goBack();
+    } catch (e) {
+      console.log('MAIN ERROR:', e);
+    }
+  };
+
+  const confirmTransaction = async (data: string) => {
+    setLoading({
+      value: true,
+      message: 'confirming transaction...',
+    });
+    console.log({data});
+    let confirm = false;
+    let retry = 0;
+    while (!confirm) {
+      if (retry > 0) {
+        setLoading({
+          value: true,
+          message: 'retrying confirmation...',
+        });
+      }
+      try {
+        const res = await SolaceSDK.testnetConnection.confirmTransaction(data);
+        showMessage({
+          message: 'transaction confirmed - wallet created',
+          type: 'success',
+        });
+        confirm = true;
+      } catch (e: any) {
+        if (
+          e.message.startsWith(
+            'Transaction was not confirmed in 60.00 seconds.',
+          )
+        ) {
+          console.log('Timeout');
+          retry++;
+        } else {
+          confirm = true;
+          console.log('OTHER ERROR: ', e.message);
+          throw e;
+        }
+      }
+    }
+  };
+
+  const getFeePayer = async (accessToken: string) => {
+    setLoading({
+      message: 'getting fee payer...',
+      value: true,
+    });
+    try {
+      const response = await getMeta(accessToken);
+      return response.feePayer;
+    } catch (e: any) {
+      setLoading({
+        message: 'failed. retry again',
+        value: false,
+      });
+      console.log('FEE PAYER', e.status);
+      if (e.message === 'Request failed with status code 401') {
+        showMessage({
+          message: 'You need to login again',
+          type: 'info',
+        });
+        await EncryptedStorage.removeItem('tokens');
+        dispatch(setAccountStatus(AccountStatus.EXISITING));
+      }
+      throw e;
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.contentContainer} bounces={false}>
       <View style={styles.headerContainer}>
@@ -48,7 +167,7 @@ const AddGuardian: React.FC<Props> = ({navigation}) => {
         <Text style={styles.mainText}>add manually</Text>
       </View>
       <View style={styles.inputContainer}>
-        <TextInput
+        {/* <TextInput
           autoCapitalize="none"
           autoComplete="off"
           autoCorrect={false}
@@ -57,7 +176,7 @@ const AddGuardian: React.FC<Props> = ({navigation}) => {
           style={styles.textInput}
           placeholderTextColor="#9999a5"
           placeholder="name"
-        />
+        /> */}
         <View style={styles.inputWrap}>
           <TextInput
             autoCapitalize="none"
@@ -73,32 +192,52 @@ const AddGuardian: React.FC<Props> = ({navigation}) => {
         </View>
       </View>
 
-      <View style={styles.subTextContainer}>
+      {/* <View style={styles.subTextContainer}>
         <AntDesign name="checkcircleo" style={styles.subIcon} />
         <Text style={styles.subText}>address found</Text>
       </View>
       <View style={[styles.subTextContainer, {marginTop: 0}]}>
         <Text style={styles.buttonText}>0x8zo881ixpzAdiZ2802hz00zc</Text>
-      </View>
+      </View> */}
 
       {/* <View style={styles.networkContainer}>
         <Text style={styles.secondText}>network</Text>
         <Text style={styles.solanaText}>solana</Text>
       </View> */}
-      <View style={styles.endContainer}>
-        <TouchableOpacity
-          disabled={!name || !address}
-          // onPress={() => addContact()}
-          style={styles.buttonStyle}>
-          <Text
-            style={[
-              styles.buttonTextStyle,
-              {color: !name || !address ? '#9999a5' : 'black'},
-            ]}>
-            add guardian
-          </Text>
-        </TouchableOpacity>
+      <View style={{flexGrow: 1}}>
+        {loading.value && <ActivityIndicator size="small" />}
       </View>
+      {/* {loading.value && (
+        <Text style={styles.secondText}>{loading.message}</Text>
+      )} */}
+      {!loading.value && (
+        <View style={styles.endContainer}>
+          <TouchableOpacity
+            // disabled={!name || !address}
+            disabled={!address}
+            onPress={() => addGuardian()}
+            style={styles.buttonStyle}>
+            <Text
+              style={[
+                styles.buttonTextStyle,
+                // {color: !name || !address ? '#9999a5' : 'black'},
+                {color: !address ? '#9999a5' : 'black'},
+              ]}>
+              add guardian
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {loading.value && (
+        <View style={styles.endContainer}>
+          <TouchableOpacity disabled={loading.value} style={styles.buttonStyle}>
+            <Text style={[styles.buttonTextStyle, {color: '#9999a5'}]}>
+              {loading.message}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </ScrollView>
   );
 };
