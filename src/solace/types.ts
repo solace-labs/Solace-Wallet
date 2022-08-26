@@ -113,10 +113,8 @@ export type Solace = {
       ],
       "args": [
         {
-          "name": "guardians",
-          "type": {
-            "vec": "publicKey"
-          }
+          "name": "guardian",
+          "type": "publicKey"
         },
         {
           "name": "recoveryThreshold",
@@ -517,10 +515,8 @@ export const IDL: Solace = {
       ],
       "args": [
         {
-          "name": "guardians",
-          "type": {
-            "vec": "publicKey"
-          }
+          "name": "guardian",
+          "type": "publicKey"
         },
         {
           "name": "recoveryThreshold",

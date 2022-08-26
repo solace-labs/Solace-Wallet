@@ -6,20 +6,31 @@ import { BN } from "bn.js";
 import IDL from "./solace/idl.json";
 import { RelayerIxData } from "./relayer";
 import * as bs58 from "bs58";
-const { LAMPORTS_PER_SOL } = anchor.web3;
 
-interface ApproveGuardianshipData {
+type RecoverWalletData = {
+  network: "local" | "testnet";
+  programAddress: string;
+  username: string;
+};
+
+type RequestWalletInformationData = {
+  network: "local" | "testnet";
+  programAddress: string;
+  solaceWalletAddress: string;
+};
+
+type ApproveGuardianshipData = {
   network: "local" | "testnet";
   programAddress: string;
   solaceWalletAddress: string;
   guardianAddress: string;
-}
+};
 
-interface SolaceSDKData {
+type SolaceSDKData = {
   owner: anchor.web3.Keypair;
   network: "local" | "testnet";
   programAddress: string;
-}
+};
 
 export const PublicKey = anchor.web3.PublicKey;
 export const KeyPair = anchor.web3.Keypair;
@@ -96,6 +107,14 @@ export class SolaceSDK {
     return this;
   }
 
+  static getWalletFromName(programAddress: string, name: string) {
+    const [walletAddress, _] = findProgramAddressSync(
+      [Buffer.from("SOLACE"), Buffer.from(name, "utf8")],
+      new anchor.web3.PublicKey(programAddress)
+    );
+    return walletAddress;
+  }
+
   /**
    *
    * @param {string} name UserName of the user, which was initialized while creating the wallet
@@ -108,13 +127,41 @@ export class SolaceSDK {
     name: string,
     data: SolaceSDKData
   ): Promise<SolaceSDK> {
-    const [walletAddress, _] = findProgramAddressSync(
-      [Buffer.from("SOLACE"), Buffer.from(name, "utf8")],
-      new anchor.web3.PublicKey(data.programAddress)
-    );
     const sdk = new this(data);
-    sdk.wallet = walletAddress;
+    sdk.wallet = SolaceSDK.getWalletFromName(data.programAddress, name);
     return sdk;
+  }
+
+  /**
+   * @param data {RequestWalletInformationData} data required to init the program and fetch guardian info
+   * Static helper method to get only the guardian information of a particular wallet, given the address of the wallet. This method is helpful to know if a particular guardian is guarding any addresses. The data obtained by this function is on-chain and un-modifiable without program calls
+   *
+   */
+  static async getWalletGuardianInfo(data: RequestWalletInformationData) {
+    const provider = new anchor.Provider(
+      data.network == "local"
+        ? SolaceSDK.localConnection
+        : SolaceSDK.testnetConnection,
+      new anchor.Wallet(KeyPair.generate()),
+      anchor.Provider.defaultOptions()
+    );
+    const programId = new anchor.web3.PublicKey(data.programAddress);
+    const program = new anchor.Program<Solace>(
+      // @ts-ignore
+      IDL,
+      programId,
+      provider
+    );
+    const wallet = await program.account.wallet.fetch(
+      new PublicKey(data.solaceWalletAddress)
+    );
+    if (!wallet) {
+      throw "Invalid solace wallet address. The SDK could not find a Solace wallet with the given address, on the selected connection cluster";
+    }
+    return {
+      pendingGuardians: wallet.pendingGuardians,
+      approvedGuardians: wallet.approvedGuardians,
+    };
   }
 
   /**
@@ -152,21 +199,22 @@ export class SolaceSDK {
 
   /**
    * Return the wallet state for the user's wallet, if any
-   * @returns {Solace}
    */
   fetchWalletData = () => {
     if (!this.wallet)
       throw "Wallet not found. Please initialize the SDK with one of the given initializers, before using";
-    return this.fetchDataForWallet(this.wallet);
+    return SolaceSDK.fetchDataForWallet(this.wallet, this.program);
   };
 
   /**
    * Fetch the state of any other given wallet
-   * @param {anchor.web3.PublicKey} wallet
-   * @returns {Solace}
    */
-  fetchDataForWallet = (wallet: anchor.web3.PublicKey) =>
-    this.program.account.wallet.fetch(wallet);
+  static fetchDataForWallet = (
+    wallet: anchor.web3.PublicKey,
+    program: Program<Solace>
+  ) => program.account.wallet.fetch(wallet);
+
+  /** Helper to confirm transactions */
   confirmTx = (tx) => this.program.provider.connection.confirmTransaction(tx);
 
   /**
@@ -198,7 +246,7 @@ export class SolaceSDK {
   ): Promise<RelayerIxData> {
     const walletData = await this.fetchWalletData();
     const tx = this.program.transaction.addGuardians(
-      [guardianPublicKey],
+      guardianPublicKey,
       walletData.approvedGuardians.length + 1,
       {
         accounts: {
@@ -266,75 +314,110 @@ export class SolaceSDK {
    * @returns
    */
   async isInRecovery(wallet: anchor.web3.PublicKey): Promise<boolean> {
-    return (await this.fetchDataForWallet(wallet)).recoveryMode as boolean;
+    return (await SolaceSDK.fetchDataForWallet(wallet, this.program))
+      .recoveryMode as boolean;
   }
 
   /**
    * Approve recovery with a solace wallet
-   * @param addressToRecover
+   * @param data
+   * @param guardianAddress
    * @returns
    */
-  async approveRecoveryByKeypair(addressToRecover: anchor.web3.PublicKey) {
+  static async approveRecoveryByKeypairTx(
+    data: RecoverWalletData,
+    guardianAddress: string
+  ) {
+    const provider = new anchor.Provider(
+      data.network == "local"
+        ? SolaceSDK.localConnection
+        : SolaceSDK.testnetConnection,
+      new anchor.Wallet(KeyPair.generate()),
+      anchor.Provider.defaultOptions()
+    );
+
+    const programId = new anchor.web3.PublicKey(data.programAddress);
+    const program = new anchor.Program<Solace>(
+      // @ts-ignore
+      IDL,
+      programId,
+      provider
+    );
+    const walletToRecover = SolaceSDK.getWalletFromName(
+      data.programAddress,
+      data.username
+    );
     try {
-      const walletData = await this.fetchDataForWallet(addressToRecover);
-      const [recoveryAddress, bump] = findProgramAddressSync(
+      console.log(walletToRecover.toString());
+      const walletData = await SolaceSDK.fetchDataForWallet(
+        walletToRecover,
+        program
+      );
+      const [recoveryAddress, _] = findProgramAddressSync(
         [
-          addressToRecover.toBuffer(),
+          walletToRecover.toBuffer(),
           new BN(walletData.walletRecoverySequence).toBuffer("le", 8),
         ],
-        this.program.programId
+        program.programId
       );
-      const tx = await this.program.rpc.approveRecoveryByKeypair({
+      console.log("Forming tx");
+      const tx = program.transaction.approveRecoveryByKeypair({
         accounts: {
-          walletToRecover: addressToRecover,
-          guardian: this.owner.publicKey,
+          walletToRecover: walletToRecover,
+          guardian: new anchor.web3.PublicKey(guardianAddress),
           recoveryAttempt: recoveryAddress,
         },
-        signers: [this.owner],
       });
-      await this.confirmTx(tx);
-      return recoveryAddress;
+      return {
+        tx,
+        recoveryAddress,
+      };
     } catch (e) {
-      return false;
+      throw e;
     }
   }
 
   /**
    * Create an account, just to recover an existing one
-   * @param newOwner
-   * @param addressToRecover
+   * @param data
+   * @param feePayer
    */
-  async createWalletToRequestRecovery(
-    newOwner: anchor.web3.Keypair,
-    addressToRecover: anchor.web3.PublicKey
-  ) {
-    // await this.apiProvider.requestAirdrop(newOwner.publicKey);
-    await this.program.provider.connection.confirmTransaction(
-      await this.program.provider.connection.requestAirdrop(
-        newOwner.publicKey,
-        1 * LAMPORTS_PER_SOL
-      )
+  async recoverWallet(username: string, feePayer: anchor.web3.PublicKey) {
+    const addressToRecover = SolaceSDK.getWalletFromName(
+      this.program.programId.toString(),
+      username
     );
-    const walletData = await this.fetchDataForWallet(addressToRecover);
-    const [recoveryAddress, bump] = findProgramAddressSync(
+
+    this.wallet = addressToRecover;
+
+    const walletData = await SolaceSDK.fetchDataForWallet(
+      addressToRecover,
+      this.program
+    );
+
+    if (!walletData) {
+      throw "Invalid solace wallet address";
+    }
+
+    const [recoveryAddress, _] = findProgramAddressSync(
       [
         addressToRecover.toBuffer(),
         new BN(walletData.walletRecoverySequence).toBuffer("le", 8),
       ],
       this.program.programId
     );
-    const tx = await this.program.rpc.initiateWalletRecovery(
-      newOwner.publicKey,
+
+    const tx = this.program.transaction.initiateWalletRecovery(
+      this.owner.publicKey,
       {
         accounts: {
           wallet: addressToRecover,
           recovery: recoveryAddress,
-          proposer: newOwner.publicKey,
+          proposer: this.owner.publicKey,
           systemProgram: anchor.web3.SystemProgram.programId,
         },
-        signers: [newOwner],
       }
     );
-    await this.confirmTx(tx);
+    return this.signTransaction(tx, feePayer);
   }
 }

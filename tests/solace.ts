@@ -43,6 +43,7 @@ describe("solace", () => {
     await Promise.all([
       airdrop(signer.publicKey),
       airdrop(relayPair.publicKey),
+      airdrop(newOwner.publicKey),
     ]);
     // Configure the client to use the local cluster.
   });
@@ -63,6 +64,7 @@ describe("solace", () => {
       SolaceSDK.localConnection
     );
     walletAddress = solaceSdk.wallet;
+    console.log("Solace Wallet", solaceSdk.wallet.toString());
   });
 
   it("should fetch an existing wallet, and should have the same addr", async () => {
@@ -105,7 +107,8 @@ describe("solace", () => {
   //   assert(afterBalance === beforeBalance + 10, "SOL Not transferred");
   // });
 
-  it("should request for guardianship", async () => {
+  //99
+  it("should request for guardianship and be auto-approved", async () => {
     let wallet = await getWallet();
     const tx = await solaceSdk.addGuardian(
       guardian1.publicKey,
@@ -114,32 +117,77 @@ describe("solace", () => {
     await relayTransaction(tx, relayPair, SolaceSDK.localConnection);
     assert(wallet.owner.equals(signer.publicKey), "Wallet not owned by owner");
     await airdrop(guardian1.publicKey);
+    const guardianInfo = await SolaceSDK.getWalletGuardianInfo({
+      solaceWalletAddress: solaceSdk.wallet.toString(),
+      programAddress: solaceSdk.program.programId.toString(),
+      network: "local",
+    });
+    assert(guardianInfo.approvedGuardians[0].equals(guardian1.publicKey));
+    solaceSdk.fetchWalletData();
     // await solaceSdk.createWalletToRequestRecovery(newOwner, walletAddress);
     // wallet = await getWallet();
     // assert(wallet.recoveryMode, "The wallet should be in recovery mode");
   });
 
-  it("should accept the request for guardianship", async () => {
-    let wallet = await solaceSdk.fetchWalletData();
-    assert(wallet.approvedGuardians.length === 0);
-    assert(wallet.pendingGuardians.length === 1);
-    assert(wallet.pendingGuardians[0].equals(guardian1.publicKey));
-    const tx = SolaceSDK.approveGuardianshipTx({
-      guardianAddress: guardian1.publicKey.toString(),
-      solaceWalletAddress: solaceSdk.wallet.toString(),
-      programAddress: solaceSdk.program.programId.toString(),
+  it("should initiate wallet recovery", async () => {
+    let wallet = await getWallet();
+    const sdk2 = new SolaceSDK({
       network: "local",
+      programAddress: PROGRAM_ADDRESS,
+      owner: newOwner,
     });
-    const confs = await solaceSdk.program.provider.connection.sendTransaction(
+    const tx = await sdk2.recoverWallet("name.solace.io", relayPair.publicKey);
+    console.log(sdk2.wallet.toString());
+    const res = await relayTransaction(
       tx,
-      [guardian1]
+      relayPair,
+      SolaceSDK.localConnection
     );
-    await solaceSdk.program.provider.connection.confirmTransaction(confs);
-    wallet = await solaceSdk.fetchWalletData();
-    assert(wallet.approvedGuardians.length === 1);
-    assert(wallet.pendingGuardians.length === 0);
-    assert(wallet.approvedGuardians[0].equals(guardian1.publicKey));
+    console.log(res);
   });
+  //99
+
+  it("should accept wallet recovery and the new owner should have access to the current wallet", async () => {
+    const tx = await SolaceSDK.approveRecoveryByKeypairTx(
+      {
+        network: "local",
+        programAddress: PROGRAM_ADDRESS,
+        username: "name.solace.io",
+      },
+      guardian1.publicKey.toString()
+    );
+    const res = await SolaceSDK.localConnection.sendTransaction(tx.tx, [
+      guardian1,
+    ]);
+    console.log(await SolaceSDK.localConnection.confirmTransaction(res));
+    const data = await SolaceSDK.fetchDataForWallet(
+      SolaceSDK.getWalletFromName(PROGRAM_ADDRESS, "name.solace.io"),
+      solaceSdk.program
+    );
+    assert(data.owner.equals(newOwner.publicKey));
+  });
+
+  // it("should accept the request for guardianship", async () => {
+  //   let wallet = await solaceSdk.fetchWalletData();
+  //   assert(wallet.approvedGuardians.length === 0);
+  //   assert(wallet.pendingGuardians.length === 1);
+  //   assert(wallet.pendingGuardians[0].equals(guardian1.publicKey));
+  //   const tx = SolaceSDK.approveGuardianshipTx({
+  //     guardianAddress: guardian1.publicKey.toString(),
+  //     solaceWalletAddress: solaceSdk.wallet.toString(),
+  //     programAddress: solaceSdk.program.programId.toString(),
+  //     network: "local",
+  //   });
+  //   const confs = await solaceSdk.program.provider.connection.sendTransaction(
+  //     tx,
+  //     [guardian1]
+  //   );
+  //   await solaceSdk.program.provider.connection.confirmTransaction(confs);
+  //   wallet = await solaceSdk.fetchWalletData();
+  //   assert(wallet.approvedGuardians.length === 1);
+  //   assert(wallet.pendingGuardians.length === 0);
+  //   assert(wallet.approvedGuardians[0].equals(guardian1.publicKey));
+  // });
 
   /**
 

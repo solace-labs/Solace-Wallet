@@ -75,24 +75,21 @@ pub mod solace {
     /// Access Control - Owner Only
     pub fn add_guardians(
         ctx: Context<AddGuardians>,
-        guardians: Vec<Pubkey>,
+        guardian: Pubkey,
         recovery_threshold: u8,
     ) -> Result<()> {
         let wallet = &mut ctx.accounts.wallet;
-        guardians.iter().for_each(|key| {
-            wallet.pending_guardians.push(*key);
-            ()
-        });
         let now = Clock::get().unwrap().unix_timestamp;
         // Check if the wallet is in incubation mode
         if wallet.created_at < now * 12 * 36000 {
-            // Approval can happen instantly
-            wallet.pending_guardians_approval_from.push(now)
+            wallet.approved_guardians.push(guardian);
         } else {
+            // Pending guardian only if a guardian is added post the incubation time
             // Approval can happen only after 36 hours
+            wallet.pending_guardians.push(guardian);
             wallet
                 .pending_guardians_approval_from
-                .push(now + 36 * 36000)
+                .push(now + 36 * 36000);
         }
         // TODO: Handle recovery thresholds based on how many guardians are approved
         wallet.recovery_threshold = recovery_threshold;
