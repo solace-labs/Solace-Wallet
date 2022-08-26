@@ -125,12 +125,12 @@ const Login: React.FC<Props> = ({navigation}) => {
       <View style={styles.container}>
         <View style={styles.textContainer}>
           <Text style={styles.heading}>
-            enter {active === 'username' ? 'username' : 'password'}
+            enter {active === 'username' ? 'solace username' : 'password'}
           </Text>
           <Text style={styles.subHeading}>sign in to your account</Text>
           <TextInput
             style={styles.textInput}
-            placeholder="email username"
+            placeholder="username"
             placeholderTextColor="#fff6"
             value={username.value}
             onChangeText={text => validateUsername(text)}
@@ -141,7 +141,7 @@ const Login: React.FC<Props> = ({navigation}) => {
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.textInput}
-              placeholder="enter password"
+              placeholder="password"
               placeholderTextColor="#fff6"
               value={password.value}
               secureTextEntry={passwordVisibility}

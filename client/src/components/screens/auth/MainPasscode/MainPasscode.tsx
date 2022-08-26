@@ -22,6 +22,7 @@ import styles from './styles';
 import {
   AccountStatus,
   GlobalContext,
+  PROGRAM_ADDRESS,
 } from '../../../../state/contexts/GlobalContext';
 import {setAccountStatus, setSDK} from '../../../../state/actions/global';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -80,7 +81,7 @@ const MainPasscodeScreen: React.FC<Props> = ({navigation}) => {
     const sdk = await SolaceSDK.retrieveFromName(solaceName, {
       network: 'testnet',
       owner: keypair,
-      programAddress: '8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U',
+      programAddress: PROGRAM_ADDRESS,
     });
     console.log({sdk});
     dispatch(setSDK(sdk));

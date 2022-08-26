@@ -25,6 +25,7 @@ const Guardian: React.FC<Props> = ({navigation}) => {
     pending: PublicKeyType[];
   }>({approved: [], pending: []});
   const [guarding, setGuarding] = useState<PublicKeyType[]>([]);
+  console.log(guardians);
 
   const getGuardians = async () => {
     console.log('here');

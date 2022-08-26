@@ -14,7 +14,7 @@ import {Contact} from '../../components/wallet/ContactItem/ContactItem';
 import useLocalStorage from '../../hooks/useLocalStorage';
 import {setAccountStatus, setUser} from '../actions/global';
 import globalReducer from '../reducers/global';
-import {SolaceSDK} from 'solace-sdk';
+import {KeyPair, SolaceSDK} from 'solace-sdk';
 import {AwsCognito} from '../../utils/aws_cognito';
 import {GoogleApi} from '../../utils/google_apis';
 
@@ -35,6 +35,8 @@ export type RetrieveData = {
   decryptedSecretKey?: any;
   decryptedSolaceName?: any;
 };
+
+export const PROGRAM_ADDRESS = '8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U';
 
 export type User = {
   email: string;
@@ -84,6 +86,25 @@ const GlobalProvider = ({children}: {children: any}) => {
   const [state, dispatch] = useReducer(globalReducer, initialState);
   const [storedUser, setStoredUser] = useLocalStorage('user', undefined);
 
+  const checkInRecoverMode = useCallback(() => {
+    console.log('in');
+    return (
+      storedUser &&
+      storedUser.inRecovery &&
+      storedUser.solaceName &&
+      storedUser.ownerPrivateKey
+    );
+  }, [storedUser]);
+
+  const checkRecovery = useCallback(async () => {
+    const privateKey = storedUser.ownerPrivateKey! as string;
+    console.log('checking recovery', privateKey);
+    const keypair = KeyPair.fromSecretKey(
+      Uint8Array.from(privateKey.split(',').map(e => +e)),
+    );
+    // SolaceSDK.
+  }, [storedUser]);
+
   const isUserValid = useCallback(() => {
     return (
       storedUser &&
@@ -96,11 +117,14 @@ const GlobalProvider = ({children}: {children: any}) => {
 
   useEffect(() => {
     console.log({storedUser});
+    // if (checkInRecoverMode()) {
+    //   console.log('inside recover');
+    //   checkRecovery();
+    // } else if (isUserValid()) {
     if (isUserValid()) {
       dispatch(setUser(storedUser));
       dispatch(setAccountStatus(AccountStatus.EXISITING));
     } else {
-      dispatch(setUser(undefined));
       dispatch(setAccountStatus(AccountStatus.NEW));
     }
   }, [storedUser]);

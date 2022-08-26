@@ -14,10 +14,12 @@ import styles from './styles';
 import {
   AccountStatus,
   GlobalContext,
+  PROGRAM_ADDRESS,
 } from '../../../../state/contexts/GlobalContext';
 import {
   setAccountStatus,
   setAwsCognito,
+  setSDK,
   setUser,
 } from '../../../../state/actions/global';
 import {useTogglePasswordVisibility} from '../../../../hooks/useTogglePasswordVisibility';
@@ -25,6 +27,8 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import {AwsCognito} from '../../../../utils/aws_cognito';
 import useLocalStorage from '../../../../hooks/useLocalStorage';
 import {showMessage} from 'react-native-flash-message';
+import {PublicKey, SolaceSDK} from 'solace-sdk';
+import {getMeta, relayTransaction} from '../../../../utils/relayer';
 
 export type Props = {
   navigation: any;
@@ -32,7 +36,7 @@ export type Props = {
 
 const Login: React.FC<Props> = ({navigation}) => {
   const [username, setUsername] = useState({
-    value: 'ankit2',
+    value: 'ankit.negi.123',
     isValid: false,
   });
   const [password, setPassword] = useState({
@@ -46,14 +50,6 @@ const Login: React.FC<Props> = ({navigation}) => {
 
   const {state, dispatch} = useContext(GlobalContext);
   const [tokens, setTokens] = useLocalStorage('tokens');
-  const [storedUser, setStoredUser] = useLocalStorage('user');
-
-  // useEffect(() => {
-  //   console.log({storedUser, tokens});
-  //   if (tokens) {
-  //     navigation.navigate('MainPasscode');
-  //   }
-  // }, [tokens, storedUser]);
 
   const validateUsername = (text: string) => {
     setUsername({
@@ -90,9 +86,13 @@ const Login: React.FC<Props> = ({navigation}) => {
         username.value,
         password.value,
       );
+      console.log({response});
       const {
+        //@ts-ignore
         accessToken: {jwtToken: accesstoken},
+        //@ts-ignore
         idToken: {jwtToken: idtoken},
+        //@ts-ignore
         refreshToken: {token: refreshtoken},
       } = response;
       setTokens({
@@ -101,12 +101,11 @@ const Login: React.FC<Props> = ({navigation}) => {
         refreshtoken,
       });
       dispatch(setUser({...state.user, solaceName: username.value}));
-      setIsLoading(false);
-      navigation.reset({
-        index: 0,
-        routes: [{name: 'GoogleDrive'}],
+      showMessage({
+        message: 'successfully logged in',
+        type: 'success',
       });
-      return;
+      navigation.navigate('GuardianRecovery');
     } catch (e: any) {
       showMessage({
         message: e.message,
@@ -141,7 +140,7 @@ const Login: React.FC<Props> = ({navigation}) => {
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.textInput}
-              placeholder="enter password"
+              placeholder="password"
               placeholderTextColor="#fff6"
               value={password.value}
               secureTextEntry={passwordVisibility}
@@ -175,7 +174,7 @@ const Login: React.FC<Props> = ({navigation}) => {
                 color: isDisable() ? '#9999a5' : 'black',
               },
             ]}>
-            {isLoading ? 'signing in...' : 'sign in'}
+            {isLoading ? 'logging in...' : 'login'}
           </Text>
         </TouchableOpacity>
       </View>

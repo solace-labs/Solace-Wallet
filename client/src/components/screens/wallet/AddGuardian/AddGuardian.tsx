@@ -40,7 +40,7 @@ export type Props = {
 const AddGuardian: React.FC<Props> = ({navigation}) => {
   const [name, setName] = useState('');
   const [address, setAddress] = useState(
-    'G9PfPVfBuKF4xr4yLt4LjfDezwunPsezCvdjfVBJnHk2',
+    'GNgMfSSJ4NjSuu1EdHj94P6TzQS24KH38y1si2CMrUsF',
   );
   const {state, dispatch} = useContext(GlobalContext);
   const [tokens, setTokens] = useLocalStorage('tokens', {});

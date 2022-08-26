@@ -49,7 +49,7 @@ const GuardianTab: React.FC<Props> = ({guardians, loading}) => {
                   styles.responseText,
                   {color: type === 'approved' ? '#00AC64' : '#D27D00'},
                 ]}>
-                {type === 'approved' ? 'approved' : 'awaiting response'}
+                {type === 'approved' ? 'approved' : 'pending'}
               </Text>
             </View>
           </View>
@@ -77,7 +77,8 @@ const GuardianTab: React.FC<Props> = ({guardians, loading}) => {
     <ScrollView bounces={true}>
       <View style={styles.mainContainer}>
         {
-          /*guardians */ guardians.pending.length > 0 ? (
+          /*guardians */ [guardians.approved, ...guardians.pending].length >
+          0 ? (
             <View style={styles.guardiansContainer}>
               <View style={styles.container}>
                 <View style={styles.item}>
@@ -93,12 +94,14 @@ const GuardianTab: React.FC<Props> = ({guardians, loading}) => {
                 </View>
               </View>
 
-              {guardians.pending.map((guardian, index) => {
-                return renderGuardian(guardian, index, 'pending');
-              })}
-              {guardians.approved.map((guardian, index) => {
-                return renderGuardian(guardian, index, 'approved');
-              })}
+              <View>
+                {guardians.pending.map((guardian, index) => {
+                  return renderGuardian(guardian, index, 'pending');
+                })}
+                {guardians.approved.map((guardian, index) => {
+                  return renderGuardian(guardian, index, 'approved');
+                })}
+              </View>
             </View>
           ) : (
             <View style={styles.imageContainer}>

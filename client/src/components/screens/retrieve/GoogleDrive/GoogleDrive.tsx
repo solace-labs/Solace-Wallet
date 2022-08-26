@@ -115,7 +115,8 @@ const GoogleDriveScreen: React.FC<Props> = ({navigation}) => {
   };
 
   const recoverUsingGuardians = () => {
-    navigation.navigate('GuardianRecovery');
+    // navigation.navigate('GuardianRecovery');
+    dispatch(setAccountStatus(AccountStatus.RECOVERY));
   };
 
   useEffect(() => {

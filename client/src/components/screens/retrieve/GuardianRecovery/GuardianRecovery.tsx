@@ -2,15 +2,21 @@ import {
   View,
   Text,
   TouchableOpacity,
-  TextInput,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
 import React, {useContext, useState} from 'react';
 import styles from './styles';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import {GlobalContext} from '../../../../state/contexts/GlobalContext';
-import {setUser} from '../../../../state/actions/global';
+import {
+  GlobalContext,
+  PROGRAM_ADDRESS,
+} from '../../../../state/contexts/GlobalContext';
+import {setSDK, setUser} from '../../../../state/actions/global';
+import {PublicKey, SolaceSDK} from 'solace-sdk';
+import {airdrop, getMeta, relayTransaction} from '../../../../utils/relayer';
+import useLocalStorage from '../../../../hooks/useLocalStorage';
+import {showMessage} from 'react-native-flash-message';
 
 export type Props = {
   navigation: any;
@@ -24,168 +30,179 @@ export enum Status {
 }
 
 const GuardianRecovery: React.FC<Props> = ({navigation}) => {
-  const [username, setUsername] = useState('');
-  const [borderColor, setBorderColor] = useState('#fff3');
-  const [isLoading, setIsLoading] = useState(false);
-  const [usernameAvailable, setUsernameAvailable] = useState(false);
-  const [status, setStatus] = useState({
-    text: 'your username will be public',
-    status: Status.INFO,
+  const [loading, setLoading] = useState({
+    value: false,
+    message: 'recover',
   });
-
+  const [tokens, setTokens] = useLocalStorage('tokens');
   const {state, dispatch} = useContext(GlobalContext);
 
-  // const checkUsernameAvailability = async () => {
-  //   if (username.trim().length === 0) {
-  //     return;
-  //   }
-  //   setIsLoading(true);
-  //   dispatch(setUser({...state.user, solaceName: username}));
-  //   setTimeout(() => {
-  //     /** Checking username availability */
-  //     // const available = await SolaceSDK.checkUsernameAvailability(username);
-  //     const available = true;
-  //     if (available) {
-  //       setStatus({
-  //         text: 'username is available',
-  //         status: Status.SUCCESS,
-  //       });
-  //       setUsernameAvailable(true);
-  //     } else {
-  //       setStatus({
-  //         text: 'username is not available',
-  //         status: Status.ERROR,
-  //       });
-  //     }
-  //     setIsLoading(false);
-  //   }, 200);
-  // };
-
-  const handleUsernameSubmit = async () => {
-    navigation.navigate('Email');
-  };
-
-  const handleChange = (text: string) => {
-    setUsername(text);
-    // if (usernameAvailable) {
-    //   setUsernameAvailable(false);
-    // }
-    // if (status.status !== Status.INFO) {
-    //   setStatus({text: 'your username will be public', status: Status.INFO});
-    // }
-  };
-
-  const getIcon = () => {
-    let name = 'infocirlceo';
-    let color = 'gray';
-    switch (status.status) {
-      case Status.INFO:
-        name = 'infocirlceo';
-        color = 'gray';
-        break;
-      case Status.WARNING:
-        name = 'exclamationcircle';
-        color = 'orange';
-        break;
-      case Status.ERROR:
-        name = 'closecircleo';
-        color = 'red';
-        break;
-      case Status.SUCCESS:
-        name = 'checkcircleo';
-        color = 'green';
+  const handleRecovery = async () => {
+    const keypair = SolaceSDK.newKeyPair();
+    try {
+      setLoading({
+        message: 'recovering...',
+        value: false,
+      });
+      const newSDK = new SolaceSDK({
+        network: 'testnet',
+        programAddress: PROGRAM_ADDRESS,
+        owner: keypair,
+      });
+      const username = state.user?.solaceName!;
+      const accessToken = tokens.accesstoken;
+      const feePayer = new PublicKey(await getFeePayer(accessToken));
+      console.log({feePayer, username});
+      const data = await requestAirdrop(
+        keypair.publicKey.toString(),
+        accessToken,
+      );
+      console.log('AIRDROP CONFIRMATION');
+      await confirmTransaction(data);
+      const tx = await newSDK.recoverWallet(username, feePayer);
+      console.log({tx});
+      const res = await relayTransaction(tx, accessToken);
+      console.log({res});
+      await confirmTransaction(res.data);
+      dispatch(setSDK(newSDK));
+      dispatch(
+        setUser({
+          ...state.user,
+          solaceName: username,
+          isWalletCreated: true,
+        }),
+      );
+      setLoading({
+        message: 'recovered',
+        value: false,
+      });
+      navigation.navigate('Recover');
+    } catch (e: any) {
+      console.log('e', JSON.stringify(e));
+      if (e.message === 'Request failed') {
+        showMessage({
+          message: 'already in recovery phase',
+          type: 'info',
+        });
+      }
+      setLoading({
+        message: 'some error. try again?',
+        value: false,
+      });
     }
-    return (
-      <View style={styles.subTextContainer}>
-        <AntDesign name={name} style={[styles.subIcon, {color}]} />
-        <Text style={styles.subText}>{status.text}</Text>
-      </View>
-    );
+  };
+
+  const requestAirdrop = async (publicKey: string, accessToken: string) => {
+    console.log({publicKey, accessToken});
+    setLoading({
+      value: true,
+      message: 'requesting air drop...',
+    });
+    try {
+      const res: any = await airdrop(publicKey, accessToken);
+      showMessage({
+        message: 'transaction sent',
+        type: 'success',
+      });
+      return res.data;
+    } catch (e) {
+      console.log('Airdrop error', e);
+      setLoading({
+        value: false,
+        message: 'request now',
+      });
+      showMessage({
+        message: 'error requesting airdrop. try again!',
+        type: 'danger',
+      });
+      throw e;
+    }
+  };
+
+  const confirmTransaction = async (data: string) => {
+    setLoading({
+      value: true,
+      message: 'confirming transaction...',
+    });
+    console.log({data});
+    let confirm = false;
+    let retry = 0;
+    while (!confirm) {
+      if (retry > 0) {
+        setLoading({
+          value: true,
+          message: 'retrying confirmation...',
+        });
+      }
+      if (retry === 3) {
+        setLoading({
+          value: false,
+          message: 'some error. try again?',
+        });
+        confirm = true;
+        continue;
+      }
+      try {
+        const res = await SolaceSDK.testnetConnection.confirmTransaction(data);
+        showMessage({
+          message: 'transaction confirmed - wallet created',
+          type: 'success',
+        });
+        confirm = true;
+      } catch (e: any) {
+        if (
+          e.message.startsWith(
+            'Transaction was not confirmed in 60.00 seconds.',
+          )
+        ) {
+          console.log('Timeout');
+          retry++;
+        } else {
+          console.log('OTHER ERROR: ', e.message);
+          retry++;
+        }
+      }
+    }
+  };
+
+  const getFeePayer = async (accessToken: string) => {
+    setLoading({
+      message: 'recovering...',
+      value: true,
+    });
+    try {
+      const response = await getMeta(accessToken);
+      console.log({response});
+      return response.feePayer;
+    } catch (e) {
+      setLoading({
+        message: 'create',
+        value: false,
+      });
+      console.log('FEE PAYER', e);
+      throw e;
+    }
   };
 
   return (
     <ScrollView contentContainerStyle={styles.contentContainer} bounces={false}>
-      {/* {isLoading ? (
-        <View
-          style={{
-            flex: 1,
-            justifyContent: 'center',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}>
-          <ActivityIndicator size="large" />
-          <Text style={{color: 'white', fontFamily: 'SpaceMono-Bold'}}>
-            setting your username
-          </Text>
-        </View>
-      ) : ( */}
       <View style={styles.container}>
         <View style={styles.textContainer}>
           <Text style={styles.heading}>your solace username</Text>
           <Text style={styles.subHeading}>
             recover your solace account by guardians approval
           </Text>
-          <TextInput
-            style={[styles.textInput, {borderColor}]}
-            placeholder="username"
-            placeholderTextColor="#fff6"
-            value={username}
-            autoCorrect={false}
-            autoCapitalize={'none'}
-            onFocus={() => setBorderColor('#fff6')}
-            onBlur={() => setBorderColor('#fff3')}
-            onChangeText={text => handleChange(text)}
-          />
-          {/* {isLoading ? (
-            <View style={styles.subTextContainer}>
-              <ActivityIndicator size="small" />
-            </View>
-          ) : (
-            getIcon()
-          )} */}
         </View>
-        {/* {!usernameAvailable ? (
-          <TouchableOpacity
-            disabled={username.trim().length === 0 || isLoading}
-            onPress={() => {
-              // checkUsernameAvailability();
-            }}
-            style={styles.buttonStyle}>
-            <Text
-              style={[
-                styles.buttonTextStyle,
-                {
-                  color:
-                    username.trim().length === 0 || isLoading
-                      ? 'gray'
-                      : 'black',
-                },
-              ]}>
-              {isLoading ? 'checking...' : 'check'}
-            </Text>
-          </TouchableOpacity>
-        ) : ( */}
+        {loading.value && <ActivityIndicator size="small" />}
         <TouchableOpacity
-          disabled={username.trim().length === 0 || isLoading}
+          disabled={loading.value}
           onPress={() => {
-            // handleUsernameSubmit();
-            navigation.navigate('Recover');
+            handleRecovery();
           }}
           style={styles.buttonStyle}>
-          <Text
-            style={[
-              styles.buttonTextStyle,
-              {
-                color:
-                  username.trim().length === 0 || isLoading ? 'gray' : 'black',
-              },
-            ]}>
-            recover
-          </Text>
+          <Text style={styles.buttonTextStyle}>{loading.message}</Text>
         </TouchableOpacity>
-        {/* )} */}
       </View>
-      {/* )} */}
     </ScrollView>
   );
 };

@@ -17,6 +17,7 @@ import {
 import {
   AccountStatus,
   GlobalContext,
+  PROGRAM_ADDRESS,
 } from '../../../../state/contexts/GlobalContext';
 import useLocalStorage from '../../../../hooks/useLocalStorage';
 import {KeyPair, PublicKey, SolaceSDK} from 'solace-sdk';
@@ -82,6 +83,7 @@ const CreateWalletScreen: React.FC = () => {
       const awsCognito = state.awsCognito!;
       await awsCognito.updateAttribute('address', sdk.wallet.toString());
       dispatch(setSDK(sdk));
+      // sdk.owner;
       dispatch(setUser({...state.user, isWalletCreated: true}));
       showMessage({
         message: 'wallet created',
@@ -170,7 +172,7 @@ const CreateWalletScreen: React.FC = () => {
       const sdk = new SolaceSDK({
         network: 'testnet',
         owner: keypair,
-        programAddress: '8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U',
+        programAddress: PROGRAM_ADDRESS,
       });
       const username = state.user?.solaceName!;
       /** TODO remove this */

@@ -15,6 +15,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
   },
+  inputContainer: {
+    position: 'relative',
+  },
+  eyeIcon: {
+    position: 'absolute',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    right: 0,
+    top: 15,
+    bottom: 0,
+    width: 50,
+  },
   textContainer: {
     display: 'flex',
     justifyContent: 'center',
@@ -33,12 +46,13 @@ const styles = StyleSheet.create({
     fontFamily: 'SpaceMono-Bold',
   },
   textInput: {
-    borderColor: '#fff3',
+    borderColor: 'rgba(255,255,255,0.2)',
     marginTop: 20,
     borderRadius: 3,
     color: 'white',
     padding: 14,
     borderWidth: 1,
+    width: '100%',
     fontFamily: 'SpaceMono-Bold',
   },
   buttonStyle: {
@@ -50,22 +64,15 @@ const styles = StyleSheet.create({
   buttonTextStyle: {
     textAlign: 'center',
     fontWeight: 'bold',
-    color: 'black',
     fontSize: 16,
     fontFamily: 'SpaceMono-Bold',
     textTransform: 'lowercase',
   },
-  subTextContainer: {
-    flexDirection: 'row',
-    marginTop: 8,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-  },
-  subIcon: {color: 'gray', fontSize: 16, fontWeight: 'bold'},
-  subText: {
-    paddingLeft: 6,
-    color: 'gray',
-    fontFamily: 'Poppins-SemiBold',
+  passwordHint: {
+    color: '#919BA6',
+    fontSize: 12,
+    paddingTop: 4,
+    fontFamily: 'SpaceMono-Regular',
   },
 });
 

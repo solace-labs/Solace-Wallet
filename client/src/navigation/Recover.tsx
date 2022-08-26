@@ -8,15 +8,16 @@ import Login from '../components/screens/retrieve/Login/Login';
 
 const Stack = createNativeStackNavigator();
 
-const RetrieveStack = () => {
+const RecoverStack = () => {
   return (
     <Stack.Navigator
-      initialRouteName="GoogleDrive"
+      initialRouteName="Login"
       screenOptions={{headerShown: false}}>
-      <Stack.Screen name="GoogleDrive" component={GoogleDriveScreen} />
-      <Stack.Screen name="Passcode" component={PasscodeScreen} />
+      <Stack.Screen name="Login" component={Login} />
+      <Stack.Screen name="GuardianRecovery" component={GuardianRecovery} />
+      <Stack.Screen name="Recover" component={RecoverScreen} />
     </Stack.Navigator>
   );
 };
 
-export default RetrieveStack;
+export default RecoverStack;
