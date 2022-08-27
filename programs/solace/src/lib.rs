@@ -35,6 +35,7 @@ pub mod solace {
         wallet.recovery_mode = false;
         wallet.recovery_threshold = recovery_threshold;
         wallet.wallet_recovery_sequence = 0;
+        wallet.created_at = Clock::get().unwrap().unix_timestamp;
         Ok(())
     }
 
@@ -70,27 +71,37 @@ pub mod solace {
         Ok(())
     }
 
-    /// Adds a guadian to the wallet's approved_guardian vector
+    /// Adds a guadian to the wallet's pending_guardians vector
     /// Access Control - Owner Only
     pub fn add_guardians(
         ctx: Context<AddGuardians>,
-        guardians: Vec<Pubkey>,
+        guardian: Pubkey,
         recovery_threshold: u8,
     ) -> Result<()> {
         let wallet = &mut ctx.accounts.wallet;
-        guardians.iter().for_each(|key| {
-            wallet.approved_guardians.push(*key);
-            ()
-        });
+        let now = Clock::get().unwrap().unix_timestamp;
+        // Check if the wallet is in incubation mode
+        if wallet.created_at < now * 12 * 36000 {
+            wallet.approved_guardians.push(guardian);
+        } else {
+            // Pending guardian only if a guardian is added post the incubation time
+            // Approval can happen only after 36 hours
+            wallet.pending_guardians.push(guardian);
+            wallet
+                .pending_guardians_approval_from
+                .push(now + 36 * 36000);
+        }
         // TODO: Handle recovery thresholds based on how many guardians are approved
         wallet.recovery_threshold = recovery_threshold;
-        msg!("Added new approved guardians");
+        msg!("Added new pending guardians");
         Ok(())
     }
 
     /// Approve a guardian to the wallet
     /// Remove the given guardian from the pending guardians vec and add them to the approved guardian vec
-    pub fn approve_guardian(ctx: Context<ApproveGuardian>) -> Result<()> {
+    /// This requires the guardian to be a keypair guardian and not a solace-guardian
+    /// Check for time-lock
+    pub fn approve_guardianship(ctx: Context<ApproveGuardian>) -> Result<()> {
         let wallet = &mut ctx.accounts.wallet;
         let index = wallet
             .pending_guardians
@@ -99,7 +110,16 @@ pub mod solace {
             .ok_or(errors::Errors::InvalidGuardian)
             .unwrap();
 
+        let now = Clock::get().unwrap().unix_timestamp;
+
+        let approval_time = wallet.pending_guardians_approval_from[index];
+        // Ensure that the require amount of wait time has passed
+        assert!(
+            now > approval_time,
+            "required wait-time has not yet been elapsed"
+        );
         wallet.pending_guardians.remove(index);
+        wallet.pending_guardians_approval_from.remove(index);
         wallet.approved_guardians.push(ctx.accounts.guardian.key());
 
         msg!("Guardian Approved");
@@ -217,7 +237,7 @@ pub struct CreateWallet<'info> {
     #[account(mut)]
     signer: Signer<'info>,
     #[account(
-        init, 
+        init,
         payer = signer,
         space = 1000,
         seeds = [b"SOLACE".as_ref(), name.as_str().as_ref()],

@@ -3555,11 +3555,14 @@
   "resolved" "https://registry.npmjs.org/crypto-js/-/crypto-js-4.1.1.tgz"
   "version" "4.1.1"
 
+<<<<<<< HEAD
 "cssesc@^3.0.0":
   "integrity" "sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg=="
   "resolved" "https://registry.npmjs.org/cssesc/-/cssesc-3.0.0.tgz"
   "version" "3.0.0"
 
+=======
+>>>>>>> 6ec7fba5c1dd14e5e9392c4bffe1996de9b23089
 "cssom@^0.4.4":
   "integrity" "sha512-p3pvU7r1MyyqbTk+WbNJIgJjG2VmTIaB10rI93LzVPrmDJKkzKYMtxxyAvQXR/NS6otuzveI7+7BBq3SjBS2mw=="
   "resolved" "https://registry.npmjs.org/cssom/-/cssom-0.4.4.tgz"
@@ -5992,7 +5995,7 @@
     "@babel/plugin-transform-modules-commonjs" "^7.13.8"
     "@babel/preset-flow" "^7.13.13"
     "@babel/preset-typescript" "^7.13.0"
-    "@babel/register" "^7.13.16"
+    "@babel/register," "^7.13.16"
     "babel-core" "^7.0.0-bridge.0"
     "chalk" "^4.1.2"
     "flow-parser" "0.*"

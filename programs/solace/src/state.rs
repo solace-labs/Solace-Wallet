@@ -4,6 +4,8 @@ use anchor_lang::prelude::*;
 pub struct Wallet {
     // The guardians for this wallet
     pub pending_guardians: Vec<Pubkey>,
+    // The unix timestamps from when the approvals can be made
+    pub pending_guardians_approval_from: Vec<i64>,
     // The guardians for this wallet
     pub approved_guardians: Vec<Pubkey>,
     // The owner for the wallet
@@ -22,6 +24,8 @@ pub struct Wallet {
     pub current_recovery: Option<Pubkey>,
     // All the accounts the users are guarding
     pub guarding: Vec<Pubkey>,
+    // The time at which the wallet was created. Used to calculate the incubation period
+    pub created_at: i64,
 }
 
 #[account]

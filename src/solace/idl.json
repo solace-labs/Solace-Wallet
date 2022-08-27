@@ -113,10 +113,8 @@
       ],
       "args": [
         {
-          "name": "guardians",
-          "type": {
-            "vec": "publicKey"
-          }
+          "name": "guardian",
+          "type": "publicKey"
         },
         {
           "name": "recoveryThreshold",
@@ -125,7 +123,7 @@
       ]
     },
     {
-      "name": "approveGuardian",
+      "name": "approveGuardianship",
       "accounts": [
         {
           "name": "wallet",
@@ -274,6 +272,12 @@
             }
           },
           {
+            "name": "pendingGuardiansApprovalFrom",
+            "type": {
+              "vec": "i64"
+            }
+          },
+          {
             "name": "approvedGuardians",
             "type": {
               "vec": "publicKey"
@@ -314,6 +318,10 @@
             "type": {
               "vec": "publicKey"
             }
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
           }
         ]
       }

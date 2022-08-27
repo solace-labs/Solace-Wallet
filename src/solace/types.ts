@@ -113,10 +113,8 @@ export type Solace = {
       ],
       "args": [
         {
-          "name": "guardians",
-          "type": {
-            "vec": "publicKey"
-          }
+          "name": "guardian",
+          "type": "publicKey"
         },
         {
           "name": "recoveryThreshold",
@@ -125,7 +123,7 @@ export type Solace = {
       ]
     },
     {
-      "name": "approveGuardian",
+      "name": "approveGuardianship",
       "accounts": [
         {
           "name": "wallet",
@@ -274,6 +272,12 @@ export type Solace = {
             }
           },
           {
+            "name": "pendingGuardiansApprovalFrom",
+            "type": {
+              "vec": "i64"
+            }
+          },
+          {
             "name": "approvedGuardians",
             "type": {
               "vec": "publicKey"
@@ -314,6 +318,10 @@ export type Solace = {
             "type": {
               "vec": "publicKey"
             }
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
           }
         ]
       }
@@ -507,10 +515,8 @@ export const IDL: Solace = {
       ],
       "args": [
         {
-          "name": "guardians",
-          "type": {
-            "vec": "publicKey"
-          }
+          "name": "guardian",
+          "type": "publicKey"
         },
         {
           "name": "recoveryThreshold",
@@ -519,7 +525,7 @@ export const IDL: Solace = {
       ]
     },
     {
-      "name": "approveGuardian",
+      "name": "approveGuardianship",
       "accounts": [
         {
           "name": "wallet",
@@ -668,6 +674,12 @@ export const IDL: Solace = {
             }
           },
           {
+            "name": "pendingGuardiansApprovalFrom",
+            "type": {
+              "vec": "i64"
+            }
+          },
+          {
             "name": "approvedGuardians",
             "type": {
               "vec": "publicKey"
@@ -708,6 +720,10 @@ export const IDL: Solace = {
             "type": {
               "vec": "publicKey"
             }
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
           }
         ]
       }

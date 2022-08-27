@@ -1,5 +1,5 @@
 [features]
-seeds = true 
+seeds = true
 
 [programs.localnet]
 solace = "8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U"
@@ -12,7 +12,9 @@ url = "https://anchor.projectserum.com"
 
 [provider]
 # cluster = "localnet"
-cluster = "http://127.0.0.1:8899"
+# cluster = "http://13.127.85.83:8899"
+cluster = "https://dawn-wild-mansion.solana-testnet.discover.quiknode.pro/8e3ffd4815d22093c073fa37348521cbe7d9ae57"
+# cluster = "http://127.0.0.1:8899"
 # cluster = "testnet"
 wallet = "./wallet/id.json"
 
