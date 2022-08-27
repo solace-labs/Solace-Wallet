@@ -10,6 +10,8 @@ import styles from './styles';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {
   GlobalContext,
+  myPublicKey,
+  NETWORK,
   PROGRAM_ADDRESS,
 } from '../../../../state/contexts/GlobalContext';
 import {setSDK, setUser} from '../../../../state/actions/global';
@@ -35,6 +37,7 @@ const GuardianRecovery: React.FC<Props> = ({navigation}) => {
     message: 'recover',
   });
   const [tokens, setTokens] = useLocalStorage('tokens');
+  const [storedUser, setStoredUser] = useLocalStorage('user');
   const {state, dispatch} = useContext(GlobalContext);
 
   const handleRecovery = async () => {
@@ -45,12 +48,13 @@ const GuardianRecovery: React.FC<Props> = ({navigation}) => {
         value: false,
       });
       const newSDK = new SolaceSDK({
-        network: 'testnet',
+        network: NETWORK,
         programAddress: PROGRAM_ADDRESS,
         owner: keypair,
       });
       const username = state.user?.solaceName!;
       const accessToken = tokens.accesstoken;
+      // const feePayer = myPublicKey;
       const feePayer = new PublicKey(await getFeePayer(accessToken));
       console.log({feePayer, username});
       const data = await requestAirdrop(
@@ -64,6 +68,11 @@ const GuardianRecovery: React.FC<Props> = ({navigation}) => {
       const res = await relayTransaction(tx, accessToken);
       console.log({res});
       await confirmTransaction(res.data);
+      setStoredUser({
+        solaceName: username,
+        ownerPrivateKey: keypair.secretKey.toString(),
+        inRecovery: true,
+      });
       dispatch(setSDK(newSDK));
       dispatch(
         setUser({
@@ -115,7 +124,7 @@ const GuardianRecovery: React.FC<Props> = ({navigation}) => {
         message: 'error requesting airdrop. try again!',
         type: 'danger',
       });
-      throw e;
+      // throw e;
     }
   };
 

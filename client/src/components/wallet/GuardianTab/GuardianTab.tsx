@@ -77,10 +77,10 @@ const GuardianTab: React.FC<Props> = ({guardians, loading}) => {
     <ScrollView bounces={true}>
       <View style={styles.mainContainer}>
         {
-          /*guardians */ [guardians.approved, ...guardians.pending].length >
+          /*guardians */ [...guardians.approved, ...guardians.pending].length >
           0 ? (
             <View style={styles.guardiansContainer}>
-              <View style={styles.container}>
+              {/* <View style={styles.container}>
                 <View style={styles.item}>
                   <View style={styles.leftSide}>
                     <View style={styles.guardianImageContainer}>
@@ -92,7 +92,7 @@ const GuardianTab: React.FC<Props> = ({guardians, loading}) => {
                     </View>
                   </View>
                 </View>
-              </View>
+              </View> */}
 
               <View>
                 {guardians.pending.map((guardian, index) => {

@@ -214,7 +214,7 @@ const AddGuardian: React.FC<Props> = ({navigation}) => {
         <Text style={styles.secondText}>network</Text>
         <Text style={styles.solanaText}>solana</Text>
       </View> */}
-      <View style={{flexGrow: 1}}>
+      <View style={{flexGrow: 1, paddingTop: 20}}>
         {loading.value && <ActivityIndicator size="small" />}
       </View>
       {/* {loading.value && (

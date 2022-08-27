@@ -1,4 +1,11 @@
 import axios from 'axios';
+import {KeyPair, PublicKey, SolaceSDK} from 'solace-sdk';
+import {relayTransaction as rlTransaction} from 'solace-sdk/relayer';
+import {
+  LAMPORTS_PER_SOL,
+  myPrivateKey,
+  NETWORK,
+} from '../state/contexts/GlobalContext';
 
 const baseUrl = 'https://rxc9xav4nk.execute-api.ap-south-1.amazonaws.com';
 
@@ -28,7 +35,13 @@ export const getMeta = async (accessToken: string) => {
  */
 export const airdrop = async (publicKey: string, accessToken: string) => {
   try {
-    const data = await axios.post(
+    if (NETWORK === 'local') {
+      return await SolaceSDK.localConnection.requestAirdrop(
+        new PublicKey(publicKey),
+        LAMPORTS_PER_SOL,
+      );
+    }
+    const res = await axios.post(
       `${baseUrl}/airdrop`,
       {
         publicKey,
@@ -37,7 +50,7 @@ export const airdrop = async (publicKey: string, accessToken: string) => {
         headers: {Authorization: accessToken},
       },
     );
-    return data;
+    return res.data;
   } catch (e) {
     console.log('ERROR', e);
   }
@@ -50,9 +63,14 @@ export const airdrop = async (publicKey: string, accessToken: string) => {
  * @returns
  */
 export const relayTransaction = async (tx: any, accessToken: string) => {
-  return await axios.post(`${baseUrl}/relay`, tx, {
+  if (NETWORK === 'local') {
+    const keypair = KeyPair.fromSecretKey(Uint8Array.from(myPrivateKey));
+    return await rlTransaction(tx, keypair);
+  }
+  const res = await axios.post(`${baseUrl}/relay`, tx, {
     headers: {Authorization: accessToken},
   });
+  return res.data;
 };
 
 /**

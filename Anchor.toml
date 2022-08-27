@@ -5,7 +5,7 @@ seeds = true
 solace = "8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U"
 
 [programs.testnet]
-solace = "8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U"
+solace = "3CvPZTk1PYMs6JzgiVNFtsAeijSNwbhrQTMYeFQKWpFw"
 
 [registry]
 url = "https://anchor.projectserum.com"

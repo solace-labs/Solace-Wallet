@@ -22,6 +22,7 @@ import styles from './styles';
 import {
   AccountStatus,
   GlobalContext,
+  NETWORK,
   PROGRAM_ADDRESS,
 } from '../../../../state/contexts/GlobalContext';
 import {setAccountStatus, setSDK} from '../../../../state/actions/global';
@@ -79,7 +80,7 @@ const MainPasscodeScreen: React.FC<Props> = ({navigation}) => {
       message: 'logging you in',
     });
     const sdk = await SolaceSDK.retrieveFromName(solaceName, {
-      network: 'testnet',
+      network: NETWORK,
       owner: keypair,
       programAddress: PROGRAM_ADDRESS,
     });

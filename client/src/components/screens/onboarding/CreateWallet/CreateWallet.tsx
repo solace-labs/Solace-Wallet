@@ -17,6 +17,7 @@ import {
 import {
   AccountStatus,
   GlobalContext,
+  NETWORK,
   PROGRAM_ADDRESS,
 } from '../../../../state/contexts/GlobalContext';
 import useLocalStorage from '../../../../hooks/useLocalStorage';
@@ -123,7 +124,8 @@ const CreateWalletScreen: React.FC = () => {
         continue;
       }
       try {
-        const res = await SolaceSDK.testnetConnection.confirmTransaction(data);
+        // const res = await SolaceSDK.testnetConnection.confirmTransaction(data);
+        const res = await SolaceSDK.testnetConnection.getSignatureStatus(data);
         showMessage({
           message: 'transaction confirmed - wallet created',
           type: 'success',
@@ -170,7 +172,7 @@ const CreateWalletScreen: React.FC = () => {
   ) => {
     try {
       const sdk = new SolaceSDK({
-        network: 'testnet',
+        network: NETWORK,
         owner: keypair,
         programAddress: PROGRAM_ADDRESS,
       });

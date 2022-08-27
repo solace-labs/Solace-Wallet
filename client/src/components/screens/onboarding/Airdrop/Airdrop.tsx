@@ -7,7 +7,7 @@ import {
 } from 'react-native';
 import React, {useContext, useState} from 'react';
 import styles from './styles';
-import {GlobalContext} from '../../../../state/contexts/GlobalContext';
+import {GlobalContext, NETWORK} from '../../../../state/contexts/GlobalContext';
 import useLocalStorage from '../../../../hooks/useLocalStorage';
 import {KeyPair, SolaceSDK} from 'solace-sdk';
 import {showMessage} from 'react-native-flash-message';
@@ -62,7 +62,7 @@ const AirdropScreen: React.FC<Props> = ({navigation}) => {
         message: 'transaction sent',
         type: 'success',
       });
-      return data.data;
+      return data;
     } catch (e) {
       console.log('Airdrop error', e);
       setLoading({
@@ -101,7 +101,11 @@ const AirdropScreen: React.FC<Props> = ({navigation}) => {
         continue;
       }
       try {
-        await SolaceSDK.testnetConnection.confirmTransaction(transactionId);
+        if (NETWORK === 'local') {
+          await SolaceSDK.localConnection.confirmTransaction(transactionId);
+        } else {
+          await SolaceSDK.testnetConnection.confirmTransaction(transactionId);
+        }
         showMessage({
           message: 'airdrop recieved',
           type: 'success',

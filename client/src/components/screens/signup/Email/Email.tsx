@@ -35,7 +35,7 @@ const EmailScreen: React.FC<Props> = ({navigation}) => {
     isValid: false,
   });
   const [password, setPassword] = useState({
-    value: 'ankitN1311@',
+    value: '',
     isValid: false,
   });
   const [otp, setOtp] = useState({

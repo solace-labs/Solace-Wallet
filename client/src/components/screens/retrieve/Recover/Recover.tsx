@@ -35,7 +35,7 @@ const RecoverScreen: React.FC<Props> = ({navigation}) => {
             source={require('../../../../../assets/images/solace/google-drive.png')}
             style={styles.image}
           /> */}
-          <Text style={styles.heading}>recover your wallet</Text>
+          <Text style={styles.heading}>recovering your wallet</Text>
           <Text style={styles.subHeading}>
             please request your guardians to approve your solace wallet
             recovery. in the mean time, your funds will be protected by the
