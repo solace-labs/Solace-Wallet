@@ -63,8 +63,8 @@ describe("solace", () => {
       relayPair,
       SolaceSDK.localConnection
     );
+    await SolaceSDK.localConnection.confirmTransaction(res);
     walletAddress = solaceSdk.wallet;
-    console.log("Solace Wallet", solaceSdk.wallet.toString());
   });
 
   it("should fetch an existing wallet, and should have the same addr", async () => {
@@ -85,36 +85,18 @@ describe("solace", () => {
     assert(!(await _sdk).wallet.equals(solaceSdk.wallet));
   });
 
-  // it("should send 500 lamports to a random address", async () => {
-  //   let randomWallet = anchor.web3.Keypair.generate();
-  //   await airdrop(randomWallet.publicKey);
-  //   await airdrop(walletAddress);
-  //
-  //   let beforeBalance = await solaceSdk.program.provider.connection.getBalance(
-  //     randomWallet.publicKey
-  //   );
-  //
-  //   const tx = await solaceSdk.sendSol(
-  //     randomWallet.publicKey,
-  //     10,
-  //     relayPair.publicKey
-  //   );
-  //   await relayTransaction(tx, relayPair, SolaceSDK.localConnection);
-  //   let afterBalance = await solaceSdk.program.provider.connection.getBalance(
-  //     randomWallet.publicKey
-  //   );
-  //
-  //   assert(afterBalance === beforeBalance + 10, "SOL Not transferred");
-  // });
-
-  //99
   it("should request for guardianship and be auto-approved", async () => {
     let wallet = await getWallet();
     const tx = await solaceSdk.addGuardian(
       guardian1.publicKey,
       relayPair.publicKey
     );
-    await relayTransaction(tx, relayPair, SolaceSDK.localConnection);
+    const sig = await relayTransaction(
+      tx,
+      relayPair,
+      SolaceSDK.localConnection
+    );
+    await SolaceSDK.localConnection.confirmTransaction(sig);
     assert(wallet.owner.equals(signer.publicKey), "Wallet not owned by owner");
     await airdrop(guardian1.publicKey);
     const guardianInfo = await SolaceSDK.getWalletGuardianInfo({
@@ -137,13 +119,12 @@ describe("solace", () => {
       owner: newOwner,
     });
     const tx = await sdk2.recoverWallet("name.solace.io", relayPair.publicKey);
-    console.log(sdk2.wallet.toString());
-    const res = await relayTransaction(
+    const sig = await relayTransaction(
       tx,
       relayPair,
       SolaceSDK.localConnection
     );
-    console.log(res);
+    await SolaceSDK.localConnection.confirmTransaction(sig);
   });
   //99
 
@@ -156,10 +137,10 @@ describe("solace", () => {
       },
       guardian1.publicKey.toString()
     );
-    const res = await SolaceSDK.localConnection.sendTransaction(tx.tx, [
+    const sig = await SolaceSDK.localConnection.sendTransaction(tx.tx, [
       guardian1,
     ]);
-    console.log(await SolaceSDK.localConnection.confirmTransaction(res));
+    await SolaceSDK.localConnection.confirmTransaction(sig);
     const data = await SolaceSDK.fetchDataForWallet(
       SolaceSDK.getWalletFromName(PROGRAM_ADDRESS, "name.solace.io"),
       solaceSdk.program

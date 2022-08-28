@@ -5,7 +5,7 @@ import { findProgramAddressSync } from "./anchor/dist/cjs/utils/pubkey";
 import { BN } from "bn.js";
 import IDL from "./solace/idl.json";
 import { RelayerIxData } from "./relayer";
-import * as bs58 from "bs58";
+import bs58 from "bs58";
 
 type RecoverWalletData = {
   network: "local" | "testnet";
@@ -198,7 +198,7 @@ export class SolaceSDK {
   }
 
   /**
-   * Return the wallet state for the user's wallet, if any
+   * Fetch the wallet data for the current wallet
    */
   fetchWalletData = () => {
     if (!this.wallet)
@@ -256,7 +256,6 @@ export class SolaceSDK {
         signers: [this.owner],
       }
     );
-
     return await this.signTransaction(tx, payer);
   }
 
@@ -348,7 +347,6 @@ export class SolaceSDK {
       data.username
     );
     try {
-      console.log(walletToRecover.toString());
       const walletData = await SolaceSDK.fetchDataForWallet(
         walletToRecover,
         program
@@ -360,7 +358,6 @@ export class SolaceSDK {
         ],
         program.programId
       );
-      console.log("Forming tx");
       const tx = program.transaction.approveRecoveryByKeypair({
         accounts: {
           walletToRecover: walletToRecover,
