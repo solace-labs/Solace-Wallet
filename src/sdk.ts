@@ -6,6 +6,18 @@ import { BN } from "bn.js";
 import IDL from "./solace/idl.json";
 import { RelayerIxData } from "./relayer";
 import bs58 from "bs58";
+import { AccountLayout, RawAccount, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+
+type SendSPLTokenData = {
+  mint: anchor.web3.PublicKey;
+  recieverTokenAccount: anchor.web3.PublicKey;
+  amount: number;
+};
+
+type SolaceTokenAccount = {
+  mint: anchor.web3.PublicKey;
+  tokenAccount: anchor.web3.PublicKey;
+};
 
 type RecoverWalletData = {
   network: "local" | "testnet";
@@ -32,6 +44,11 @@ type SolaceSDKData = {
   programAddress: string;
 };
 
+type ATAData = {
+  tokenMint: anchor.web3.PublicKey;
+  tokenAccount: anchor.web3.PublicKey;
+};
+
 export const PublicKey = anchor.web3.PublicKey;
 export const KeyPair = anchor.web3.Keypair;
 
@@ -41,6 +58,7 @@ export class SolaceSDK {
   static testnetConnection = new anchor.web3.Connection(
     "https://api.testnet.solana.com"
   );
+  tokenAccounts: SolaceTokenAccount[] = new Array<SolaceTokenAccount>();
   wallet: anchor.web3.PublicKey;
   owner: anchor.web3.Keypair;
   program: Program<Solace>;
@@ -69,6 +87,41 @@ export class SolaceSDK {
       provider
     );
     this.owner = data.owner;
+  }
+
+  /**
+   * Get the associated token account for the current wallet instance
+   */
+  getTokenAccount(mint: anchor.web3.PublicKey) {
+    let tokenAccount = this.tokenAccounts.find((x) =>
+      x.mint.equals(mint)
+    )?.tokenAccount;
+    if (!tokenAccount) {
+      [tokenAccount] = anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("wallet"), this.wallet.toBuffer(), mint.toBuffer()],
+        this.program.programId
+      );
+      this.tokenAccounts.push({
+        mint,
+        tokenAccount,
+      });
+    }
+    return tokenAccount;
+  }
+
+  /**
+   * Get the token account info if available, otherwise return null
+   * Caches token accounts for quicker access
+   */
+  async getTokenAccountInfo(mint: anchor.web3.PublicKey): Promise<RawAccount> {
+    const tokenAccount = this.getTokenAccount(mint);
+    const info = await SolaceSDK.localConnection.getAccountInfo(tokenAccount);
+    if (!info) {
+      return null;
+    }
+    const data = Buffer.from(info.data);
+    const accountInfo = AccountLayout.decode(data);
+    return accountInfo;
   }
 
   async signTransaction(
@@ -188,6 +241,7 @@ export class SolaceSDK {
       {
         accounts: {
           signer: this.owner.publicKey,
+          rentPayer: feePayer,
           wallet: walletAddress,
           systemProgram: anchor.web3.SystemProgram.programId,
         },
@@ -415,6 +469,61 @@ export class SolaceSDK {
         },
       }
     );
+    return this.signTransaction(tx, feePayer);
+  }
+
+  /**
+   * Check if a token account is valid. Should use try-catch around this method to check for the same.
+   * If an error is caught, then the token account for the PDA doesn't exist and one needs to be created
+   */
+  checkTokenAccount(data: ATAData, feePayer: anchor.web3.PublicKey) {
+    const tx = this.program.transaction.checkAta({
+      accounts: {
+        rentPayer: feePayer,
+        wallet: this.wallet,
+        tokenAccount: data.tokenAccount,
+        tokenMint: data.tokenMint,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: anchor.web3.SystemProgram.programId,
+        owner: this.owner.publicKey,
+      },
+      signers: [this.owner],
+    });
+    return this.signTransaction(tx, feePayer);
+  }
+
+  /**
+   * Create a token account for a given mint. Only create if it doesn't already exists
+   */
+  createTokenAccount(data: ATAData, feePayer: anchor.web3.PublicKey) {
+    const tx = this.program.transaction.createAta({
+      accounts: {
+        rentPayer: feePayer,
+        owner: this.owner.publicKey,
+        wallet: this.wallet,
+        tokenMint: data.tokenMint,
+        tokenAccount: data.tokenAccount,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      },
+    });
+    return this.signTransaction(tx, feePayer);
+  }
+
+  sendSplToken(data: SendSPLTokenData, feePayer: anchor.web3.PublicKey) {
+    const tx = this.program.transaction.sendSpl(new BN(data.amount), {
+      accounts: {
+        owner: this.owner.publicKey,
+        wallet: this.wallet,
+        recieverAccount: data.recieverTokenAccount,
+        // reciever: data.reciever,
+        tokenMint: data.mint,
+        tokenAccount: this.getTokenAccount(data.mint),
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      },
+    });
     return this.signTransaction(tx, feePayer);
   }
 }

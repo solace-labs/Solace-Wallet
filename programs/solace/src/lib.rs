@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_spl::token::{Mint, Token, TokenAccount};
 use vipers::prelude::*;
 
 mod errors;
@@ -14,6 +15,8 @@ declare_id!("8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U");
 
 #[program]
 pub mod solace {
+
+    use anchor_spl::token::Transfer;
 
     use super::*;
 
@@ -40,8 +43,12 @@ pub mod solace {
     }
 
     // Add a token acount for a particular mint address. Ex. USDC
-    pub fn add_token_account(_ctx: Context<NoAccount>) -> Result<()> {
-        todo!();
+    pub fn create_ata(_ctx: Context<CreateATA>) -> Result<()> {
+        Ok(())
+    }
+
+    // Check if a token account is valid
+    pub fn check_ata(_ctx: Context<CheckATA>) -> Result<()> {
         Ok(())
     }
 
@@ -67,6 +74,27 @@ pub mod solace {
 
         **from.try_borrow_mut_lamports()? -= amount_of_lamports;
         **to.try_borrow_mut_lamports()? += amount_of_lamports;
+
+        Ok(())
+    }
+
+    pub fn send_spl(ctx: Context<SendSPL>, amount: u64) -> Result<()> {
+        let bump = ctx.accounts.wallet.bump.clone().to_le_bytes();
+        let token_mint = ctx.accounts.token_mint.key().clone();
+        let wallet = ctx.accounts.wallet.clone();
+        let inner = vec![b"SOLACE".as_ref(), wallet.name.as_str().as_ref(), &bump];
+        let outer = vec![inner.as_slice()];
+        let transfer_instruction = Transfer {
+            from: ctx.accounts.token_account.to_account_info(),
+            to: ctx.accounts.reciever_account.to_account_info(),
+            authority: ctx.accounts.wallet.to_account_info(),
+        };
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            transfer_instruction,
+            outer.as_slice(),
+        );
+        anchor_spl::token::transfer(cpi_ctx, amount)?;
 
         Ok(())
     }
@@ -236,9 +264,11 @@ pub struct NoAccount {}
 pub struct CreateWallet<'info> {
     #[account(mut)]
     signer: Signer<'info>,
+    #[account(mut)]
+    rent_payer: Signer<'info>,
     #[account(
         init,
-        payer = signer,
+        payer = rent_payer,
         space = 1000,
         seeds = [b"SOLACE".as_ref(), name.as_str().as_ref()],
         bump
@@ -331,4 +361,75 @@ pub struct ApproveRecoveryBySolace<'info> {
     // The recovery account
     #[account(mut)]
     recovery_attempt: Account<'info, RecoveryAttempt>,
+}
+
+#[derive(Accounts)]
+pub struct SendSPL<'info> {
+    #[account(mut)]
+    wallet: Account<'info, Wallet>,
+    #[account(mut)]
+    owner: Signer<'info>,
+    #[account(
+        mut,
+        token::mint=token_mint,
+        token::authority=wallet,
+    )]
+    token_account: Account<'info, TokenAccount>,
+
+    #[account(mut)]
+    reciever_account: Account<'info, TokenAccount>,
+    // /// CHECK: The account to which spl needs to be sent to
+    // reciever: AccountInfo<'info>,
+    system_program: Program<'info, System>,
+    token_program: Program<'info, Token>,
+    token_mint: Account<'info, Mint>,
+}
+
+#[derive(Accounts)]
+pub struct CreateATA<'info> {
+    #[account(mut)] // TODO: Add constraint to check guardian
+    wallet: Account<'info, Wallet>,
+    #[account(mut)]
+    owner: Signer<'info>,
+    #[account(mut)]
+    rent_payer: Signer<'info>,
+    #[account(
+        init,
+        payer = rent_payer,
+        seeds=[b"wallet".as_ref(),
+            wallet.key().as_ref(),
+            token_mint.key().as_ref()
+        ],
+        bump,
+        token::mint=token_mint,
+        token::authority=wallet,
+    )]
+    token_account: Account<'info, TokenAccount>,
+    system_program: Program<'info, System>,
+    token_program: Program<'info, Token>,
+    token_mint: Account<'info, Mint>,
+    rent: Sysvar<'info, Rent>,
+}
+
+#[derive(Accounts)]
+pub struct CheckATA<'info> {
+    #[account(mut)]
+    wallet: Account<'info, Wallet>,
+    #[account(mut)]
+    owner: Signer<'info>,
+    #[account(mut)]
+    rent_payer: Signer<'info>,
+    #[account(
+        seeds=[b"wallet".as_ref(),
+            wallet.key().as_ref(),
+            token_mint.key().as_ref()
+        ],
+        bump,
+        token::mint=token_mint,
+        token::authority=wallet,
+    )]
+    token_account: Account<'info, TokenAccount>,
+    system_program: Program<'info, System>,
+    token_program: Program<'info, Token>,
+    token_mint: Account<'info, Mint>,
 }
