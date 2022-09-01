@@ -121,7 +121,7 @@ export class InstructionCoder {
    * Dewcodes a program instruction.
    */
   public decode(
-    ix: Buffer | string,
+    ix: any,
     encoding: "hex" | "base58" = "hex"
   ): Instruction | null {
     if (typeof ix === "string") {

@@ -19,6 +19,7 @@
   "license": "MIT",
   "dependencies": {
     "@project-serum/anchor": "^0.18.0",
+    "array-flat-polyfill": "^1.0.1",
     "bs58": "^5.0.0"
   }
 }
