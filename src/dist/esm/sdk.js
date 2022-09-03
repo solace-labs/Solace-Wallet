@@ -1,11 +1,10 @@
-import * as anchor from "./anchor";
-import { findProgramAddressSync } from "./anchor/dist/cjs/utils/pubkey";
+import { web3, Provider, Wallet, setProvider, getProvider, Program, } from "anchor-rn";
 import { BN } from "bn.js";
-import IDL from "./solace/idl.json";
 import bs58 from "bs58";
 import { AccountLayout, TOKEN_PROGRAM_ID, } from "@solana/spl-token";
-export const PublicKey = anchor.web3.PublicKey;
-export const KeyPair = anchor.web3.Keypair;
+const IDL = require("./solace.json");
+export const PublicKey = web3.PublicKey;
+export const KeyPair = web3.Keypair;
 // The SDK to interface with the client
 export class SolaceSDK {
     /**
@@ -24,13 +23,14 @@ export class SolaceSDK {
         };
         /** Helper to confirm transactions */
         this.confirmTx = (tx) => this.program.provider.connection.confirmTransaction(tx);
-        const provider = new anchor.Provider(data.network == "local"
+        const provider = new Provider(data.network == "local"
             ? SolaceSDK.localConnection
-            : SolaceSDK.testnetConnection, new anchor.Wallet(data.owner), anchor.Provider.defaultOptions());
-        anchor.setProvider(provider);
+            : SolaceSDK.testnetConnection, new Wallet(data.owner), Provider.defaultOptions());
+        setProvider(provider);
         this.provider = provider;
-        const programId = new anchor.web3.PublicKey(data.programAddress);
-        this.program = new anchor.Program(
+        const programId = new web3.PublicKey(data.programAddress);
+        // @ts-ignore
+        this.program = new Program(
         // @ts-ignore
         IDL, programId, provider);
         this.owner = data.owner;
@@ -42,7 +42,7 @@ export class SolaceSDK {
         var _a;
         let tokenAccount = (_a = this.tokenAccounts.find((x) => x.mint.equals(mint))) === null || _a === void 0 ? void 0 : _a.tokenAccount;
         if (!tokenAccount) {
-            [tokenAccount] = anchor.web3.PublicKey.findProgramAddressSync([Buffer.from("wallet"), this.wallet.toBuffer(), mint.toBuffer()], this.program.programId);
+            [tokenAccount] = web3.PublicKey.findProgramAddressSync([Buffer.from("wallet"), this.wallet.toBuffer(), mint.toBuffer()], this.program.programId);
             this.tokenAccounts.push({
                 mint,
                 tokenAccount,
@@ -66,8 +66,8 @@ export class SolaceSDK {
         return accountInfo;
     }
     async signTransaction(transaction, payer) {
-        const x = await anchor.getProvider().connection.getLatestBlockhash();
-        const tx = new anchor.web3.Transaction({
+        const x = await getProvider().connection.getLatestBlockhash();
+        const tx = new web3.Transaction({
             ...x,
             feePayer: payer,
         });
@@ -86,17 +86,17 @@ export class SolaceSDK {
     }
     /// Generate a new key pair
     static newKeyPair() {
-        return anchor.web3.Keypair.generate();
+        return web3.Keypair.generate();
     }
     static fromSeed(seed, data) {
         const sdk = new this({
             ...data,
         });
-        sdk.seed = new anchor.web3.PublicKey(seed);
+        sdk.seed = new web3.PublicKey(seed);
         return this;
     }
     static getWalletFromName(programAddress, name) {
-        const [walletAddress, _] = findProgramAddressSync([Buffer.from("SOLACE"), Buffer.from(name, "utf8")], new anchor.web3.PublicKey(programAddress));
+        const [walletAddress, _] = web3.PublicKey.findProgramAddressSync([Buffer.from("SOLACE"), Buffer.from(name, "utf8")], new web3.PublicKey(programAddress));
         return walletAddress;
     }
     /**
@@ -118,11 +118,11 @@ export class SolaceSDK {
      *
      */
     static async getWalletGuardianInfo(data) {
-        const provider = new anchor.Provider(data.network == "local"
+        const provider = new Provider(data.network == "local"
             ? SolaceSDK.localConnection
-            : SolaceSDK.testnetConnection, new anchor.Wallet(KeyPair.generate()), anchor.Provider.defaultOptions());
-        const programId = new anchor.web3.PublicKey(data.programAddress);
-        const program = new anchor.Program(
+            : SolaceSDK.testnetConnection, new Wallet(KeyPair.generate()), Provider.defaultOptions());
+        const programId = new web3.PublicKey(data.programAddress);
+        const program = new Program(
         // @ts-ignore
         IDL, programId, provider);
         const wallet = await program.account.wallet.fetch(new PublicKey(data.solaceWalletAddress));
@@ -140,7 +140,7 @@ export class SolaceSDK {
      * @returns {Promise<RelayerIxData>} return the transaction that can be relayed
      */
     async createFromName(name, feePayer) {
-        const [walletAddress, _] = findProgramAddressSync([Buffer.from("SOLACE"), Buffer.from(name, "utf8")], this.program.programId);
+        const [walletAddress, _] = web3.PublicKey.findProgramAddressSync([Buffer.from("SOLACE"), Buffer.from(name, "utf8")], this.program.programId);
         console.log("Owner Address", this.owner.publicKey.toString());
         const tx = this.program.transaction.createWallet(this.owner.publicKey, // Owner
         [], // Guardian
@@ -150,7 +150,7 @@ export class SolaceSDK {
                 signer: this.owner.publicKey,
                 rentPayer: feePayer,
                 wallet: walletAddress,
-                systemProgram: anchor.web3.SystemProgram.programId,
+                systemProgram: web3.SystemProgram.programId,
             },
         });
         this.wallet = walletAddress;
@@ -159,20 +159,24 @@ export class SolaceSDK {
     /**
      * Should send some amount of SOL to the `toAddress`
      */
-    async sendSol(toAddress, lamports, feePayer) {
-        const tx = this.program.transaction.sendSol(new anchor.BN(lamports), {
-            accounts: {
-                toAccount: toAddress,
-                wallet: this.wallet,
-                owner: this.owner.publicKey,
-            },
-            signers: [this.owner],
-        });
-        return this.signTransaction(tx, feePayer);
-    }
+    // async sendSol(
+    //   toAddress: web3.PublicKey,
+    //   lamports: number,
+    //   feePayer: web3.PublicKey
+    // ) {
+    //   const tx = this.program.transaction.sendSol([new BN(lamports)], {
+    //     accounts: {
+    //       toAccount: toAddress,
+    //       wallet: this.wallet,
+    //       owner: this.owner.publicKey,
+    //     },
+    //     signers: [this.owner],
+    //   });
+    //   return this.signTransaction(tx, feePayer);
+    // }
     /**
      * Add a guardian to the wallet, signed by the owner
-     * @param {anchor.web3.PublicKey} guardianPublicKey
+     * @param {web3.PublicKey} guardianPublicKey
      */
     async addGuardian(guardianPublicKey, payer) {
         const walletData = await this.fetchWalletData();
@@ -190,11 +194,11 @@ export class SolaceSDK {
      * @param data {ApproveGuardianshipData} data required to create a approve guardianship transaction
      */
     static approveGuardianshipTx(data) {
-        const provider = new anchor.Provider(data.network == "local"
+        const provider = new Provider(data.network == "local"
             ? SolaceSDK.localConnection
-            : SolaceSDK.testnetConnection, new anchor.Wallet(KeyPair.generate()), anchor.Provider.defaultOptions());
-        const programId = new anchor.web3.PublicKey(data.programAddress);
-        const program = new anchor.Program(
+            : SolaceSDK.testnetConnection, new Wallet(KeyPair.generate()), Provider.defaultOptions());
+        const programId = new web3.PublicKey(data.programAddress);
+        const program = new Program(
         // @ts-ignore
         IDL, programId, provider);
         return program.transaction.approveGuardianship({
@@ -235,24 +239,26 @@ export class SolaceSDK {
      * @returns
      */
     static async approveRecoveryByKeypairTx(data, guardianAddress) {
-        const provider = new anchor.Provider(data.network == "local"
+        const provider = new Provider(data.network == "local"
             ? SolaceSDK.localConnection
-            : SolaceSDK.testnetConnection, new anchor.Wallet(KeyPair.generate()), anchor.Provider.defaultOptions());
-        const programId = new anchor.web3.PublicKey(data.programAddress);
-        const program = new anchor.Program(
+            : SolaceSDK.testnetConnection, new Wallet(KeyPair.generate()), Provider.defaultOptions());
+        const programId = new web3.PublicKey(data.programAddress);
+        const program = new Program(
         // @ts-ignore
         IDL, programId, provider);
         const walletToRecover = SolaceSDK.getWalletFromName(data.programAddress, data.username);
         try {
-            const walletData = await SolaceSDK.fetchDataForWallet(walletToRecover, program);
-            const [recoveryAddress, _] = findProgramAddressSync([
+            const walletData = await SolaceSDK.fetchDataForWallet(walletToRecover, 
+            // @ts-ignore
+            program);
+            const [recoveryAddress, _] = web3.PublicKey.findProgramAddressSync([
                 walletToRecover.toBuffer(),
                 new BN(walletData.walletRecoverySequence).toBuffer("le", 8),
             ], program.programId);
             const tx = program.transaction.approveRecoveryByKeypair({
                 accounts: {
                     walletToRecover: walletToRecover,
-                    guardian: new anchor.web3.PublicKey(guardianAddress),
+                    guardian: new web3.PublicKey(guardianAddress),
                     recoveryAttempt: recoveryAddress,
                 },
             });
@@ -277,7 +283,7 @@ export class SolaceSDK {
         if (!walletData) {
             throw "Invalid solace wallet address";
         }
-        const [recoveryAddress, _] = findProgramAddressSync([
+        const [recoveryAddress, _] = web3.PublicKey.findProgramAddressSync([
             addressToRecover.toBuffer(),
             new BN(walletData.walletRecoverySequence).toBuffer("le", 8),
         ], this.program.programId);
@@ -286,7 +292,7 @@ export class SolaceSDK {
                 wallet: addressToRecover,
                 recovery: recoveryAddress,
                 proposer: this.owner.publicKey,
-                systemProgram: anchor.web3.SystemProgram.programId,
+                systemProgram: web3.SystemProgram.programId,
             },
         });
         return this.signTransaction(tx, feePayer);
@@ -303,7 +309,7 @@ export class SolaceSDK {
                 tokenAccount: data.tokenAccount,
                 tokenMint: data.tokenMint,
                 tokenProgram: TOKEN_PROGRAM_ID,
-                systemProgram: anchor.web3.SystemProgram.programId,
+                systemProgram: web3.SystemProgram.programId,
                 owner: this.owner.publicKey,
             },
             signers: [this.owner],
@@ -322,8 +328,8 @@ export class SolaceSDK {
                 tokenMint: data.tokenMint,
                 tokenAccount: data.tokenAccount,
                 tokenProgram: TOKEN_PROGRAM_ID,
-                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                systemProgram: anchor.web3.SystemProgram.programId,
+                rent: web3.SYSVAR_RENT_PUBKEY,
+                systemProgram: web3.SystemProgram.programId,
             },
         });
         return this.signTransaction(tx, feePayer);
@@ -338,7 +344,7 @@ export class SolaceSDK {
                 tokenMint: data.mint,
                 tokenAccount: this.getTokenAccount(data.mint),
                 tokenProgram: TOKEN_PROGRAM_ID,
-                systemProgram: anchor.web3.SystemProgram.programId,
+                systemProgram: web3.SystemProgram.programId,
             },
         });
         return this.signTransaction(tx1, feePayer);
@@ -353,33 +359,35 @@ export class SolaceSDK {
                 tokenMint: transfer.tokenMint,
                 tokenProgram: TOKEN_PROGRAM_ID,
                 tokenAccount: transfer.from,
-                systemProgram: anchor.web3.SystemProgram.programId,
+                systemProgram: web3.SystemProgram.programId,
             },
         });
         return this.signTransaction(tx, feePayer);
     }
     static async approveSplTransfer(data) {
-        const provider = new anchor.Provider(data.network == "local"
+        const provider = new Provider(data.network == "local"
             ? SolaceSDK.localConnection
-            : SolaceSDK.testnetConnection, new anchor.Wallet(KeyPair.generate()), anchor.Provider.defaultOptions());
-        const programId = new anchor.web3.PublicKey(data.programAddress);
-        const program = new anchor.Program(
+            : SolaceSDK.testnetConnection, new Wallet(KeyPair.generate()), Provider.defaultOptions());
+        const programId = new web3.PublicKey(data.programAddress);
+        const program = new Program(
         // @ts-ignore
         IDL, programId, provider);
-        const walletData = await SolaceSDK.fetchDataForWallet(new anchor.web3.PublicKey(data.solaceWalletAddress), program);
+        const walletData = await SolaceSDK.fetchDataForWallet(new web3.PublicKey(data.solaceWalletAddress), 
+        // @ts-ignore
+        program);
         if (!walletData) {
             throw "Solace wallet not found with the address";
         }
         const { ongoingTransfer } = walletData;
         return program.transaction.approveAndExecuteTransfer({
             accounts: {
-                wallet: new anchor.web3.PublicKey(data.solaceWalletAddress),
+                wallet: new web3.PublicKey(data.solaceWalletAddress),
                 tokenAccount: ongoingTransfer.from,
                 tokenProgram: TOKEN_PROGRAM_ID,
                 tokenMint: ongoingTransfer.tokenMint,
                 recieverAccount: ongoingTransfer.to,
                 recieverBase: ongoingTransfer.toBase,
-                systemProgram: anchor.web3.SystemProgram.programId,
+                systemProgram: web3.SystemProgram.programId,
                 guardian: new PublicKey(data.guardianAddress),
             },
         });
@@ -403,8 +411,8 @@ export class SolaceSDK {
         return this.signTransaction(tx, feePayer);
     }
 }
-SolaceSDK.localConnection = new anchor.web3.Connection("http://127.0.0.1:8899");
-SolaceSDK.testnetConnection = new anchor.web3.Connection("https://api.testnet.solana.com");
+SolaceSDK.localConnection = new web3.Connection("http://127.0.0.1:8899");
+SolaceSDK.testnetConnection = new web3.Connection("https://api.testnet.solana.com");
 /**
  * Fetch the state of any other given wallet
  */

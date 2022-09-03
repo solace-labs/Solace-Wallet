@@ -1,12 +1,13 @@
 {
   "name": "solace-sdk",
-  "version": "2.0.0",
+  "version": "2.0.6",
   "description": "SDK to interact with the Solace Program",
   "main": "./dist/esm/sdk.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rm -rf dist && tsc -p tsconfig.json",
-    "prepublish": "rm -rf dist && npx tsc -p tsconfig.json"
+    "prepublishOnly": "rm -rf dist && npx tsc -p tsconfig.json"
   },
   "files": [
     "./dist"
@@ -23,7 +24,6 @@
   "author": "Ashwin Prasad",
   "license": "MIT",
   "dependencies": {
-    "@project-serum/anchor": "^0.18.0",
     "@solana/spl-token": "^0.3.4",
     "anchor-rn": "^0.18.2",
     "bs58": "^5.0.0"

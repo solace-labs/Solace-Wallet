@@ -1,17 +1,16 @@
-import { Program } from "@project-serum/anchor";
 import { Solace } from "./solace/types";
-import * as anchor from "./anchor";
+import { web3, Provider, Program } from "anchor-rn";
 import { RelayerIxData } from "./relayer";
 import { RawAccount } from "@solana/spl-token";
 declare type SendSPLTokenData = {
-    mint: anchor.web3.PublicKey;
-    recieverTokenAccount: anchor.web3.PublicKey;
-    reciever: anchor.web3.PublicKey;
+    mint: web3.PublicKey;
+    recieverTokenAccount: web3.PublicKey;
+    reciever: web3.PublicKey;
     amount: number;
 };
 declare type SolaceTokenAccount = {
-    mint: anchor.web3.PublicKey;
-    tokenAccount: anchor.web3.PublicKey;
+    mint: web3.PublicKey;
+    tokenAccount: web3.PublicKey;
 };
 declare type RecoverWalletData = {
     network: "local" | "testnet";
@@ -30,25 +29,25 @@ declare type ApproveGuardianshipData = {
     guardianAddress: string;
 };
 declare type SolaceSDKData = {
-    owner: anchor.web3.Keypair;
+    owner: web3.Keypair;
     network: "local" | "testnet";
     programAddress: string;
 };
 declare type ATAData = {
-    tokenMint: anchor.web3.PublicKey;
-    tokenAccount: anchor.web3.PublicKey;
+    tokenMint: web3.PublicKey;
+    tokenAccount: web3.PublicKey;
 };
-export declare const PublicKey: typeof anchor.web3.PublicKey;
-export declare const KeyPair: typeof anchor.web3.Keypair;
+export declare const PublicKey: typeof web3.PublicKey;
+export declare const KeyPair: typeof web3.Keypair;
 export declare class SolaceSDK {
-    static localConnection: anchor.web3.Connection;
-    static testnetConnection: anchor.web3.Connection;
+    static localConnection: web3.Connection;
+    static testnetConnection: web3.Connection;
     tokenAccounts: SolaceTokenAccount[];
-    wallet: anchor.web3.PublicKey;
-    owner: anchor.web3.Keypair;
+    wallet: web3.PublicKey;
+    owner: web3.Keypair;
     program: Program<Solace>;
-    seed: anchor.web3.PublicKey;
-    provider: anchor.Provider;
+    seed: web3.PublicKey;
+    provider: Provider;
     /**
      * Create a wallet instance. Should be used in conjuncture with an initializer
      * @param {SolaceSDKData} data
@@ -57,16 +56,16 @@ export declare class SolaceSDK {
     /**
      * Get the associated token account for the current wallet instance
      */
-    getTokenAccount(mint: anchor.web3.PublicKey): anchor.web3.PublicKey;
+    getTokenAccount(mint: web3.PublicKey): web3.PublicKey;
     /**
      * Get the token account info if available, otherwise return null
      * Caches token accounts for quicker access
      */
-    getTokenAccountInfo(mint: anchor.web3.PublicKey): Promise<RawAccount>;
-    signTransaction(transaction: anchor.web3.Transaction, payer: anchor.web3.PublicKey): Promise<RelayerIxData>;
-    static newKeyPair(): anchor.web3.Keypair;
+    getTokenAccountInfo(mint: web3.PublicKey): Promise<RawAccount>;
+    signTransaction(transaction: web3.Transaction, payer: web3.PublicKey): Promise<RelayerIxData>;
+    static newKeyPair(): web3.Keypair;
     static fromSeed(seed: string, data: SolaceSDKData): typeof SolaceSDK;
-    static getWalletFromName(programAddress: string, name: string): anchor.web3.PublicKey;
+    static getWalletFromName(programAddress: string, name: string): web3.PublicKey;
     /**
      *
      * @param {string} name UserName of the user, which was initialized while creating the wallet
@@ -82,19 +81,19 @@ export declare class SolaceSDK {
      *
      */
     static getWalletGuardianInfo(data: RequestWalletInformationData): Promise<{
-        pendingGuardians: anchor.web3.PublicKey[];
-        approvedGuardians: anchor.web3.PublicKey[];
+        pendingGuardians: web3.PublicKey[];
+        approvedGuardians: web3.PublicKey[];
     }>;
     /**
      * Create a wallet for the first time
      * @param {string} name Name of the user
      * @returns {Promise<RelayerIxData>} return the transaction that can be relayed
      */
-    createFromName(name: string, feePayer: anchor.web3.PublicKey): Promise<RelayerIxData>;
+    createFromName(name: string, feePayer: web3.PublicKey): Promise<RelayerIxData>;
     /**
      * Fetch the wallet data for the current wallet
      */
-    fetchWalletData: () => Promise<import("./anchor/dist/cjs/program/namespace/types").TypeDef<{
+    fetchWalletData: () => Promise<import("anchor-rn/dist/cjs/program/namespace/types").TypeDef<{
         name: "wallet";
         type: {
             kind: "struct";
@@ -198,11 +197,11 @@ export declare class SolaceSDK {
                 type: "bool";
             }];
         };
-    }, anchor.IdlTypes<Solace>>>;
+    }, import("anchor-rn").IdlTypes<Solace>>>;
     /**
      * Fetch the state of any other given wallet
      */
-    static fetchDataForWallet: (wallet: anchor.web3.PublicKey, program: Program<Solace>) => Promise<import("./anchor/dist/cjs/program/namespace/types").TypeDef<{
+    static fetchDataForWallet: (wallet: web3.PublicKey, program: Program<Solace>) => Promise<import("anchor-rn/dist/cjs/program/namespace/types").TypeDef<{
         name: "wallet";
         type: {
             kind: "struct";
@@ -306,33 +305,32 @@ export declare class SolaceSDK {
                 type: "bool";
             }];
         };
-    }, anchor.IdlTypes<Solace>>>;
+    }, import("anchor-rn").IdlTypes<Solace>>>;
     /** Helper to confirm transactions */
-    confirmTx: (tx: any) => Promise<anchor.web3.RpcResponseAndContext<anchor.web3.SignatureResult>>;
+    confirmTx: (tx: any) => Promise<web3.RpcResponseAndContext<web3.SignatureResult>>;
     /**
      * Should send some amount of SOL to the `toAddress`
      */
-    sendSol(toAddress: anchor.web3.PublicKey, lamports: number, feePayer: anchor.web3.PublicKey): Promise<RelayerIxData>;
     /**
      * Add a guardian to the wallet, signed by the owner
-     * @param {anchor.web3.PublicKey} guardianPublicKey
+     * @param {web3.PublicKey} guardianPublicKey
      */
-    addGuardian(guardianPublicKey: anchor.web3.PublicKey, payer: anchor.web3.PublicKey): Promise<RelayerIxData>;
+    addGuardian(guardianPublicKey: web3.PublicKey, payer: web3.PublicKey): Promise<RelayerIxData>;
     /**
      * Use this method to create a transaction which can be signed by the guardian, to approve guardianship to a specific wallet
      * @param data {ApproveGuardianshipData} data required to create a approve guardianship transaction
      */
-    static approveGuardianshipTx(data: ApproveGuardianshipData): anchor.web3.Transaction;
+    static approveGuardianshipTx(data: ApproveGuardianshipData): web3.Transaction;
     /**
      * FOR - User to remove a guardian
      */
-    removeGuardian(guardianAdress: anchor.web3.PublicKey, payer: anchor.web3.PublicKey): Promise<RelayerIxData>;
+    removeGuardian(guardianAdress: web3.PublicKey, payer: web3.PublicKey): Promise<RelayerIxData>;
     /**
      * Checks if the given wallet address is in recovery mode
      * @param wallet The wallet to be checked
      * @returns
      */
-    isInRecovery(wallet: anchor.web3.PublicKey): Promise<boolean>;
+    isInRecovery(wallet: web3.PublicKey): Promise<boolean>;
     /**
      * Approve recovery with a solace wallet
      * @param data
@@ -340,28 +338,28 @@ export declare class SolaceSDK {
      * @returns
      */
     static approveRecoveryByKeypairTx(data: RecoverWalletData, guardianAddress: string): Promise<{
-        tx: anchor.web3.Transaction;
-        recoveryAddress: anchor.web3.PublicKey;
+        tx: web3.Transaction;
+        recoveryAddress: web3.PublicKey;
     }>;
     /**
      * Create an account, just to recover an existing one
      * @param data
      * @param feePayer
      */
-    recoverWallet(username: string, feePayer: anchor.web3.PublicKey): Promise<RelayerIxData>;
+    recoverWallet(username: string, feePayer: web3.PublicKey): Promise<RelayerIxData>;
     /**
      * Check if a token account is valid. Should use try-catch around this method to check for the same.
      * If an error is caught, then the token account for the PDA doesn't exist and one needs to be created
      */
-    checkTokenAccount(data: ATAData, feePayer: anchor.web3.PublicKey): Promise<RelayerIxData>;
+    checkTokenAccount(data: ATAData, feePayer: web3.PublicKey): Promise<RelayerIxData>;
     /**
      * Create a token account for a given mint. Only create if it doesn't already exists
      */
-    createTokenAccount(data: ATAData, feePayer: anchor.web3.PublicKey): Promise<RelayerIxData>;
-    requestSplTransfer(data: SendSPLTokenData, feePayer: anchor.web3.PublicKey): Promise<RelayerIxData>;
-    executeSplTransfer(feePayer: anchor.web3.PublicKey): Promise<RelayerIxData>;
-    static approveSplTransfer(data: ApproveGuardianshipData): Promise<anchor.web3.Transaction>;
-    endIncubation(feePayer: anchor.web3.PublicKey): Promise<RelayerIxData>;
-    addTrustedPubkey(pubkey: anchor.web3.PublicKey, feePayer: anchor.web3.PublicKey): Promise<RelayerIxData>;
+    createTokenAccount(data: ATAData, feePayer: web3.PublicKey): Promise<RelayerIxData>;
+    requestSplTransfer(data: SendSPLTokenData, feePayer: web3.PublicKey): Promise<RelayerIxData>;
+    executeSplTransfer(feePayer: web3.PublicKey): Promise<RelayerIxData>;
+    static approveSplTransfer(data: ApproveGuardianshipData): Promise<web3.Transaction>;
+    endIncubation(feePayer: web3.PublicKey): Promise<RelayerIxData>;
+    addTrustedPubkey(pubkey: web3.PublicKey, feePayer: web3.PublicKey): Promise<RelayerIxData>;
 }
 export {};

@@ -1,7 +1,7 @@
 /**
  * This file acts as a mock relayer to test out various SDK Functions
  */
-import * as anchor from "anchor-rn";
+import { web3 } from "anchor-rn";
 import bs58 from "bs58";
 
 export interface RelayerIxData {
@@ -19,15 +19,15 @@ export interface RelayerIxData {
  */
 export const relayTransaction = async (
   data: RelayerIxData,
-  payer: anchor.web3.Keypair,
-  connection?: anchor.web3.Connection
+  payer: web3.Keypair,
+  connection?: web3.Connection
 ) => {
-  connection = new anchor.web3.Connection("http://127.0.0.1:8899");
-  const transaction = anchor.web3.Transaction.populate(
-    anchor.web3.Message.from(Buffer.from(data.message, "base64"))
+  connection = new web3.Connection("http://127.0.0.1:8899");
+  const transaction = web3.Transaction.populate(
+    web3.Message.from(Buffer.from(data.message, "base64"))
   );
   transaction.addSignature(
-    new anchor.web3.PublicKey(data.publicKey),
+    new web3.PublicKey(data.publicKey),
     Buffer.from(bs58.decode(data.signature))
   );
   transaction.partialSign(payer);
