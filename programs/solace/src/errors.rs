@@ -25,4 +25,13 @@ pub enum Errors {
 
     #[msg("Keys mismatch")]
     KeyMisMatch,
+
+    #[msg("Wallet is not in incubation mode")]
+    WalletNotInIncubation,
+
+    #[msg("No transaction history with pub key")]
+    TrustedPubkeyNoTransactions,
+
+    #[msg("Pubkey is already trusted")]
+    TrustedPubkeyAlreadyTrusted,
 }

@@ -239,6 +239,22 @@
       ]
     },
     {
+      "name": "endIncubation",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "requestTransaction",
       "accounts": [
         {
@@ -816,6 +832,36 @@
       "code": 6004,
       "name": "PaymentsDisabled",
       "msg": "Payments are disabled - Wallet in recovery mode"
+    },
+    {
+      "code": 6005,
+      "name": "TransferNotExecutable",
+      "msg": "Requested transfer is not executable"
+    },
+    {
+      "code": 6006,
+      "name": "TransferAlreadyComplete",
+      "msg": "Requested transfer is already completed"
+    },
+    {
+      "code": 6007,
+      "name": "KeyMisMatch",
+      "msg": "Keys mismatch"
+    },
+    {
+      "code": 6008,
+      "name": "WalletNotInIncubation",
+      "msg": "Wallet is not in incubation mode"
+    },
+    {
+      "code": 6009,
+      "name": "TrustedPubkeyNoTransactions",
+      "msg": "No transaction history with pub key"
+    },
+    {
+      "code": 6010,
+      "name": "TrustedPubkeyAlreadyTrusted",
+      "msg": "Pubkey is already trusted"
     }
   ]
 }

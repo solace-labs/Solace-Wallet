@@ -125,8 +125,10 @@ export class InstructionCoder {
     encoding: "hex" | "base58" = "hex"
   ): Instruction | null {
     if (typeof ix === "string") {
+      // @ts-ignore
       ix = encoding === "hex" ? Buffer.from(ix, "hex") : bs58.decode(ix);
     }
+    // @ts-ignore
     let sighash = bs58.encode(ix.slice(0, 8));
     let data = ix.slice(8);
     const decoder = this.sighashLayouts.get(sighash);
@@ -268,10 +270,10 @@ class InstructionFormatter {
       return data === null
         ? "null"
         : this.formatIdlData(
-            // @ts-ignore
-            { name: "", type: idlField.type.option },
-            data
-          );
+          // @ts-ignore
+          { name: "", type: idlField.type.option },
+          data
+        );
     }
     // @ts-ignore
     if (idlField.type.defined) {

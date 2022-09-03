@@ -82,6 +82,15 @@ pub mod solace {
         Ok(())
     }
 
+    pub fn end_incubation(ctx: Context<Verified>) -> Result<()> {
+        invariant!(
+            ctx.accounts.wallet.incubation_mode,
+            errors::Errors::WalletNotInIncubation
+        );
+        ctx.accounts.wallet.incubation_mode = false;
+        Ok(())
+    }
+
     pub fn request_transaction(ctx: Context<SendSPL>, amount: u64) -> Result<()> {
         let token_mint = ctx.accounts.token_mint.key().clone();
         let bump = ctx.accounts.wallet.bump.clone().to_le_bytes();
@@ -104,8 +113,11 @@ pub mod solace {
         wallet_mut.ongoing_transfer.token_mint = ctx.accounts.token_mint.key();
         wallet_mut.ongoing_transfer.to_base = ctx.accounts.reciever_base.key();
 
-        if wallet_mut.check_incubation() {
-            // Check if an ongoing transfer is complete
+        // If the wallet is in incubation mode or if the wallet is not guarded
+        if wallet_mut.check_incubation()
+            || !wallet.has_guardians()
+            || wallet.is_pubkey_trusted(reciever_account.key())
+        {
             utils::do_execute_transfer(
                 token_account,
                 reciever_account,
@@ -113,7 +125,11 @@ pub mod solace {
                 token_program,
                 amount,
                 &seeds,
+                wallet_mut,
             )?;
+            wallet_mut
+                .pubkey_history
+                .push(ctx.accounts.reciever_account.clone().key());
             // Set that the transfer is complete
             wallet_mut.ongoing_transfer.is_complete = true;
         } else {
@@ -140,8 +156,13 @@ pub mod solace {
         let guardian = ctx.accounts.guardian.key();
         assert!(ctx.accounts.wallet.validate_guardian(guardian));
         // Now that the guardian is validated, we can approve the transaction by the guardian
-        let wallet = &mut ctx.accounts.wallet;
-        let is_executable = wallet.approve_transfer(guardian);
+        let wallet_mut = &mut ctx.accounts.wallet;
+        let is_executable = wallet_mut.approve_transfer(guardian);
+        msg!(format!(
+            "guardian approval complete - is executable: {}",
+            is_executable
+        )
+        .as_str());
         if is_executable {
             let bump = ctx.accounts.wallet.bump.clone().to_le_bytes();
             let wallet = ctx.accounts.wallet.clone();
@@ -165,7 +186,9 @@ pub mod solace {
                 token_program,
                 amount,
                 &seeds,
+                &mut ctx.accounts.wallet,
             )?;
+            ctx.accounts.wallet.ongoing_transfer.is_complete = true;
         }
         Ok(())
     }
@@ -209,6 +232,7 @@ pub mod solace {
             token_program,
             amount,
             &seeds,
+            &mut ctx.accounts.wallet,
         )?;
 
         Ok(())
@@ -367,6 +391,10 @@ pub mod solace {
         let wallet = &mut ctx.accounts.wallet;
         let wallet_clone = wallet.clone();
 
+        if get_key_index(wallet_clone.trusted_pubkeys.clone(), pubkey).is_some() {
+            return Err(errors::Errors::TrustedPubkeyAlreadyTrusted.into());
+        }
+
         let is_in_incubation = wallet.check_incubation();
         let trusted_pubkeys = &mut wallet.trusted_pubkeys;
 
@@ -382,10 +410,12 @@ pub mod solace {
         // then create a new deterministic PDA which carries the expiry for adding this pubkey to the trusted list
         match get_key_index(wallet_clone.pubkey_history.clone(), pubkey) {
             Some(index) => {
+                trusted_pubkeys.push(pubkey);
                 // The wallet is in the transaction history
             }
             None => {
                 // The wallet isn't in the transaction history and hence, can't be added to the trusted list
+                return Err(errors::Errors::TrustedPubkeyNoTransactions.into());
             }
         }
 

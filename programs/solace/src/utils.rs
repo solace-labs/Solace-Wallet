@@ -20,6 +20,7 @@ pub fn can_update_owner(wallet: &Wallet, recovery: &RecoveryAttempt) -> Result<b
 pub fn get_key_index<T: Eq>(keys: Vec<T>, key_to_find: T) -> Option<usize> {
     keys.into_iter().position(|x| x == key_to_find)
 }
+
 //
 // /// Instruction.
 // #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, Default, PartialEq)]
@@ -67,10 +68,11 @@ pub fn do_execute_transfer<'a>(
     token_program: AccountInfo<'a>,
     amount: u64,
     seeds: &[&[&[u8]]],
+    wallet: &mut Wallet,
 ) -> Result<()> {
     let transfer_instruction = Transfer {
         from: token_account,
-        to: reciever_account,
+        to: reciever_account.clone(),
         authority,
     };
     // transfer_instruction
@@ -80,6 +82,11 @@ pub fn do_execute_transfer<'a>(
     let cpi_ctx = CpiContext::new_with_signer(token_program, transfer_instruction, &seeds);
     anchor_spl::token::transfer(cpi_ctx, amount)?;
     msg!("transfer complete");
+    let reciever_key = reciever_account.key();
+    // Push the reciever to the pubkey history if it doesn't already contain it
+    if !wallet.pubkey_history.contains(&reciever_key) {
+        wallet.pubkey_history.push(reciever_key);
+    }
     Ok(())
 }
 

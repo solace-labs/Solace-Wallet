@@ -591,4 +591,27 @@ export class SolaceSDK {
       },
     });
   }
+
+  endIncubation(feePayer: anchor.web3.PublicKey) {
+    const tx = this.program.transaction.endIncubation({
+      accounts: {
+        wallet: this.wallet,
+        owner: this.owner.publicKey,
+      },
+    });
+    return this.signTransaction(tx, feePayer);
+  }
+
+  addTrustedPubkey(
+    pubkey: anchor.web3.PublicKey,
+    feePayer: anchor.web3.PublicKey
+  ) {
+    const tx = this.program.transaction.addTrustedPubkey(pubkey, {
+      accounts: {
+        wallet: this.wallet,
+        owner: this.owner.publicKey,
+      },
+    });
+    return this.signTransaction(tx, feePayer);
+  }
 }

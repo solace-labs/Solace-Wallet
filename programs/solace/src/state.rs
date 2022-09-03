@@ -59,6 +59,11 @@ pub struct OngoingTransfer {
 }
 
 impl Wallet {
+    /// Helper to check if the wallet has any approved guardians
+    pub fn has_guardians(&self) -> bool {
+        self.approved_guardians.len() != 0
+    }
+
     /// Check if the wallet is in incubation mode or not
     pub fn check_incubation(&mut self) -> bool {
         let now = Clock::get().unwrap().unix_timestamp;
@@ -69,6 +74,11 @@ impl Wallet {
         } else {
             false
         }
+    }
+
+    /// Check if a pubkey is trusted by the wallet
+    pub fn is_pubkey_trusted(&self, pubkey: Pubkey) -> bool {
+        crate::utils::get_key_index(self.trusted_pubkeys.clone(), pubkey).is_some()
     }
 
     /// Check if a given guardian pubkey is a valid guardian or not
