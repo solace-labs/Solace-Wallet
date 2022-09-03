@@ -1,7 +1,7 @@
 /**
  * This file acts as a mock relayer to test out various SDK Functions
  */
-import * as anchor from "./anchor";
+import * as anchor from "anchor-rn";
 import bs58 from "bs58";
 
 export interface RelayerIxData {

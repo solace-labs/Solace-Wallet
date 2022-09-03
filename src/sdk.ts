@@ -1,7 +1,7 @@
 import { Program } from "@project-serum/anchor";
 import { Solace } from "./solace/types";
-import * as anchor from "./anchor";
-import { findProgramAddressSync } from "./anchor/dist/cjs/utils/pubkey";
+import * as anchor from "anchor-rn";
+import { findProgramAddressSync } from "anchor-rn/dist/cjs/utils/pubkey";
 import { BN } from "bn.js";
 import IDL from "./solace/idl.json";
 import { RelayerIxData, relayTransaction } from "./relayer";
@@ -86,6 +86,7 @@ export class SolaceSDK {
     anchor.setProvider(provider);
     this.provider = provider;
     const programId = new anchor.web3.PublicKey(data.programAddress);
+    // @ts-ignore
     this.program = new anchor.Program<Solace>(
       // @ts-ignore
       IDL,
@@ -281,21 +282,21 @@ export class SolaceSDK {
   /**
    * Should send some amount of SOL to the `toAddress`
    */
-  async sendSol(
-    toAddress: anchor.web3.PublicKey,
-    lamports: number,
-    feePayer: anchor.web3.PublicKey
-  ) {
-    const tx = this.program.transaction.sendSol(new anchor.BN(lamports), {
-      accounts: {
-        toAccount: toAddress,
-        wallet: this.wallet,
-        owner: this.owner.publicKey,
-      },
-      signers: [this.owner],
-    });
-    return this.signTransaction(tx, feePayer);
-  }
+  // async sendSol(
+  //   toAddress: anchor.web3.PublicKey,
+  //   lamports: number,
+  //   feePayer: anchor.web3.PublicKey
+  // ) {
+  //   const tx = this.program.transaction.sendSol([new anchor.BN(lamports)], {
+  //     accounts: {
+  //       toAccount: toAddress,
+  //       wallet: this.wallet,
+  //       owner: this.owner.publicKey,
+  //     },
+  //     signers: [this.owner],
+  //   });
+  //   return this.signTransaction(tx, feePayer);
+  // }
 
   /**
    * Add a guardian to the wallet, signed by the owner
@@ -410,6 +411,7 @@ export class SolaceSDK {
     try {
       const walletData = await SolaceSDK.fetchDataForWallet(
         walletToRecover,
+        // @ts-ignore
         program
       );
       const [recoveryAddress, _] = findProgramAddressSync(
@@ -572,6 +574,7 @@ export class SolaceSDK {
     );
     const walletData = await SolaceSDK.fetchDataForWallet(
       new anchor.web3.PublicKey(data.solaceWalletAddress),
+      // @ts-ignore
       program
     );
     if (!walletData) {

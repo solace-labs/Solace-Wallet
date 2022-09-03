@@ -1,4 +1,4 @@
-import * as anchor from "../src/anchor";
+import * as anchor from "anchor-rn";
 import { assert } from "chai";
 import { KeyPair, SolaceSDK } from "../src/sdk";
 import { relayTransaction } from "../src/relayer";
