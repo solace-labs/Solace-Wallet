@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "module": "es6",
+    "target": "es2019",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist/esm",
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "declaration": true,
+    "paths": {}
+  },
+  "include": ["../src/**/*"],
+  "exclude": ["node_modules"]
+}

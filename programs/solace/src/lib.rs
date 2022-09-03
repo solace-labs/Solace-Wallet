@@ -7,6 +7,8 @@ mod state;
 mod utils;
 mod validators;
 
+use crate::utils::get_key_index;
+use anchor_spl::token::Transfer;
 pub use errors::*;
 pub use state::*;
 pub use validators::*;
@@ -15,8 +17,6 @@ declare_id!("8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U");
 
 #[program]
 pub mod solace {
-
-    use anchor_spl::token::Transfer;
 
     use super::*;
 
@@ -39,6 +39,10 @@ pub mod solace {
         wallet.recovery_threshold = recovery_threshold;
         wallet.wallet_recovery_sequence = 0;
         wallet.created_at = Clock::get().unwrap().unix_timestamp;
+        wallet.ongoing_transfer = OngoingTransfer::default();
+        // Set that the ongoing transfer is complete, so no new transfers get held up
+        wallet.ongoing_transfer.is_complete = true;
+        wallet.incubation_mode = true;
         Ok(())
     }
 
@@ -78,23 +82,134 @@ pub mod solace {
         Ok(())
     }
 
-    pub fn send_spl(ctx: Context<SendSPL>, amount: u64) -> Result<()> {
-        let bump = ctx.accounts.wallet.bump.clone().to_le_bytes();
+    pub fn request_transaction(ctx: Context<SendSPL>, amount: u64) -> Result<()> {
         let token_mint = ctx.accounts.token_mint.key().clone();
+        let bump = ctx.accounts.wallet.bump.clone().to_le_bytes();
+        let wallet = ctx.accounts.wallet.clone();
+
+        let inner = vec![b"SOLACE".as_ref(), wallet.name.as_str().as_ref(), &bump];
+        let seeds = vec![inner.as_slice()];
+        let ongoing_transfer = wallet.ongoing_transfer.clone();
+        let token_account = ctx.accounts.token_account.to_account_info();
+        let reciever_account = ctx.accounts.reciever_account.to_account_info();
+        let token_program = ctx.accounts.token_program.to_account_info();
+        assert!(wallet.ongoing_transfer.is_complete);
+
+        let wallet_mut = &mut ctx.accounts.wallet;
+        wallet_mut.ongoing_transfer.is_complete = false;
+        wallet_mut.ongoing_transfer.program_id = Some(ctx.accounts.token_program.key());
+        wallet_mut.ongoing_transfer.to = ctx.accounts.reciever_account.key();
+        wallet_mut.ongoing_transfer.from = ctx.accounts.token_account.key();
+        wallet_mut.ongoing_transfer.amount = amount;
+        wallet_mut.ongoing_transfer.token_mint = ctx.accounts.token_mint.key();
+        wallet_mut.ongoing_transfer.to_base = ctx.accounts.reciever_base.key();
+
+        if wallet_mut.check_incubation() {
+            // Check if an ongoing transfer is complete
+            utils::do_execute_transfer(
+                token_account,
+                reciever_account,
+                wallet.to_account_info(),
+                token_program,
+                amount,
+                &seeds,
+            )?;
+            // Set that the transfer is complete
+            wallet_mut.ongoing_transfer.is_complete = true;
+        } else {
+            wallet_mut.ongoing_transfer.is_complete = false;
+            wallet_mut.ongoing_transfer.approvers = wallet.approved_guardians.clone();
+            wallet_mut.ongoing_transfer.approvals = vec![false; wallet.approved_guardians.len()];
+        }
+        Ok(())
+    }
+
+    /// Approve the transfer of funds by being a guardian signer
+    pub fn approve_transfer(ctx: Context<ApproveTransfer>) -> Result<()> {
+        let guardian = ctx.accounts.guardian.key();
+        assert!(ctx.accounts.wallet.validate_guardian(guardian));
+        // Now that the guardian is validated, we can approve the transaction by the guardian
+        let wallet = &mut ctx.accounts.wallet;
+        wallet.approve_transfer(guardian);
+
+        Ok(())
+    }
+
+    /// Approve a transaction and if applicable, execute it as well
+    pub fn approve_and_execute_transfer(ctx: Context<ApproveAndExecuteTransfer>) -> Result<()> {
+        let guardian = ctx.accounts.guardian.key();
+        assert!(ctx.accounts.wallet.validate_guardian(guardian));
+        // Now that the guardian is validated, we can approve the transaction by the guardian
+        let wallet = &mut ctx.accounts.wallet;
+        let is_executable = wallet.approve_transfer(guardian);
+        if is_executable {
+            let bump = ctx.accounts.wallet.bump.clone().to_le_bytes();
+            let wallet = ctx.accounts.wallet.clone();
+            let inner = vec![b"SOLACE".as_ref(), wallet.name.as_str().as_ref(), &bump];
+            let seeds = vec![inner.as_slice()];
+            let ongoing_transfer = wallet.ongoing_transfer.clone();
+            let token_account = ctx.accounts.token_account.to_account_info();
+            let reciever_account = ctx.accounts.reciever_account.to_account_info();
+            let authority = ctx.accounts.wallet.to_account_info();
+            let token_program = ctx.accounts.token_program.to_account_info();
+            let amount = wallet.ongoing_transfer.amount;
+            // Checks to ensure that the transfer is legitimate
+            assert_eq!(ongoing_transfer.from, token_account.key());
+            assert_eq!(ongoing_transfer.to, reciever_account.key());
+            assert!(ongoing_transfer.is_executable);
+
+            utils::do_execute_transfer(
+                token_account,
+                reciever_account,
+                authority,
+                token_program,
+                amount,
+                &seeds,
+            )?;
+        }
+        Ok(())
+    }
+
+    pub fn execute_transfer(ctx: Context<ExecuteTransfer>) -> Result<()> {
+        let bump = ctx.accounts.wallet.bump.clone().to_le_bytes();
         let wallet = ctx.accounts.wallet.clone();
         let inner = vec![b"SOLACE".as_ref(), wallet.name.as_str().as_ref(), &bump];
-        let outer = vec![inner.as_slice()];
-        let transfer_instruction = Transfer {
-            from: ctx.accounts.token_account.to_account_info(),
-            to: ctx.accounts.reciever_account.to_account_info(),
-            authority: ctx.accounts.wallet.to_account_info(),
-        };
-        let cpi_ctx = CpiContext::new_with_signer(
-            ctx.accounts.token_program.to_account_info(),
-            transfer_instruction,
-            outer.as_slice(),
+        let seeds = vec![inner.as_slice()];
+        let ongoing_transfer = wallet.ongoing_transfer.clone();
+        let token_account = ctx.accounts.token_account.to_account_info();
+        let reciever_account = ctx.accounts.reciever_account.to_account_info();
+        let authority = ctx.accounts.wallet.to_account_info();
+        let token_program = ctx.accounts.token_program.to_account_info();
+        let amount = wallet.ongoing_transfer.amount;
+
+        // Checks to ensure that the transfer is legitimate
+        assert_keys_eq!(
+            ongoing_transfer.from,
+            token_account.key(),
+            errors::Errors::KeyMisMatch,
         );
-        anchor_spl::token::transfer(cpi_ctx, amount)?;
+        assert_keys_eq!(
+            ongoing_transfer.to,
+            reciever_account.key(),
+            errors::Errors::KeyMisMatch,
+        );
+        invariant!(
+            ongoing_transfer.is_executable,
+            errors::Errors::TransferNotExecutable
+        );
+        invariant!(
+            !ongoing_transfer.is_complete,
+            errors::Errors::TransferAlreadyComplete
+        );
+
+        utils::do_execute_transfer(
+            token_account,
+            reciever_account,
+            authority,
+            token_program,
+            amount,
+            &seeds,
+        )?;
 
         Ok(())
     }
@@ -245,13 +360,56 @@ pub mod solace {
     pub fn reject_recovery(_ctx: Context<NoAccount>) -> Result<()> {
         Ok(())
     }
+
+    // ----------------------------------------
+
+    pub fn add_trusted_pubkey(ctx: Context<Verified>, pubkey: Pubkey) -> Result<()> {
+        let wallet = &mut ctx.accounts.wallet;
+        let wallet_clone = wallet.clone();
+
+        let is_in_incubation = wallet.check_incubation();
+        let trusted_pubkeys = &mut wallet.trusted_pubkeys;
+
+        // check if the app is in the incubation period
+        // if yes then add the pubkey to the list blindly
+        if is_in_incubation {
+            trusted_pubkeys.push(pubkey);
+            msg!("wallet added to trusted pubkey list");
+            return Ok(());
+        }
+
+        // check if the pubkey is in the transaciton history
+        // then create a new deterministic PDA which carries the expiry for adding this pubkey to the trusted list
+        match get_key_index(wallet_clone.pubkey_history.clone(), pubkey) {
+            Some(index) => {
+                // The wallet is in the transaction history
+            }
+            None => {
+                // The wallet isn't in the transaction history and hence, can't be added to the trusted list
+            }
+        }
+
+        // [Use a jobs service to trigger the transaction]
+
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
 pub struct Initialize {}
 
 #[derive(Accounts)]
-pub struct NoAccount {}
+pub struct NoAccount<'info> {
+    #[account(mut)]
+    wallet: Box<Account<'info, Wallet>>,
+}
+
+#[derive(Accounts)]
+pub struct Verified<'info> {
+    #[account(mut, has_one=owner, constraint=wallet.owner == owner.key())]
+    wallet: Account<'info, Wallet>,
+    owner: Signer<'info>,
+}
 
 // Access the name parameter passed to the txn
 #[derive(Accounts)]
@@ -364,9 +522,53 @@ pub struct ApproveRecoveryBySolace<'info> {
 }
 
 #[derive(Accounts)]
+pub struct ExecuteTransfer<'info> {
+    #[account(mut)]
+    wallet: Box<Account<'info, Wallet>>,
+    #[account(
+        mut,
+        token::mint=token_mint,
+        token::authority=wallet,
+    )]
+    token_account: Account<'info, TokenAccount>,
+
+    #[account(mut)]
+    reciever_account: Account<'info, TokenAccount>,
+    // TODO: Derive the token address from the base inside the program, instead of deriving it from the client
+    /// CHECK: Account to check in whitelist
+    reciever_base: AccountInfo<'info>,
+    system_program: Program<'info, System>,
+    token_program: Program<'info, Token>,
+    token_mint: Account<'info, Mint>,
+}
+
+#[derive(Accounts)]
+pub struct ApproveAndExecuteTransfer<'info> {
+    #[account(mut)]
+    wallet: Box<Account<'info, Wallet>>,
+    #[account(mut)]
+    guardian: Signer<'info>,
+    #[account(
+        mut,
+        token::mint=token_mint,
+        token::authority=wallet,
+    )]
+    token_account: Account<'info, TokenAccount>,
+
+    #[account(mut)]
+    reciever_account: Account<'info, TokenAccount>,
+    // TODO: Derive the token address from the base inside the program, instead of deriving it from the client
+    /// CHECK: Account to check in whitelist
+    reciever_base: AccountInfo<'info>,
+    system_program: Program<'info, System>,
+    token_program: Program<'info, Token>,
+    token_mint: Account<'info, Mint>,
+}
+
+#[derive(Accounts)]
 pub struct SendSPL<'info> {
     #[account(mut)]
-    wallet: Account<'info, Wallet>,
+    wallet: Box<Account<'info, Wallet>>,
     #[account(mut)]
     owner: Signer<'info>,
     #[account(
@@ -378,8 +580,9 @@ pub struct SendSPL<'info> {
 
     #[account(mut)]
     reciever_account: Account<'info, TokenAccount>,
-    // /// CHECK: The account to which spl needs to be sent to
-    // reciever: AccountInfo<'info>,
+    // TODO: Derive the token address from the base inside the program, instead of deriving it from the client
+    /// CHECK: Account to check in whitelist
+    reciever_base: AccountInfo<'info>,
     system_program: Program<'info, System>,
     token_program: Program<'info, Token>,
     token_mint: Account<'info, Mint>,
@@ -387,12 +590,10 @@ pub struct SendSPL<'info> {
 
 #[derive(Accounts)]
 pub struct CreateATA<'info> {
-    #[account(mut)] // TODO: Add constraint to check guardian
-    wallet: Account<'info, Wallet>,
+    #[account(mut, has_one=owner)]
+    wallet: Box<Account<'info, Wallet>>,
     #[account(mut)]
     owner: Signer<'info>,
-    #[account(mut)]
-    rent_payer: Signer<'info>,
     #[account(
         init,
         payer = rent_payer,
@@ -405,6 +606,8 @@ pub struct CreateATA<'info> {
         token::authority=wallet,
     )]
     token_account: Account<'info, TokenAccount>,
+    #[account(mut)]
+    rent_payer: Signer<'info>,
     system_program: Program<'info, System>,
     token_program: Program<'info, Token>,
     token_mint: Account<'info, Mint>,
@@ -432,4 +635,11 @@ pub struct CheckATA<'info> {
     system_program: Program<'info, System>,
     token_program: Program<'info, Token>,
     token_mint: Account<'info, Mint>,
+}
+
+#[derive(Accounts)]
+pub struct ApproveTransfer<'info> {
+    #[account(mut)]
+    wallet: Account<'info, Wallet>,
+    guardian: Signer<'info>,
 }

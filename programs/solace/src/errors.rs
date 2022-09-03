@@ -16,4 +16,13 @@ pub enum Errors {
 
     #[msg("Payments are disabled - Wallet in recovery mode")]
     PaymentsDisabled,
+
+    #[msg("Requested transfer is not executable")]
+    TransferNotExecutable,
+
+    #[msg("Requested transfer is already completed")]
+    TransferAlreadyComplete,
+
+    #[msg("Keys mismatch")]
+    KeyMisMatch,
 }

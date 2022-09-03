@@ -75,11 +75,6 @@ export type Solace = {
           "isSigner": true
         },
         {
-          "name": "rentPayer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
           "name": "tokenAccount",
           "isMut": true,
           "isSigner": false,
@@ -104,6 +99,11 @@ export type Solace = {
               }
             ]
           }
+        },
+        {
+          "name": "rentPayer",
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "systemProgram",
@@ -192,12 +192,24 @@ export type Solace = {
     },
     {
       "name": "depositSplTokens",
-      "accounts": [],
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
       "args": []
     },
     {
       "name": "depositSol",
-      "accounts": [],
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
       "args": []
     },
     {
@@ -227,7 +239,7 @@ export type Solace = {
       ]
     },
     {
-      "name": "sendSpl",
+      "name": "requestTransaction",
       "accounts": [
         {
           "name": "wallet",
@@ -247,6 +259,11 @@ export type Solace = {
         {
           "name": "recieverAccount",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "recieverBase",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -271,6 +288,109 @@ export type Solace = {
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "approveTransfer",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "guardian",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "approveAndExecuteTransfer",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "guardian",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "recieverAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "recieverBase",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "executeTransfer",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "recieverAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "recieverBase",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     },
     {
       "name": "addGuardians",
@@ -430,8 +550,35 @@ export type Solace = {
     },
     {
       "name": "rejectRecovery",
-      "accounts": [],
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
       "args": []
+    },
+    {
+      "name": "addTrustedPubkey",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "pubkey",
+          "type": "publicKey"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -497,6 +644,28 @@ export type Solace = {
           {
             "name": "createdAt",
             "type": "i64"
+          },
+          {
+            "name": "trustedPubkeys",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "pubkeyHistory",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "incubationMode",
+            "type": "bool"
+          },
+          {
+            "name": "ongoingTransfer",
+            "type": {
+              "defined": "OngoingTransfer"
+            }
           }
         ]
       }
@@ -540,6 +709,82 @@ export type Solace = {
           },
           {
             "name": "isExecuted",
+            "type": "bool"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "OngoingTransfer",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "from",
+            "type": "publicKey"
+          },
+          {
+            "name": "to",
+            "type": "publicKey"
+          },
+          {
+            "name": "toBase",
+            "type": "publicKey"
+          },
+          {
+            "name": "programId",
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "approvers",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "approvals",
+            "type": {
+              "vec": "bool"
+            }
+          },
+          {
+            "name": "isExecutable",
+            "type": "bool"
+          },
+          {
+            "name": "isComplete",
+            "type": "bool"
+          },
+          {
+            "name": "tokenMint",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TXAccountMeta",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pubkey",
+            "type": "publicKey"
+          },
+          {
+            "name": "isSigner",
+            "type": "bool"
+          },
+          {
+            "name": "isWritable",
             "type": "bool"
           }
         ]
@@ -652,11 +897,6 @@ export const IDL: Solace = {
           "isSigner": true
         },
         {
-          "name": "rentPayer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
           "name": "tokenAccount",
           "isMut": true,
           "isSigner": false,
@@ -681,6 +921,11 @@ export const IDL: Solace = {
               }
             ]
           }
+        },
+        {
+          "name": "rentPayer",
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "systemProgram",
@@ -769,12 +1014,24 @@ export const IDL: Solace = {
     },
     {
       "name": "depositSplTokens",
-      "accounts": [],
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
       "args": []
     },
     {
       "name": "depositSol",
-      "accounts": [],
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
       "args": []
     },
     {
@@ -804,7 +1061,7 @@ export const IDL: Solace = {
       ]
     },
     {
-      "name": "sendSpl",
+      "name": "requestTransaction",
       "accounts": [
         {
           "name": "wallet",
@@ -824,6 +1081,11 @@ export const IDL: Solace = {
         {
           "name": "recieverAccount",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "recieverBase",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -848,6 +1110,109 @@ export const IDL: Solace = {
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "approveTransfer",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "guardian",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "approveAndExecuteTransfer",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "guardian",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "recieverAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "recieverBase",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "executeTransfer",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "recieverAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "recieverBase",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     },
     {
       "name": "addGuardians",
@@ -1007,8 +1372,35 @@ export const IDL: Solace = {
     },
     {
       "name": "rejectRecovery",
-      "accounts": [],
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
       "args": []
+    },
+    {
+      "name": "addTrustedPubkey",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "pubkey",
+          "type": "publicKey"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1074,6 +1466,28 @@ export const IDL: Solace = {
           {
             "name": "createdAt",
             "type": "i64"
+          },
+          {
+            "name": "trustedPubkeys",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "pubkeyHistory",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "incubationMode",
+            "type": "bool"
+          },
+          {
+            "name": "ongoingTransfer",
+            "type": {
+              "defined": "OngoingTransfer"
+            }
           }
         ]
       }
@@ -1117,6 +1531,82 @@ export const IDL: Solace = {
           },
           {
             "name": "isExecuted",
+            "type": "bool"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "OngoingTransfer",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "from",
+            "type": "publicKey"
+          },
+          {
+            "name": "to",
+            "type": "publicKey"
+          },
+          {
+            "name": "toBase",
+            "type": "publicKey"
+          },
+          {
+            "name": "programId",
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "approvers",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "approvals",
+            "type": {
+              "vec": "bool"
+            }
+          },
+          {
+            "name": "isExecutable",
+            "type": "bool"
+          },
+          {
+            "name": "isComplete",
+            "type": "bool"
+          },
+          {
+            "name": "tokenMint",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TXAccountMeta",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pubkey",
+            "type": "publicKey"
+          },
+          {
+            "name": "isSigner",
+            "type": "bool"
+          },
+          {
+            "name": "isWritable",
             "type": "bool"
           }
         ]
