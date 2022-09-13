@@ -2,8 +2,10 @@ import { Keypair, PublicKey, Connection } from "@solana/web3.js";
 import {
   mintTo,
   createMint,
-  createAssociatedTokenAccount,
   getAssociatedTokenAddress,
+  TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccount,
 } from "@solana/spl-token";
 
 /**
@@ -14,7 +16,7 @@ export class TokenMint {
     public token: PublicKey,
     public signer: Keypair,
     public connection: Connection
-  ) { }
+  ) {}
 
   /**
    * Initialize a `TokenMint` object
@@ -40,31 +42,36 @@ export class TokenMint {
   /**
    * Get or create the associated token account for the specified `wallet`
    * @param wallet The wallet to get the ATA for
-   * @param allowOffcurse Allow the owner account to be a PDA
    * @returns
    */
-  async getAssociatedTokenAccount(
-    wallet: PublicKey,
-    allowOffcurse: boolean = false
-  ): Promise<PublicKey> {
+  async getAssociatedTokenAccount(wallet: PublicKey): Promise<PublicKey> {
     const ata = await getAssociatedTokenAddress(
       this.token,
       wallet,
-      allowOffcurse
+      true,
+      TOKEN_PROGRAM_ID,
+      ASSOCIATED_TOKEN_PROGRAM_ID
     );
-    const exist = await checkAccountExist(this.connection, ata);
 
-    if (exist) {
-      return ata;
-    }
+    return ata;
 
-    await createAssociatedTokenAccount(
+    // await createAssociatedTokenAccount(
+    //   this.connection,
+    //   this.signer,
+    //   this.token,
+    //   wallet
+    // );
+
+    // return ata;
+  }
+
+  async createAssociatedTokenAccount(wallet: PublicKey) {
+    return await createAssociatedTokenAccount(
       this.connection,
       this.signer,
       this.token,
       wallet
     );
-    return ata;
   }
 
   /**

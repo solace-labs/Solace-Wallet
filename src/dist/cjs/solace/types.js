@@ -1,4 +1,7 @@
-export const IDL = {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.IDL = void 0;
+exports.IDL = {
     "version": "0.1.0",
     "name": "solace",
     "instructions": [
@@ -473,6 +476,11 @@ export const IDL = {
         {
             "name": "initiateWalletRecovery",
             "accounts": [
+                {
+                    "name": "rentPayer",
+                    "isMut": true,
+                    "isSigner": true
+                },
                 {
                     "name": "wallet",
                     "isMut": true,

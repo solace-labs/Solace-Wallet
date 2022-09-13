@@ -1,13 +1,13 @@
 {
   "name": "solace-sdk",
-  "version": "2.0.6",
+  "version": "2.0.15",
   "description": "SDK to interact with the Solace Program",
-  "main": "./dist/esm/sdk.js",
-  "type": "module",
+  "main": "./dist/cjs/sdk.js",
+  "type": "commonjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "rm -rf dist && tsc -p tsconfig.json",
-    "prepublishOnly": "rm -rf dist && npx tsc -p tsconfig.json"
+    "build": "rm -rf dist && tsc -p tsconfig-cjs.json",
+    "prepublishOnly": "rm -rf dist && npx tsc -p tsconfig-cjs.json"
   },
   "files": [
     "./dist"

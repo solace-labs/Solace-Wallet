@@ -6,8 +6,8 @@ import bs58 from "bs58";
 
 export interface RelayerIxData {
   message: string;
-  signature: string;
-  publicKey: string;
+  signature?: string;
+  publicKey?: string;
   blockHash: {
     lastValidBlockHeight: number;
     blockhash: string;
@@ -26,10 +26,11 @@ export const relayTransaction = async (
   const transaction = web3.Transaction.populate(
     web3.Message.from(Buffer.from(data.message, "base64"))
   );
-  transaction.addSignature(
-    new web3.PublicKey(data.publicKey),
-    Buffer.from(bs58.decode(data.signature))
-  );
+  if (data.publicKey && data.signature)
+    transaction.addSignature(
+      new web3.PublicKey(data.publicKey),
+      Buffer.from(bs58.decode(data.signature))
+    );
   transaction.partialSign(payer);
   const res = await connection.sendEncodedTransaction(
     transaction.serialize().toString("base64")

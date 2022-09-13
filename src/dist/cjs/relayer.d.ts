@@ -4,8 +4,8 @@
 import { web3 } from "anchor-rn";
 export interface RelayerIxData {
     message: string;
-    signature: string;
-    publicKey: string;
+    signature?: string;
+    publicKey?: string;
     blockHash: {
         lastValidBlockHeight: number;
         blockhash: string;

@@ -95,6 +95,7 @@ pub mod solace {
         let token_mint = ctx.accounts.token_mint.key().clone();
         let bump = ctx.accounts.wallet.bump.clone().to_le_bytes();
         let wallet = ctx.accounts.wallet.clone();
+        // [owner.toBuffer(), programId.toBuffer(), mint.toBuffer()],
 
         let inner = vec![b"SOLACE".as_ref(), wallet.name.as_str().as_ref(), &bump];
         let seeds = vec![inner.as_slice()];
@@ -102,7 +103,7 @@ pub mod solace {
         let token_account = ctx.accounts.token_account.to_account_info();
         let reciever_account = ctx.accounts.reciever_account.to_account_info();
         let token_program = ctx.accounts.token_program.to_account_info();
-        assert!(wallet.ongoing_transfer.is_complete);
+        invariant!(wallet.ongoing_transfer.is_complete);
 
         let wallet_mut = &mut ctx.accounts.wallet;
         wallet_mut.ongoing_transfer.is_complete = false;
@@ -127,9 +128,16 @@ pub mod solace {
                 &seeds,
                 wallet_mut,
             )?;
-            wallet_mut
-                .pubkey_history
-                .push(ctx.accounts.reciever_account.clone().key());
+            if utils::get_key_index(
+                wallet.pubkey_history.clone(),
+                ctx.accounts.reciever_account.key(),
+            )
+            .is_none()
+            {
+                wallet_mut
+                    .pubkey_history
+                    .push(ctx.accounts.reciever_account.clone().key());
+            }
             // Set that the transfer is complete
             wallet_mut.ongoing_transfer.is_complete = true;
         } else {
@@ -510,11 +518,13 @@ pub struct SendSol<'info> {
 /// This can be anyone signing for recover (Ideally the new wallet of the user)
 #[derive(Accounts)]
 pub struct InitiateWalletRecovery<'info> {
+    #[account(mut)]
+    rent_payer: Signer<'info>,
     #[account(mut)] // TODO: Add constraint to check guardian
     wallet: Account<'info, Wallet>,
     #[account(
         init,
-        payer = proposer,
+        payer = rent_payer,
         space = 1000, // TODO: Add dynamic spacing
         seeds = [wallet.key().as_ref(), wallet.wallet_recovery_sequence.to_le_bytes().as_ref()],
         bump
@@ -607,7 +617,8 @@ pub struct SendSPL<'info> {
         token::authority=wallet,
     )]
     token_account: Account<'info, TokenAccount>,
-
+    // [owner.toBuffer(), programId.toBuffer(), mint.toBuffer()],
+    // associatedTokenProgramId
     #[account(mut)]
     reciever_account: Account<'info, TokenAccount>,
     // TODO: Derive the token address from the base inside the program, instead of deriving it from the client

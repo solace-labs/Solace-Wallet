@@ -474,6 +474,11 @@ export type Solace = {
       "name": "initiateWalletRecovery",
       "accounts": [
         {
+          "name": "rentPayer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
           "name": "wallet",
           "isMut": true,
           "isSigner": false
@@ -1341,6 +1346,11 @@ export const IDL: Solace = {
     {
       "name": "initiateWalletRecovery",
       "accounts": [
+        {
+          "name": "rentPayer",
+          "isMut": true,
+          "isSigner": true
+        },
         {
           "name": "wallet",
           "isMut": true,

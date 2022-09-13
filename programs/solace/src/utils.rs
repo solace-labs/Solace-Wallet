@@ -75,6 +75,10 @@ pub fn do_execute_transfer<'a>(
         to: reciever_account.clone(),
         authority,
     };
+    // anchor_lang::solana_program::pubkey::Pubkey::find_program_address(
+    //     &[&[&[reciever_account]]],
+    //     &token_program.key(),
+    // );
     // transfer_instruction
     msg!(format_args!("transferring {} USDC", amount)
         .to_string()

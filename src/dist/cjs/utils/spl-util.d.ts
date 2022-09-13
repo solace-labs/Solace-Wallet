@@ -18,10 +18,10 @@ export declare class TokenMint {
     /**
      * Get or create the associated token account for the specified `wallet`
      * @param wallet The wallet to get the ATA for
-     * @param allowOffcurse Allow the owner account to be a PDA
      * @returns
      */
-    getAssociatedTokenAccount(wallet: PublicKey, allowOffcurse?: boolean): Promise<PublicKey>;
+    getAssociatedTokenAccount(wallet: PublicKey): Promise<PublicKey>;
+    createAssociatedTokenAccount(wallet: PublicKey): Promise<PublicKey>;
     /**
      * Mint `amount` tokens into `tokenAccount`
      * @param tokenAccount The token account to mint into
