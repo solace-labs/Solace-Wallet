@@ -4,6 +4,8 @@ use anchor_lang::prelude::*;
 pub struct Wallet {
     // The guardians for this wallet
     pub pending_guardians: Vec<Pubkey>,
+    // The unix timestamps from when the approvals can be made
+    pub pending_guardians_approval_from: Vec<i64>,
     // The guardians for this wallet
     pub approved_guardians: Vec<Pubkey>,
     // The owner for the wallet
@@ -22,6 +24,97 @@ pub struct Wallet {
     pub current_recovery: Option<Pubkey>,
     // All the accounts the users are guarding
     pub guarding: Vec<Pubkey>,
+    // The time at which the wallet was created. Used to calculate the incubation period
+    pub created_at: i64,
+    // A list of trusted pubkeys to which transactions can be instant
+    pub trusted_pubkeys: Vec<Pubkey>,
+    // History of all the pubkeys the wallet has transacted with
+    pub pubkey_history: Vec<Pubkey>,
+    // If the wallet is in incubation or not. To be checked on only within the H12 window
+    pub incubation_mode: bool,
+    // Ongoing trasnfer which requires guardian approval
+    pub ongoing_transfer: OngoingTransfer,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Clone, Default)]
+pub struct OngoingTransfer {
+    pub from: Pubkey,
+    pub to: Pubkey,
+    // In the case that the to_key was derived
+    pub to_base: Pubkey,
+    // None of SOL transfer and Some(Pubkey) for SPL transfers
+    pub program_id: Option<Pubkey>,
+    // The amount to be transacted
+    pub amount: u64,
+    // The approvers of the transactions
+    pub approvers: Vec<Pubkey>,
+    // The approvals by guardians
+    pub approvals: Vec<bool>,
+    // Flag if the transfer is executable or not
+    pub is_executable: bool,
+    // Flag to check if the current ongoing transaction is complete
+    pub is_complete: bool,
+    // Mint of the token to be transferred
+    pub token_mint: Pubkey,
+}
+
+impl Wallet {
+    /// Helper to check if the wallet has any approved guardians
+    pub fn has_guardians(&self) -> bool {
+        self.approved_guardians.len() != 0
+    }
+
+    /// Check if the wallet is in incubation mode or not
+    pub fn check_incubation(&mut self) -> bool {
+        let now = Clock::get().unwrap().unix_timestamp;
+        // Check if the wallet is in incubation mode
+        if self.created_at < now * 12 * 36000 {
+            // if the wallet is in the incubation window, then respect the incubation_mode flag
+            self.incubation_mode
+        } else {
+            false
+        }
+    }
+
+    /// Check if a pubkey is trusted by the wallet
+    pub fn is_pubkey_trusted(&self, pubkey: Pubkey) -> bool {
+        crate::utils::get_key_index(self.trusted_pubkeys.clone(), pubkey).is_some()
+    }
+
+    /// Check if a given guardian pubkey is a valid guardian or not
+    pub fn validate_guardian(&self, guardian: Pubkey) -> bool {
+        match crate::utils::get_key_index(self.approved_guardians.clone(), guardian) {
+            Some(i) => true,
+            None => false,
+        }
+    }
+
+    /// Helper to approve a transfer and check if the transfer is executable
+    pub fn approve_transfer(&mut self, guardian: Pubkey) -> bool {
+        let is_executable =
+            match crate::utils::get_key_index(self.approved_guardians.clone(), guardian) {
+                Some(i) => {
+                    assert!(
+                        !self.ongoing_transfer.approvals[i],
+                        "transfer already approved by guardian"
+                    );
+                    self.ongoing_transfer.approvals[i] = true;
+                    let mut is_approval_pending = false;
+                    self.ongoing_transfer.approvals.iter().for_each(|a| {
+                        if !a {
+                            is_approval_pending = true
+                        };
+                    });
+                    // Return false if approval is still pending and true otherwise
+                    !is_approval_pending
+                }
+                None => false,
+            };
+        if is_executable {
+            self.ongoing_transfer.is_executable = true;
+        }
+        self.ongoing_transfer.is_executable
+    }
 }
 
 #[account]

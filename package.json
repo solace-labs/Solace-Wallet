@@ -4,18 +4,14 @@
     "prebuild": "cd server && rimraf dist",
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
-    "package": "anchor build && mkdir -p src/solace/ && cp -f target/idl/solace.json src/solace/idl.json && cp -i target/types/solace.ts src/solace/types.ts",
-    "client:android": "cd client && npm run android",
-    "client:ios": "cd client && npm run ios",
-    "client:start": "cd client && npm run start",
-    "server:start:dev": "cd server && npm run start:dev",
-    "server:start": "cd server && npm run start",
-    "server:start:prod": "cd server && node dist/main"
+    "package": "anchor build && mkdir -p src/solace/ && cp -f target/idl/solace.json src/solace/idl.json && cp -i target/types/solace.ts src/solace/types.ts"
   },
   "dependencies": {
     "@nestjs/mapped-types": "*",
     "@project-serum/anchor": "^0.18.2",
+    "@solana/spl-token": "^0.3.4",
     "@textile/hub": "^6.3.4",
+    "anchor-rn": "^0.18.2",
     "axios": "^0.27.2"
   },
   "devDependencies": {
