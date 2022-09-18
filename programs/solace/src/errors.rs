@@ -34,4 +34,7 @@ pub enum Errors {
 
     #[msg("Pubkey is already trusted")]
     TrustedPubkeyAlreadyTrusted,
+
+    #[msg("Ongoing transfer is incomplete")]
+    OngoingTransferIncomplete,
 }

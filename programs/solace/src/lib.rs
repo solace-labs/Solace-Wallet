@@ -91,11 +91,11 @@ pub mod solace {
         Ok(())
     }
 
+    // Request a transaction from the vault to other addresses
     pub fn request_transaction(ctx: Context<SendSPL>, amount: u64) -> Result<()> {
         let token_mint = ctx.accounts.token_mint.key().clone();
         let bump = ctx.accounts.wallet.bump.clone().to_le_bytes();
         let wallet = ctx.accounts.wallet.clone();
-        // [owner.toBuffer(), programId.toBuffer(), mint.toBuffer()],
 
         let inner = vec![b"SOLACE".as_ref(), wallet.name.as_str().as_ref(), &bump];
         let seeds = vec![inner.as_slice()];
@@ -103,7 +103,10 @@ pub mod solace {
         let token_account = ctx.accounts.token_account.to_account_info();
         let reciever_account = ctx.accounts.reciever_account.to_account_info();
         let token_program = ctx.accounts.token_program.to_account_info();
-        invariant!(wallet.ongoing_transfer.is_complete);
+        invariant!(
+            wallet.ongoing_transfer.is_complete,
+            errors::Errors::OngoingTransferIncomplete
+        );
 
         let wallet_mut = &mut ctx.accounts.wallet;
         wallet_mut.ongoing_transfer.is_complete = false;

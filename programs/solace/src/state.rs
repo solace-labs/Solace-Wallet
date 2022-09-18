@@ -135,3 +135,9 @@ pub struct RecoveryAttempt {
     // Is the wallet recovery executed
     pub is_executed: bool,
 }
+
+#[account]
+pub struct SolTransfer {}
+
+#[account]
+pub struct SplTransfer {}
