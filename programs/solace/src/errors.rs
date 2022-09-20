@@ -37,4 +37,7 @@ pub enum Errors {
 
     #[msg("Ongoing transfer is incomplete")]
     OngoingTransferIncomplete,
+
+    #[msg("The requested transfer type is invalid")]
+    InvalidTransferType,
 }

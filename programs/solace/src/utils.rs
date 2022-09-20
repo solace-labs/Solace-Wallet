@@ -16,6 +16,16 @@ pub fn can_update_owner(wallet: &Wallet, recovery: &RecoveryAttempt) -> Result<b
     }
 }
 
+/// Given a vector of bools and a threshold, the function validates if the threshold is met or not
+pub fn is_action_approved(approvals: Vec<bool>, threshold: u8) -> bool {
+    let approval_count = approvals.iter().filter(|&&x| x).count();
+
+    if approval_count >= (threshold as usize) {
+        true
+    } else {
+        false
+    }
+}
 /// Get the index of any given variable in a vector
 pub fn get_key_index<T: Eq>(keys: Vec<T>, key_to_find: T) -> Option<usize> {
     keys.into_iter().position(|x| x == key_to_find)
