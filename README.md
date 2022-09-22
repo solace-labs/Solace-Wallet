@@ -4,7 +4,8 @@ Solace is a program (smart-contract) based vault for Solana enhances security us
 
 Program Address (Testnet) - `8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U`
 
-![solace](./assets/Solace.jpg)
+![image](https://user-images.githubusercontent.com/103751566/191743628-80f07942-28e6-4cd9-b76f-cc7b5aedef00.png)
+
 
 ### How does it work
 
