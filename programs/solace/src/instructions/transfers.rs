@@ -1,9 +1,9 @@
 use anchor_lang::{prelude::*, Key};
-use vipers::{assert_keys, assert_keys_eq, invariant};
+use vipers::{assert_keys_eq, invariant};
 
 use crate::{
-    errors::Errors, utils, ApproveAndExecuteSPLTransfer, ExecuteTransfer, RequestGuardedTransfer,
-    RequestInstantSOLTransfer, RequestInstantSPLTransfer,
+    errors::Errors, utils, ApproveAndExecuteSPLTransfer, ApproveTransfer, ExecuteTransfer,
+    RequestGuardedTransfer, RequestInstantSOLTransfer, RequestInstantSPLTransfer,
 };
 
 /// Request instant sol transfer
@@ -32,7 +32,6 @@ pub fn request_instant_spl_transfer(
 ) -> Result<()> {
     // TODO: Check if an instant transfer is event possible
 
-    let token_mint = ctx.accounts.token_mint.key().clone();
     let bump = ctx.accounts.wallet.bump.clone().to_le_bytes();
     let wallet = ctx.accounts.wallet.clone();
 
@@ -55,31 +54,53 @@ pub fn request_instant_spl_transfer(
     Ok(())
 }
 
-// 1. Check if the guardian is valid for this transfer
-// 2. Approve the transfer
-// 3. Check if the transfer can be executed
-// 4. If the transfer cannot be executed, then throw and error and undo the approval, as "approve" needs to be called, not "aprove_and_execute"
-pub fn approve_and_execute_transfer(ctx: Context<ApproveAndExecuteSPLTransfer>) -> Result<()> {
-    let transfer_account = ctx.accounts.transfer;
+pub fn approve_transfer(ctx: Context<ApproveTransfer>) -> Result<()> {
+    let accounts = ctx.accounts;
+    let transfer_account = &mut accounts.transfer;
+    transfer_account.approve_transfer(accounts.guardian.key())
+}
+
+/// 1. Check if the guardian is valid for this transfer
+/// 2. Approve the transfer
+/// 3. Check if the transfer can be executed
+/// 4. If the transfer cannot be executed, then throw and error and undo the approval, as "approve" needs to be called, not "aprove_and_execute"
+pub fn approve_and_execute_spl_transfer(ctx: Context<ApproveAndExecuteSPLTransfer>) -> Result<()> {
+    let accounts = ctx.accounts;
+    let transfer_account = &mut accounts.transfer;
+
     // Ensure that the transfer type is SPL only
     invariant!(
         transfer_account.is_spl_transfer,
         Errors::InvalidTransferType
     );
+
     // Ensure that the transfer account is valid
-    assert_keys_eq!(transfer_account.to.key(), ctx.accounts.reciever_account);
+    assert_keys_eq!(transfer_account.to.key(), accounts.reciever_account);
     assert_keys_eq!(
         transfer_account.to_base.unwrap().key(),
-        ctx.accounts.reciever_base
+        accounts.reciever_base
     );
+
     // Approve transfer and check if the transfer is executable
-    transfer_account.approve_transfer(ctx.accounts.guardian.key())?;
+    transfer_account.approve_transfer(accounts.guardian.key())?;
     invariant!(
         transfer_account.is_executable,
         Errors::TransferNotExecutable
     );
-    // Execute transfer
 
+    let bump = accounts.wallet.bump.clone().to_le_bytes();
+    let wallet = accounts.wallet.clone();
+    let inner = vec![b"SOLACE".as_ref(), wallet.name.as_str().as_ref(), &bump];
+    let seeds = vec![inner.as_slice()];
+    utils::do_execute_transfer(
+        accounts.token_account.to_account_info(),
+        accounts.reciever_account.to_account_info(),
+        accounts.wallet.to_account_info(),
+        accounts.token_program.to_account_info(),
+        transfer_account.amount,
+        &seeds,
+        &mut accounts.wallet,
+    )?;
     Ok(())
 }
 
@@ -101,7 +122,6 @@ pub fn request_guarded_transfer(
     ctx: Context<RequestGuardedTransfer>,
     data: &GuardedTransferData,
 ) -> Result<()> {
-    // TODO:
     // Add the data to the PDA and append it to the vec inside the wallet
     let transfer_account = &mut ctx.accounts.transfer;
     transfer_account.to = data.to;
@@ -119,14 +139,21 @@ pub fn request_guarded_transfer(
     // Random key used to derive the address
     transfer_account.random = data.random;
 
+    // Ensure that all the required data is provided and nothing is missing
     if data.from_token_account.is_none()
         && data.token_program.is_none()
         && data.mint.is_none()
         && data.to_base.is_none()
     {
         transfer_account.is_spl_transfer = false;
-    } else {
+    } else if data.from_token_account.is_some()
+        && data.token_program.is_some()
+        && data.mint.is_some()
+        && data.to_base.is_some()
+    {
         transfer_account.is_spl_transfer = true;
+    } else {
+        return err!(Errors::InvalidTransferData);
     }
 
     ctx.accounts
@@ -152,7 +179,6 @@ pub fn execute_transfer(ctx: Context<ExecuteTransfer>) -> Result<()> {
     // TODO: Assert that all the values match from the Transfer account
     // Ensure that the transfer account is executable
     // Ensure that the transfer account is a part of the ongoing transfers
-
     utils::do_execute_transfer(
         token_account,
         reciever_account,

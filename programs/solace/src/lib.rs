@@ -8,7 +8,6 @@ mod state;
 mod utils;
 mod validators;
 
-use crate::utils::get_key_index;
 use anchor_spl::token::Transfer;
 pub use errors::*;
 pub use state::*;
@@ -42,6 +41,7 @@ pub mod solace {
         Ok(())
     }
 
+    /// End the incubation
     pub fn end_incubation(ctx: Context<Verified>) -> Result<()> {
         invariant!(
             ctx.accounts.wallet.incubation_mode,
@@ -51,6 +51,9 @@ pub mod solace {
         Ok(())
     }
 
+    /// Request an instant SPL transfer
+    /// This can only be called if the wallet is in incubation mode
+    /// Or if the address is trusted
     pub fn request_instant_spl_transfer(
         ctx: Context<RequestInstantSPLTransfer>,
         amount: u64,
@@ -58,6 +61,9 @@ pub mod solace {
         instructions::transfers::request_instant_spl_transfer(ctx, amount)
     }
 
+    /// Request an instant SOL transfer
+    /// This can only be called if the wallet is in incubation mode
+    /// Or if the address is trusted
     pub fn request_instant_sol_transfer(
         ctx: Context<RequestInstantSOLTransfer>,
         amount: u64,
@@ -65,6 +71,8 @@ pub mod solace {
         instructions::transfers::request_instant_sol_transfer(ctx, amount)
     }
 
+    /// Request for a new guarded transfer
+    /// This can be used for both SOL and SPL transfers
     pub fn request_guarded_transfer(
         ctx: Context<RequestGuardedTransfer>,
         data: instructions::transfers::GuardedTransferData,
@@ -74,129 +82,47 @@ pub mod solace {
 
     /// Approve the transfer of funds by being a guardian signer
     pub fn approve_transfer(ctx: Context<ApproveTransfer>) -> Result<()> {
-        let guardian = ctx.accounts.guardian.key();
-        assert!(ctx.accounts.wallet.validate_guardian(guardian));
-        // Now that the guardian is validated, we can approve the transaction by the guardian
-        let wallet = &mut ctx.accounts.wallet;
-        // wallet.approve_transfer(guardian);
-
-        Ok(())
+        instructions::transfers::approve_transfer(ctx)
     }
 
-    /// Approve a transaction and if applicable, execute it as well
-    pub fn approve_and_execute_transfer(ctx: Context<ApproveAndExecuteSPLTransfer>) -> Result<()> {
-        instructions::transfers::approve_and_execute_transfer(ctx)
-        // let guardian = ctx.accounts.guardian.key();
-        // assert!(ctx.accounts.wallet.validate_guardian(guardian));
-        // // Now that the guardian is validated, we can approve the transaction by the guardian
-        // let wallet_mut = &mut ctx.accounts.wallet;
-        // let is_executable = wallet_mut.approve_transfer(guardian);
-        // msg!(format!(
-        //     "guardian approval complete - is executable: {}",
-        //     is_executable
-        // )
-        // .as_str());
-        // if is_executable {
-        //     let bump = ctx.accounts.wallet.bump.clone().to_le_bytes();
-        //     let wallet = ctx.accounts.wallet.clone();
-        //     let inner = vec![b"SOLACE".as_ref(), wallet.name.as_str().as_ref(), &bump];
-        //     let seeds = vec![inner.as_slice()];
-        //     let ongoing_transfer = wallet.ongoing_transfer.clone();
-        //     let token_account = ctx.accounts.token_account.to_account_info();
-        //     let reciever_account = ctx.accounts.reciever_account.to_account_info();
-        //     let authority = ctx.accounts.wallet.to_account_info();
-        //     let token_program = ctx.accounts.token_program.to_account_info();
-        //     let amount = wallet.ongoing_transfer.amount;
-        //     // Checks to ensure that the transfer is legitimate
-        //     assert_eq!(ongoing_transfer.from, token_account.key());
-        //     assert_eq!(ongoing_transfer.to, reciever_account.key());
-        //     assert!(ongoing_transfer.is_executable);
-        //
-        //     utils::do_execute_transfer(
-        //         token_account,
-        //         reciever_account,
-        //         authority,
-        //         token_program,
-        //         amount,
-        //         &seeds,
-        //         &mut ctx.accounts.wallet,
-        //     )?;
-        //     ctx.accounts.wallet.ongoing_transfer.is_complete = true;
-        // }
+    /// Approve a SPL transaction and if applicable, execute it as well
+    /// Else throw an error
+    pub fn approve_and_execute_spl_transfer(
+        ctx: Context<ApproveAndExecuteSPLTransfer>,
+    ) -> Result<()> {
+        instructions::transfers::approve_and_execute_spl_transfer(ctx)
     }
 
+    /// Approve a SOL transaction and if applicable, execute it as well
+    /// Else throw an error
+    pub fn approve_and_execute_sol_transfer(_ctx: Context<NoAccount>) -> Result<()> {
+        todo!("Based on the implementation of approve_and_execute_spl_transfer, implement sol transfer")
+    }
+
+    /// Execute a trasnfer, as long as a transfer is already approved
+    /// This acts as a proxy when all guardians have approved the transfer but the transfer is still not approved
     pub fn execute_transfer(ctx: Context<ExecuteTransfer>) -> Result<()> {
         instructions::transfers::execute_transfer(ctx)
     }
 
-    /// Adds a guadian to the wallet's pending_guardians vector
+    /// Adds a guardian to the wallet appropriately
     /// Access Control - Owner Only
-    pub fn add_guardians(
-        ctx: Context<AddGuardians>,
-        guardian: Pubkey,
-        recovery_threshold: u8,
-    ) -> Result<()> {
-        let wallet = &mut ctx.accounts.wallet;
-        let now = Clock::get().unwrap().unix_timestamp;
-        // Check if the wallet is in incubation mode
-        if wallet.created_at < now * 12 * 36000 {
-            wallet.approved_guardians.push(guardian);
-        } else {
-            // Pending guardian only if a guardian is added post the incubation time
-            // Approval can happen only after 36 hours
-            wallet.pending_guardians.push(guardian);
-            wallet
-                .pending_guardians_approval_from
-                .push(now + 36 * 36000);
-        }
-        // TODO: Handle recovery thresholds based on how many guardians are approved
-        wallet.recovery_threshold = recovery_threshold;
-        msg!("Added new pending guardians");
-        Ok(())
+    pub fn add_guardians(ctx: Context<AddGuardians>, guardian: Pubkey) -> Result<()> {
+        instructions::guardians::add_guardian(ctx, guardian)
     }
 
     /// Approve a guardian to the wallet
     /// Remove the given guardian from the pending guardians vec and add them to the approved guardian vec
     /// This requires the guardian to be a keypair guardian and not a solace-guardian
     /// Check for time-lock
-    pub fn approve_guardianship(ctx: Context<ApproveGuardian>) -> Result<()> {
-        let wallet = &mut ctx.accounts.wallet;
-        let index = wallet
-            .pending_guardians
-            .iter()
-            .position(|&x| x == ctx.accounts.guardian.key())
-            .ok_or(errors::Errors::InvalidGuardian)
-            .unwrap();
-
-        let now = Clock::get().unwrap().unix_timestamp;
-
-        let approval_time = wallet.pending_guardians_approval_from[index];
-        // Ensure that the require amount of wait time has passed
-        assert!(
-            now > approval_time,
-            "required wait-time has not yet been elapsed"
-        );
-        wallet.pending_guardians.remove(index);
-        wallet.pending_guardians_approval_from.remove(index);
-        wallet.approved_guardians.push(ctx.accounts.guardian.key());
-
-        msg!("Guardian Approved");
-        Ok(())
+    pub fn approve_guardianship(ctx: Context<ApproveGuardian>, guardian: Pubkey) -> Result<()> {
+        instructions::guardians::approve_guardianship(ctx, guardian)
     }
 
     /// Remove guardian
     /// TODO: Add timelock to remove guardians
-    pub fn remove_guardians(ctx: Context<RemoveGuardian>) -> Result<()> {
-        let wallet = &mut ctx.accounts.wallet;
-        let approved_guardians = wallet.approved_guardians.clone();
-        let index = approved_guardians
-            .iter()
-            .position(|&x| x == ctx.accounts.guardian.key())
-            .ok_or(errors::Errors::InvalidGuardian)
-            .unwrap();
-        wallet.approved_guardians.remove(index);
-        msg!("Guardain removed");
-        Ok(())
+    pub fn remove_guardians(_ctx: Context<RemoveGuardian>) -> Result<()> {
+        todo!("Create a timelock and remove a guardian using it");
     }
 
     /// Initiate wallet recovery for an account
@@ -204,115 +130,31 @@ pub mod solace {
         ctx: Context<InitiateWalletRecovery>,
         new_owner: Pubkey,
     ) -> Result<()> {
-        let wallet = &mut ctx.accounts.wallet;
-        let recovery = &mut ctx.accounts.recovery;
-
-        recovery.wallet = wallet.key();
-        recovery.new_owner = new_owner;
-        recovery.proposer = ctx.accounts.proposer.key();
-        recovery.bump = *ctx.bumps.get("recovery").unwrap();
-        recovery.new_owner = ctx.accounts.proposer.key();
-        recovery.approvals = vec![false; wallet.approved_guardians.len()];
-
-        wallet.recovery_mode = true;
-        wallet.current_recovery = Some(recovery.key());
-
-        Ok(())
+        instructions::recovery::initiate_wallet_recovery(ctx, new_owner)
     }
 
     /// Approve the recovery attempt as a key pair guardian
     #[access_control(ctx.accounts.validate())]
     pub fn approve_recovery_by_keypair(ctx: Context<ApproveRecoveryByKeypair>) -> Result<()> {
-        let wallet = &mut ctx.accounts.wallet_to_recover;
-        let recovery = &mut ctx.accounts.recovery_attempt;
-
-        let index = utils::get_key_index::<Pubkey>(
-            wallet.approved_guardians.clone(),
-            ctx.accounts.guardian.key(),
-        )
-        .ok_or(Errors::InvalidGuardian)
-        .unwrap();
-
-        msg!("Guardian found at index {:?}", &index);
-
-        recovery.approvals[index] = true;
-
-        let can_update = utils::can_update_owner(&wallet, &recovery).unwrap();
-        if can_update {
-            wallet.recovery_mode = false;
-            wallet.owner = recovery.new_owner;
-            recovery.is_executed = true;
-        }
-        msg!("New owner set");
-        Ok(())
+        instructions::recovery::approve_recovery_by_keypair(ctx)
     }
 
     /// Approve the recovery attempt as a Solace Guardian
     #[access_control(ctx.accounts.validate())]
     pub fn approve_recovery_by_solace(ctx: Context<ApproveRecoveryBySolace>) -> Result<()> {
-        let wallet = &mut ctx.accounts.wallet_to_recover;
-        let recovery = &mut ctx.accounts.recovery_attempt;
-
-        let index = utils::get_key_index(
-            wallet.approved_guardians.clone(),
-            ctx.accounts.guardian_wallet.key(),
-        )
-        .ok_or(Errors::InvalidGuardian)
-        .unwrap();
-
-        recovery.approvals[index] = true;
-
-        let can_update = utils::can_update_owner(&wallet, &recovery).unwrap();
-        if can_update {
-            wallet.recovery_mode = false;
-            wallet.owner = recovery.new_owner;
-            recovery.is_executed = true;
-        }
-        Ok(())
+        todo!("Approve a wallet recovery using another solace wallet")
     }
 
     // Reject the recovery as a guardian for a wallet
     pub fn reject_recovery(_ctx: Context<NoAccount>) -> Result<()> {
-        Ok(())
+        todo!("Reject a recovery from a guardian")
     }
 
     // ----------------------------------------
 
+    /// Add a new trusted pubkey to the trusted list
     pub fn add_trusted_pubkey(ctx: Context<Verified>, pubkey: Pubkey) -> Result<()> {
-        let wallet = &mut ctx.accounts.wallet;
-        let wallet_clone = wallet.clone();
-
-        if get_key_index(wallet_clone.trusted_pubkeys.clone(), pubkey).is_some() {
-            return Err(errors::Errors::TrustedPubkeyAlreadyTrusted.into());
-        }
-
-        let is_in_incubation = wallet.check_incubation();
-        let trusted_pubkeys = &mut wallet.trusted_pubkeys;
-
-        // check if the app is in the incubation period
-        // if yes then add the pubkey to the list blindly
-        if is_in_incubation {
-            trusted_pubkeys.push(pubkey);
-            msg!("wallet added to trusted pubkey list");
-            return Ok(());
-        }
-
-        // check if the pubkey is in the transaciton history
-        // then create a new deterministic PDA which carries the expiry for adding this pubkey to the trusted list
-        match get_key_index(wallet_clone.pubkey_history.clone(), pubkey) {
-            // The wallet is in the transaction history
-            Some(index) => {
-                trusted_pubkeys.push(pubkey);
-            }
-            None => {
-                // The wallet isn't in the transaction history and hence, can't be added to the trusted list
-                return Err(errors::Errors::TrustedPubkeyNoTransactions.into());
-            }
-        }
-
-        // [Use a jobs service to trigger the transaction]
-
-        Ok(())
+        instructions::guardians::add_new_trusted_pubkey(ctx, pubkey)
     }
 }
 
@@ -364,13 +206,12 @@ pub struct AddGuardians<'info> {
     owner: Signer<'info>,
 }
 
+/// Any keypair can invoke this transaction as
+/// all it does is approve a pending guardian
 #[derive(Accounts)]
 pub struct ApproveGuardian<'info> {
     #[account(mut)]
     wallet: Account<'info, Wallet>,
-    // The guardian who is approving the txn
-    #[account(mut)]
-    guardian: Signer<'info>,
 }
 
 #[derive(Accounts)]
@@ -384,6 +225,7 @@ pub struct RemoveGuardian<'info> {
     owner: Signer<'info>,
 }
 
+/// Request an instant SOL Transfer
 #[derive(Accounts)]
 pub struct RequestInstantSOLTransfer<'info> {
     /// CHECK: The account to which sol needs to be sent to
@@ -418,6 +260,7 @@ pub struct InitiateWalletRecovery<'info> {
     system_program: Program<'info, System>,
 }
 
+/// Approve a Wallet Recovery by a KeyPair
 #[derive(Accounts)]
 pub struct ApproveRecoveryByKeypair<'info> {
     #[account(mut)]
@@ -430,6 +273,7 @@ pub struct ApproveRecoveryByKeypair<'info> {
     recovery_attempt: Account<'info, RecoveryAttempt>,
 }
 
+/// Approve a wallet recovery by Solace Wallet
 #[derive(Accounts)]
 pub struct ApproveRecoveryBySolace<'info> {
     #[account(mut)]
@@ -444,6 +288,7 @@ pub struct ApproveRecoveryBySolace<'info> {
     recovery_attempt: Account<'info, RecoveryAttempt>,
 }
 
+/// Execute a new SPL Transfer if the all the conditions are met
 #[derive(Accounts)]
 pub struct ExecuteTransfer<'info> {
     #[account(mut)]
@@ -467,6 +312,22 @@ pub struct ExecuteTransfer<'info> {
     token_mint: Account<'info, Mint>,
 }
 
+/// Approve an ongoing transfer to a wallet
+/// Signed by the guardian approving the transaction
+#[derive(Accounts)]
+pub struct ApproveTransfer<'info> {
+    // The wallet in context
+    #[account(mut)]
+    wallet: Box<Account<'info, Wallet>>,
+    // The guardian approving
+    #[account(mut)]
+    guardian: Signer<'info>,
+    // The GuardedTransfer Account containing the data
+    #[account(mut)]
+    transfer: Account<'info, GuardedTransfer>,
+}
+
+/// Approve and Execute a new SPL Transfer
 #[derive(Accounts)]
 pub struct ApproveAndExecuteSPLTransfer<'info> {
     // The wallet in context
@@ -538,60 +399,4 @@ pub struct RequestInstantSPLTransfer<'info> {
     system_program: Program<'info, System>,
     token_program: Program<'info, Token>,
     token_mint: Account<'info, Mint>,
-}
-
-#[derive(Accounts)]
-pub struct CreateATA<'info> {
-    #[account(mut, has_one=owner)]
-    wallet: Box<Account<'info, Wallet>>,
-    #[account(mut)]
-    owner: Signer<'info>,
-    #[account(
-        init,
-        payer = rent_payer,
-        seeds=[b"wallet".as_ref(),
-            wallet.key().as_ref(),
-            token_mint.key().as_ref()
-        ],
-        bump,
-        token::mint=token_mint,
-        token::authority=wallet,
-    )]
-    token_account: Account<'info, TokenAccount>,
-    #[account(mut)]
-    rent_payer: Signer<'info>,
-    system_program: Program<'info, System>,
-    token_program: Program<'info, Token>,
-    token_mint: Account<'info, Mint>,
-    rent: Sysvar<'info, Rent>,
-}
-
-#[derive(Accounts)]
-pub struct CheckATA<'info> {
-    #[account(mut)]
-    wallet: Account<'info, Wallet>,
-    #[account(mut)]
-    owner: Signer<'info>,
-    #[account(mut)]
-    rent_payer: Signer<'info>,
-    #[account(
-        seeds=[b"wallet".as_ref(),
-            wallet.key().as_ref(),
-            token_mint.key().as_ref()
-        ],
-        bump,
-        token::mint=token_mint,
-        token::authority=wallet,
-    )]
-    token_account: Account<'info, TokenAccount>,
-    system_program: Program<'info, System>,
-    token_program: Program<'info, Token>,
-    token_mint: Account<'info, Mint>,
-}
-
-#[derive(Accounts)]
-pub struct ApproveTransfer<'info> {
-    #[account(mut)]
-    wallet: Account<'info, Wallet>,
-    guardian: Signer<'info>,
 }

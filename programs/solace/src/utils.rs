@@ -16,7 +16,9 @@ pub fn can_update_owner(wallet: &Wallet, recovery: &RecoveryAttempt) -> Result<b
     }
 }
 
-/// Given a vector of bools and a threshold, the function validates if the threshold is met or not
+/// Utility function to check if a threshold limit is reached
+/// given a vec of bools, check if there are enough "true" in the vector for the action to pass
+/// Function name can be better
 pub fn is_action_approved(approvals: Vec<bool>, threshold: u8) -> bool {
     let approval_count = approvals.iter().filter(|&&x| x).count();
 
@@ -26,51 +28,16 @@ pub fn is_action_approved(approvals: Vec<bool>, threshold: u8) -> bool {
         false
     }
 }
-/// Get the index of any given variable in a vector
+
+/// Given a vector of T, and a key to find T, find the index of the key
+/// This function helps get the index and reduces the number of characters required for doing it
 pub fn get_key_index<T: Eq>(keys: Vec<T>, key_to_find: T) -> Option<usize> {
     keys.into_iter().position(|x| x == key_to_find)
 }
 
-//
-// /// Instruction.
-// #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, Default, PartialEq)]
-// pub struct TXInstruction {
-//     /// Pubkey of the instruction processor that executes this instruction
-//     pub program_id: Pubkey,
-//     /// Metadata for what accounts should be passed to the instruction processor
-//     pub keys: Vec<TXAccountMeta>,
-//     /// Opaque data passed to the instruction processor
-//     pub data: Vec<u8>,
-// }
-//
-// impl TXInstruction {
-//     /// Space that a [TXInstruction] takes up.
-//     pub fn space(&self) -> usize {
-//         std::mem::size_of::<Pubkey>()
-//             + (self.keys.len() as usize) * std::mem::size_of::<TXAccountMeta>()
-//             + (self.data.len() as usize)
-//     }
-// }
-//
-// impl From<&TXInstruction> for anchor_lang::solana_program::instruction::Instruction {
-//     fn from(tx: &TXInstruction) -> anchor_lang::solana_program::instruction::Instruction {
-//         anchor_lang::solana_program::instruction::Instruction {
-//             program_id: tx.program_id,
-//             accounts: tx.keys.clone().into_iter().map(Into::into).collect(),
-//             data: tx.data.clone(),
-//         }
-//     }
-// }
-//
-// impl Display for TXInstruction {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         self.keys.iter().for_each(|k| {
-//             f.write_fmt(format_args!("{}", k.pubkey.to_string()));
-//         });
-//         Ok(())
-//     }
-// }
-
+/// A gigachad convenience function to execute SPL Token Transfers from a PDA
+/// Takes accounts required for the transfers and returns a result
+/// Used in most transfer functions
 pub fn do_execute_transfer<'a>(
     token_account: AccountInfo<'a>,
     reciever_account: AccountInfo<'a>,
@@ -102,31 +69,4 @@ pub fn do_execute_transfer<'a>(
         wallet.pubkey_history.push(reciever_key);
     }
     Ok(())
-}
-
-/// Account metadata used to define [TXInstruction]s
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Copy, Clone)]
-pub struct TXAccountMeta {
-    /// An account's public key
-    pub pubkey: Pubkey,
-    /// True if an Instruction requires a Transaction signature matching `pubkey`.
-    pub is_signer: bool,
-    /// True if the `pubkey` can be loaded as a read-write account.
-    pub is_writable: bool,
-}
-
-impl From<TXAccountMeta> for anchor_lang::solana_program::instruction::AccountMeta {
-    fn from(
-        TXAccountMeta {
-            pubkey,
-            is_signer,
-            is_writable,
-        }: TXAccountMeta,
-    ) -> anchor_lang::solana_program::instruction::AccountMeta {
-        anchor_lang::solana_program::instruction::AccountMeta {
-            pubkey,
-            is_signer,
-            is_writable,
-        }
-    }
 }

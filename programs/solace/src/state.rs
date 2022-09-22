@@ -1,5 +1,3 @@
-use std::ops::DerefMut;
-
 use anchor_lang::prelude::*;
 use vipers::invariant;
 
@@ -133,6 +131,10 @@ impl Wallet {
 }
 
 impl GuardedTransfer {
+    /// Utility method to approve an ongoing transfer
+    /// Checks if the guardian is a part of the transfer or not
+    /// Sets the associated boolean to "true" if valid
+    /// Panics if invalid
     pub fn approve_transfer(&mut self, guardian_pubkey: Pubkey) -> Result<()> {
         // Ensure that the signed guardian is a part of the transfer
         let index = utils::get_key_index(self.approvers.clone(), guardian_pubkey);

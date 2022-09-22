@@ -11,6 +11,12 @@ pub enum Errors {
     #[msg("No approved guardian")]
     NoApprovedGuardians,
 
+    #[msg("Guardian already added")]
+    GuardianAlreadyAdded,
+
+    #[msg("Guardian approval time not elapsed")]
+    GuardianApprovalTimeNotElapsed,
+
     #[msg("Key not found")]
     KeyNotFound,
 
@@ -40,4 +46,7 @@ pub enum Errors {
 
     #[msg("The requested transfer type is invalid")]
     InvalidTransferType,
+
+    #[msg("Invalid transfer data")]
+    InvalidTransferData,
 }
