@@ -72,7 +72,7 @@ pub fn add_new_trusted_pubkey(ctx: Context<Verified>, pubkey: Pubkey) -> Result<
 
     // Check if the pubkey requested is already trusted
     invariant!(
-        utils::get_key_index(wallet_clone.trusted_pubkeys.clone(), pubkey).is_some(),
+        utils::get_key_index(wallet_clone.trusted_pubkeys.clone(), pubkey).is_none(),
         Errors::TrustedPubkeyAlreadyTrusted
     );
 
