@@ -202,7 +202,7 @@ export type Solace = {
         {
           "name": "data",
           "type": {
-            "defined": "instructions::transfers::GuardedTransferData"
+            "defined": "GuardedTransferData"
           }
         }
       ]
@@ -1070,7 +1070,7 @@ export const IDL: Solace = {
         {
           "name": "data",
           "type": {
-            "defined": "instructions::transfers::GuardedTransferData"
+            "defined": "GuardedTransferData"
           }
         }
       ]

@@ -13,7 +13,7 @@ pub use errors::*;
 pub use state::*;
 pub use validators::*;
 
-declare_id!("3CvPZTk1PYMs6JzgiVNFtsAeijSNwbhrQTMYeFQKWpFw");
+declare_id!("8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U");
 
 #[program]
 pub mod solace {
@@ -75,7 +75,7 @@ pub mod solace {
     /// This can be used for both SOL and SPL transfers
     pub fn request_guarded_transfer(
         ctx: Context<RequestGuardedTransfer>,
-        data: instructions::transfers::GuardedTransferData,
+        data: GuardedTransferData,
     ) -> Result<()> {
         instructions::transfers::request_guarded_transfer(ctx, &data)
     }
@@ -156,6 +156,18 @@ pub mod solace {
     pub fn add_trusted_pubkey(ctx: Context<Verified>, pubkey: Pubkey) -> Result<()> {
         instructions::guardians::add_new_trusted_pubkey(ctx, pubkey)
     }
+}
+
+/// A helper struct to transfer data between the client and the program
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug)]
+pub struct GuardedTransferData {
+    pub to: Pubkey,
+    pub to_base: Option<Pubkey>,
+    pub mint: Option<Pubkey>,
+    pub from_token_account: Option<Pubkey>,
+    pub token_program: Option<Pubkey>,
+    pub amount: u64,
+    pub random: Pubkey,
 }
 
 #[derive(Accounts)]

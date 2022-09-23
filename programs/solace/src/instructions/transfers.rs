@@ -104,23 +104,11 @@ pub fn approve_and_execute_spl_transfer(ctx: Context<ApproveAndExecuteSPLTransfe
     Ok(())
 }
 
-/// A helper struct to transfer data between the client and the program
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug)]
-pub struct GuardedTransferData {
-    pub to: Pubkey,
-    pub to_base: Option<Pubkey>,
-    pub mint: Option<Pubkey>,
-    pub from_token_account: Option<Pubkey>,
-    pub token_program: Option<Pubkey>,
-    pub amount: u64,
-    pub random: Pubkey,
-}
-
 /// Request for a guarded transfer
 /// A new PDA for the transfer will be init'd and will be tracked in the wallet state
 pub fn request_guarded_transfer(
     ctx: Context<RequestGuardedTransfer>,
-    data: &GuardedTransferData,
+    data: &crate::GuardedTransferData,
 ) -> Result<()> {
     // Add the data to the PDA and append it to the vec inside the wallet
     let transfer_account = &mut ctx.accounts.transfer;

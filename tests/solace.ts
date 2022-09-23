@@ -132,27 +132,27 @@ describe("solace", () => {
     console.log(tokenAccounts);
   });
 
-  it("should send USDC to someone random", async () => {
-    const recieverTA = await USDC.createAssociatedTokenAccount(
-      newOwner.publicKey
-    );
-
-    const tx = await solaceSdk.requestSplTransfer(
-      {
-        mint: USDC.token,
-        recieverTokenAccount: recieverTA,
-        reciever: newOwner.publicKey,
-        amount: 101,
-      },
-      relayPair.publicKey
-    );
-    const sig = await relayTransaction(tx, relayPair);
-    await SolaceSDK.localConnection.confirmTransaction(sig);
-    const info = await SolaceSDK.localConnection.getAccountInfo(recieverTA);
-    const data = Buffer.from(info.data);
-    const accountInfo = AccountLayout.decode(data);
-    assert(accountInfo.amount.toString() === "101");
-  });
+  // it("should send USDC to someone random", async () => {
+  //   const recieverTA = await USDC.createAssociatedTokenAccount(
+  //     newOwner.publicKey
+  //   );
+  //
+  //   const tx = await solaceSdk.requestSplTransfer(
+  //     {
+  //       mint: USDC.token,
+  //       recieverTokenAccount: recieverTA,
+  //       reciever: newOwner.publicKey,
+  //       amount: 101,
+  //     },
+  //     relayPair.publicKey
+  //   );
+  //   const sig = await relayTransaction(tx, relayPair);
+  //   await SolaceSDK.localConnection.confirmTransaction(sig);
+  //   const info = await SolaceSDK.localConnection.getAccountInfo(recieverTA);
+  //   const data = Buffer.from(info.data);
+  //   const accountInfo = AccountLayout.decode(data);
+  //   assert(accountInfo.amount.toString() === "101");
+  // });
 
   it("should end incubation", async () => {
     const tx = await solaceSdk.endIncubation(relayPair.publicKey);
@@ -271,25 +271,25 @@ describe("solace", () => {
     await SolaceSDK.localConnection.confirmTransaction(sig);
   });
 
-  it("should transfer USDC being non-incubation - with guardians - to a trusted pubkey", async () => {
-    const recieverTA = await USDC.getAssociatedTokenAccount(newOwner.publicKey);
-
-    const tx = await solaceSdk.requestSplTransfer(
-      {
-        mint: USDC.token,
-        recieverTokenAccount: recieverTA,
-        reciever: newOwner.publicKey,
-        amount: 101,
-      },
-      relayPair.publicKey
-    );
-    const sig = await relayTransaction(tx, relayPair);
-    await SolaceSDK.localConnection.confirmTransaction(sig);
-    const info = await SolaceSDK.localConnection.getAccountInfo(recieverTA);
-    const data = Buffer.from(info.data);
-    const accountInfo = AccountLayout.decode(data);
-    assert(accountInfo.amount.toString() === "404");
-  });
+  // it("should transfer USDC being non-incubation - with guardians - to a trusted pubkey", async () => {
+  //   const recieverTA = await USDC.getAssociatedTokenAccount(newOwner.publicKey);
+  //
+  //   const tx = await solaceSdk.requestSplTransfer(
+  //     {
+  //       mint: USDC.token,
+  //       recieverTokenAccount: recieverTA,
+  //       reciever: newOwner.publicKey,
+  //       amount: 101,
+  //     },
+  //     relayPair.publicKey
+  //   );
+  //   const sig = await relayTransaction(tx, relayPair);
+  //   await SolaceSDK.localConnection.confirmTransaction(sig);
+  //   const info = await SolaceSDK.localConnection.getAccountInfo(recieverTA);
+  //   const data = Buffer.from(info.data);
+  //   const accountInfo = AccountLayout.decode(data);
+  //   assert(accountInfo.amount.toString() === "404");
+  // });
 
   it("should initiate wallet recovery", async () => {
     let wallet = await getWallet();
