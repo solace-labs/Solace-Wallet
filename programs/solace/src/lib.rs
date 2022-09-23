@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount};
 use vipers::prelude::*;
 
 mod errors;
@@ -9,6 +8,7 @@ mod utils;
 mod validators;
 
 use anchor_spl::token::Transfer;
+pub use instructions::*;
 pub use errors::*;
 pub use state::*;
 pub use validators::*;
@@ -174,12 +174,6 @@ pub struct GuardedTransferData {
 pub struct Initialize {}
 
 #[derive(Accounts)]
-pub struct NoAccount<'info> {
-    #[account(mut)]
-    wallet: Box<Account<'info, Wallet>>,
-}
-
-#[derive(Accounts)]
 pub struct Verified<'info> {
     #[account(mut, has_one=owner, constraint=wallet.owner == owner.key())]
     wallet: Account<'info, Wallet>,
@@ -208,207 +202,4 @@ pub struct CreateWallet<'info> {
     )]
     wallet: Account<'info, Wallet>,
     system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct AddGuardians<'info> {
-    #[account(mut, has_one = owner)]
-    wallet: Account<'info, Wallet>,
-    #[account(mut)]
-    owner: Signer<'info>,
-}
-
-/// Any keypair can invoke this transaction as
-/// all it does is approve a pending guardian
-#[derive(Accounts)]
-pub struct ApproveGuardian<'info> {
-    #[account(mut)]
-    wallet: Account<'info, Wallet>,
-}
-
-#[derive(Accounts)]
-pub struct RemoveGuardian<'info> {
-    #[account(mut, has_one = owner)]
-    wallet: Account<'info, Wallet>,
-    /// CHECK: The guardian account to remove
-    #[account()]
-    guardian: AccountInfo<'info>,
-    #[account(mut)]
-    owner: Signer<'info>,
-}
-
-/// Request an instant SOL Transfer
-#[derive(Accounts)]
-pub struct RequestInstantSOLTransfer<'info> {
-    /// CHECK: The account to which sol needs to be sent to
-    #[account(mut)]
-    to_account: AccountInfo<'info>,
-
-    #[account(mut, has_one = owner)]
-    wallet: Account<'info, Wallet>,
-
-    #[account(mut)]
-    owner: Signer<'info>,
-}
-
-/// Initiate a wallet recovery for a particular Solace Wallet
-/// This can be anyone signing for recover (Ideally the new wallet of the user)
-#[derive(Accounts)]
-pub struct InitiateWalletRecovery<'info> {
-    #[account(mut)]
-    rent_payer: Signer<'info>,
-    #[account(mut)] // TODO: Add constraint to check guardian
-    wallet: Account<'info, Wallet>,
-    #[account(
-        init,
-        payer = rent_payer,
-        space = 1000, // TODO: Add dynamic spacing
-        seeds = [wallet.key().as_ref(), wallet.wallet_recovery_sequence.to_le_bytes().as_ref()],
-        bump
-    )]
-    recovery: Account<'info, RecoveryAttempt>,
-    #[account(mut)]
-    proposer: Signer<'info>,
-    system_program: Program<'info, System>,
-}
-
-/// Approve a Wallet Recovery by a KeyPair
-#[derive(Accounts)]
-pub struct ApproveRecoveryByKeypair<'info> {
-    #[account(mut)]
-    wallet_to_recover: Account<'info, Wallet>,
-    // The guardian approving the recovery - Must be a keypair guardian
-    #[account(mut)]
-    guardian: Signer<'info>,
-    // The recovery account
-    #[account(mut)]
-    recovery_attempt: Account<'info, RecoveryAttempt>,
-}
-
-/// Approve a wallet recovery by Solace Wallet
-#[derive(Accounts)]
-pub struct ApproveRecoveryBySolace<'info> {
-    #[account(mut)]
-    wallet_to_recover: Account<'info, Wallet>,
-    // The guardian approving the recovery - Must be a keypair guardian
-    #[account(mut)]
-    owner: Signer<'info>,
-    #[account(mut, has_one=owner)]
-    guardian_wallet: Account<'info, Wallet>,
-    // The recovery account
-    #[account(mut)]
-    recovery_attempt: Account<'info, RecoveryAttempt>,
-}
-
-/// Execute a new SPL Transfer if the all the conditions are met
-#[derive(Accounts)]
-pub struct ExecuteTransfer<'info> {
-    #[account(mut)]
-    transfer_account: Account<'info, GuardedTransfer>,
-    #[account(mut)]
-    wallet: Box<Account<'info, Wallet>>,
-    #[account(
-        mut,
-        token::mint=token_mint,
-        token::authority=wallet,
-    )]
-    token_account: Account<'info, TokenAccount>,
-
-    #[account(mut)]
-    reciever_account: Account<'info, TokenAccount>,
-    // TODO: Derive the token address from the base inside the program, instead of deriving it from the client
-    /// CHECK: Account to check in whitelist
-    reciever_base: AccountInfo<'info>,
-    system_program: Program<'info, System>,
-    token_program: Program<'info, Token>,
-    token_mint: Account<'info, Mint>,
-}
-
-/// Approve an ongoing transfer to a wallet
-/// Signed by the guardian approving the transaction
-#[derive(Accounts)]
-pub struct ApproveTransfer<'info> {
-    // The wallet in context
-    #[account(mut)]
-    wallet: Box<Account<'info, Wallet>>,
-    // The guardian approving
-    #[account(mut)]
-    guardian: Signer<'info>,
-    // The GuardedTransfer Account containing the data
-    #[account(mut)]
-    transfer: Account<'info, GuardedTransfer>,
-}
-
-/// Approve and Execute a new SPL Transfer
-#[derive(Accounts)]
-pub struct ApproveAndExecuteSPLTransfer<'info> {
-    // The wallet in context
-    #[account(mut)]
-    wallet: Box<Account<'info, Wallet>>,
-    // The guardian approving
-    #[account(mut)]
-    guardian: Signer<'info>,
-    // The token account transferring the funds
-    #[account(
-        mut,
-        token::mint=token_mint,
-        token::authority=wallet,
-    )]
-    token_account: Account<'info, TokenAccount>,
-    // The GuardedTransfer Account containing the data
-    #[account(mut)]
-    transfer: Account<'info, GuardedTransfer>,
-    // The reciever token account
-    #[account(mut)]
-    reciever_account: Account<'info, TokenAccount>,
-    // TODO: Derive the token address from the base inside the program, instead of deriving it from the client
-    /// CHECK: Account to check in whitelist
-    reciever_base: AccountInfo<'info>,
-    system_program: Program<'info, System>,
-    token_program: Program<'info, Token>,
-    token_mint: Account<'info, Mint>,
-}
-
-#[derive(Accounts)]
-#[instruction(random_key: Pubkey)]
-pub struct RequestGuardedTransfer<'info> {
-    #[account(mut)]
-    wallet: Box<Account<'info, Wallet>>,
-    #[account(mut)]
-    owner: Signer<'info>,
-    #[account(mut)]
-    rent_payer: Signer<'info>,
-    #[account(
-        init,
-        payer = rent_payer,
-        space = GuardedTransfer::space(10),
-        seeds = [wallet.key().as_ref(), random_key.key().as_ref()],
-        bump
-    )]
-    transfer: Account<'info, GuardedTransfer>,
-    system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct RequestInstantSPLTransfer<'info> {
-    #[account(mut)]
-    wallet: Box<Account<'info, Wallet>>,
-    #[account(mut)]
-    owner: Signer<'info>,
-    #[account(
-        mut,
-        token::mint=token_mint,
-        token::authority=wallet,
-    )]
-    token_account: Account<'info, TokenAccount>,
-    // [owner.toBuffer(), programId.toBuffer(), mint.toBuffer()],
-    // associatedTokenProgramId
-    #[account(mut)]
-    reciever_account: Account<'info, TokenAccount>,
-    // TODO: Derive the token address from the base inside the program, instead of deriving it from the client
-    /// CHECK: Account to check in whitelist
-    reciever_base: AccountInfo<'info>,
-    system_program: Program<'info, System>,
-    token_program: Program<'info, Token>,
-    token_mint: Account<'info, Mint>,
 }

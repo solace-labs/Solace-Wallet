@@ -1,9 +1,9 @@
 use anchor_lang::{prelude::*, Key};
+use anchor_spl::token::{Mint, Token, TokenAccount};
 use vipers::{assert_keys_eq, invariant};
 
 use crate::{
-    errors::Errors, utils, ApproveAndExecuteSPLTransfer, ApproveTransfer, ExecuteTransfer,
-    RequestGuardedTransfer, RequestInstantSOLTransfer, RequestInstantSPLTransfer,
+    errors::Errors, state::*, utils, Wallet,
 };
 
 /// Request instant sol transfer
@@ -181,4 +181,137 @@ pub fn execute_transfer(ctx: Context<ExecuteTransfer>) -> Result<()> {
     // close_any(close_address, recipient_address, authority_address, program_address)
 
     Ok(())
+}
+
+#[derive(Accounts)]
+pub struct RequestInstantSPLTransfer<'info> {
+    #[account(mut)]
+    wallet: Box<Account<'info, Wallet>>,
+    #[account(mut)]
+    owner: Signer<'info>,
+    #[account(
+        mut,
+        token::mint=token_mint,
+        token::authority=wallet,
+    )]
+    token_account: Account<'info, TokenAccount>,
+    // [owner.toBuffer(), programId.toBuffer(), mint.toBuffer()],
+    // associatedTokenProgramId
+    #[account(mut)]
+    reciever_account: Account<'info, TokenAccount>,
+    // TODO: Derive the token address from the base inside the program, instead of deriving it from the client
+    /// CHECK: Account to check in whitelist
+    reciever_base: AccountInfo<'info>,
+    system_program: Program<'info, System>,
+    token_program: Program<'info, Token>,
+    token_mint: Account<'info, Mint>,
+}
+
+/// Request an instant SOL Transfer
+#[derive(Accounts)]
+pub struct RequestInstantSOLTransfer<'info> {
+    /// CHECK: The account to which sol needs to be sent to
+    #[account(mut)]
+    to_account: AccountInfo<'info>,
+
+    #[account(mut, has_one = owner)]
+    wallet: Account<'info, Wallet>,
+
+    #[account(mut)]
+    owner: Signer<'info>,
+}
+
+#[derive(Accounts)]
+#[instruction(random_key: Pubkey)]
+pub struct RequestGuardedTransfer<'info> {
+    #[account(mut)]
+    wallet: Box<Account<'info, Wallet>>,
+    #[account(mut)]
+    owner: Signer<'info>,
+    #[account(mut)]
+    rent_payer: Signer<'info>,
+    #[account(
+        init,
+        payer = rent_payer,
+        space = GuardedTransfer::space(10),
+        seeds = [wallet.key().as_ref(), random_key.key().as_ref()],
+        bump
+    )]
+    transfer: Account<'info, GuardedTransfer>,
+    system_program: Program<'info, System>,
+}
+
+/// Approve an ongoing transfer to a wallet
+/// Signed by the guardian approving the transaction
+#[derive(Accounts)]
+pub struct ApproveTransfer<'info> {
+    // The wallet in context
+    #[account(mut)]
+    wallet: Box<Account<'info, Wallet>>,
+    // The guardian approving
+    #[account(mut)]
+    guardian: Signer<'info>,
+    // The GuardedTransfer Account containing the data
+    #[account(mut)]
+    transfer: Account<'info, GuardedTransfer>,
+}
+
+/// Approve and Execute a new SPL Transfer
+#[derive(Accounts)]
+pub struct ApproveAndExecuteSPLTransfer<'info> {
+    // The wallet in context
+    #[account(mut)]
+    wallet: Box<Account<'info, Wallet>>,
+    // The guardian approving
+    #[account(mut)]
+    guardian: Signer<'info>,
+    // The token account transferring the funds
+    #[account(
+        mut,
+        token::mint=token_mint,
+        token::authority=wallet,
+    )]
+    token_account: Account<'info, TokenAccount>,
+    // The GuardedTransfer Account containing the data
+    #[account(mut)]
+    transfer: Account<'info, GuardedTransfer>,
+    // The reciever token account
+    #[account(mut)]
+    reciever_account: Account<'info, TokenAccount>,
+    // TODO: Derive the token address from the base inside the program, instead of deriving it from the client
+    /// CHECK: Account to check in whitelist
+    reciever_base: AccountInfo<'info>,
+    system_program: Program<'info, System>,
+    token_program: Program<'info, Token>,
+    token_mint: Account<'info, Mint>,
+}
+
+#[derive(Accounts)]
+pub struct NoAccount<'info> {
+    #[account(mut)]
+    wallet: Box<Account<'info, Wallet>>,
+}
+
+/// Execute a new SPL Transfer if the all the conditions are met
+#[derive(Accounts)]
+pub struct ExecuteTransfer<'info> {
+    #[account(mut)]
+    transfer_account: Account<'info, GuardedTransfer>,
+    #[account(mut)]
+    wallet: Box<Account<'info, Wallet>>,
+    #[account(
+        mut,
+        token::mint=token_mint,
+        token::authority=wallet,
+    )]
+    token_account: Account<'info, TokenAccount>,
+
+    #[account(mut)]
+    reciever_account: Account<'info, TokenAccount>,
+    // TODO: Derive the token address from the base inside the program, instead of deriving it from the client
+    /// CHECK: Account to check in whitelist
+    reciever_base: AccountInfo<'info>,
+    system_program: Program<'info, System>,
+    token_program: Program<'info, Token>,
+    token_mint: Account<'info, Mint>,
 }

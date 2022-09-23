@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{errors::Errors, utils};
-use crate::{ApproveRecoveryByKeypair, InitiateWalletRecovery};
+use crate::{errors::Errors, state::*, utils, Wallet};
 
 /// Given a new owner, initiate a wallet recovery
 /// Create a new Recovery PDA and load it with required information
@@ -51,4 +50,53 @@ pub fn approve_recovery_by_keypair(ctx: Context<ApproveRecoveryByKeypair>) -> Re
     }
     msg!("New owner set");
     Ok(())
+}
+
+/// Initiate a wallet recovery for a particular Solace Wallet
+/// This can be anyone signing for recover (Ideally the new wallet of the user)
+#[derive(Accounts)]
+pub struct InitiateWalletRecovery<'info> {
+    #[account(mut)]
+    rent_payer: Signer<'info>,
+    #[account(mut)] // TODO: Add constraint to check guardian
+    pub wallet: Account<'info, Wallet>,
+    #[account(
+        init,
+        payer = rent_payer,
+        space = 1000, // TODO: Add dynamic spacing
+        seeds = [wallet.key().as_ref(), wallet.wallet_recovery_sequence.to_le_bytes().as_ref()],
+        bump
+    )]
+    recovery: Account<'info, RecoveryAttempt>,
+    #[account(mut)]
+    proposer: Signer<'info>,
+    system_program: Program<'info, System>,
+}
+
+/// Approve a Wallet Recovery by a KeyPair
+#[derive(Accounts)]
+pub struct ApproveRecoveryByKeypair<'info> {
+    #[account(mut)]
+    pub wallet_to_recover: Account<'info, Wallet>,
+    // The guardian approving the recovery - Must be a keypair guardian
+    #[account(mut)]
+    pub guardian: Signer<'info>,
+    // The recovery account
+    #[account(mut)]
+    recovery_attempt: Account<'info, RecoveryAttempt>,
+}
+
+/// Approve a wallet recovery by Solace Wallet
+#[derive(Accounts)]
+pub struct ApproveRecoveryBySolace<'info> {
+    #[account(mut)]
+    pub wallet_to_recover: Account<'info, Wallet>,
+    // The guardian approving the recovery - Must be a keypair guardian
+    #[account(mut)]
+    owner: Signer<'info>,
+    #[account(mut, has_one=owner)]
+    pub guardian_wallet: Account<'info, Wallet>,
+    // The recovery account
+    #[account(mut)]
+    recovery_attempt: Account<'info, RecoveryAttempt>,
 }

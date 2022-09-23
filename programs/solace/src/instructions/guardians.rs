@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use vipers::invariant;
 
-use crate::{utils, AddGuardians, ApproveGuardian, Errors, Verified};
+use crate::{utils, Wallet, Errors, Verified};
 
 /// Add a new guardian to the wallet
 /// 1. Check if the account is in incubation or not
@@ -94,4 +94,31 @@ pub fn add_new_trusted_pubkey(ctx: Context<Verified>, pubkey: Pubkey) -> Result<
     trusted_pubkeys.push(pubkey);
 
     Ok(())
+}
+
+#[derive(Accounts)]
+pub struct AddGuardians<'info> {
+    #[account(mut, has_one = owner)]
+    wallet: Account<'info, Wallet>,
+    #[account(mut)]
+    owner: Signer<'info>,
+}
+
+/// Any keypair can invoke this transaction as
+/// all it does is approve a pending guardian
+#[derive(Accounts)]
+pub struct ApproveGuardian<'info> {
+    #[account(mut)]
+    wallet: Account<'info, Wallet>,
+}
+
+#[derive(Accounts)]
+pub struct RemoveGuardian<'info> {
+    #[account(mut, has_one = owner)]
+    wallet: Account<'info, Wallet>,
+    /// CHECK: The guardian account to remove
+    #[account()]
+    guardian: AccountInfo<'info>,
+    #[account(mut)]
+    owner: Signer<'info>,
 }
