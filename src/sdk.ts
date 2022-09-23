@@ -356,7 +356,6 @@ export class SolaceSDK {
     guardianPublicKey: anchor.web3.PublicKey,
     payer: anchor.web3.PublicKey
   ): Promise<RelayerIxData> {
-    const walletData = await this.fetchWalletData();
     const tx = this.program.transaction.addGuardians(guardianPublicKey, {
       accounts: {
         wallet: this.wallet,

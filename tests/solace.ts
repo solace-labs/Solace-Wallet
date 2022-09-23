@@ -154,12 +154,6 @@ describe("solace", () => {
   //   assert(accountInfo.amount.toString() === "101");
   // });
 
-  it("should end incubation", async () => {
-    const tx = await solaceSdk.endIncubation(relayPair.publicKey);
-    const sig = await relayTransaction(tx, relayPair);
-    await SolaceSDK.localConnection.confirmTransaction(sig);
-  });
-
   // it("should initate a non-incubated SPL transfer - without guardians", async () => {
   //   const recieverTA = await USDC.getAssociatedTokenAccount(newOwner.publicKey);
   //
@@ -189,7 +183,6 @@ describe("solace", () => {
   // });
 
   it("should request for guardianship and be auto-approved", async () => {
-    let wallet = await getWallet();
     const tx = await solaceSdk.addGuardian(
       guardian1.publicKey,
       relayPair.publicKey
@@ -200,6 +193,7 @@ describe("solace", () => {
       SolaceSDK.localConnection
     );
     await SolaceSDK.localConnection.confirmTransaction(sig);
+    let wallet = await getWallet();
     assert(wallet.owner.equals(signer.publicKey), "Wallet not owned by owner");
     await airdrop(guardian1.publicKey);
     const guardianInfo = await SolaceSDK.getWalletGuardianInfo({
@@ -213,7 +207,6 @@ describe("solace", () => {
     // wallet = await getWallet();
     // assert(wallet.recoveryMode, "The wallet should be in recovery mode");
   });
-
   // it("should initiate a non-incubated SPL transfer - with guardians", async () => {
   //   const recieverTA = await USDC.getAssociatedTokenAccount(newOwner.publicKey);
   //
@@ -267,6 +260,12 @@ describe("solace", () => {
       recieverTA,
       relayPair.publicKey
     );
+    const sig = await relayTransaction(tx, relayPair);
+    await SolaceSDK.localConnection.confirmTransaction(sig);
+  });
+
+  it("should end incubation", async () => {
+    const tx = await solaceSdk.endIncubation(relayPair.publicKey);
     const sig = await relayTransaction(tx, relayPair);
     await SolaceSDK.localConnection.confirmTransaction(sig);
   });
