@@ -1,3 +1,4 @@
+use crate::{Errors, instructions::*};
 use crate::*;
 
 impl<'info> Validate<'info> for CreateWallet<'info> {
