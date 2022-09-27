@@ -8,8 +8,8 @@ mod utils;
 mod validators;
 
 use anchor_spl::token::Transfer;
-pub use instructions::*;
 pub use errors::*;
+pub use instructions::*;
 pub use state::*;
 pub use validators::*;
 
