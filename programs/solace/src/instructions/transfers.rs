@@ -104,6 +104,41 @@ pub fn approve_and_execute_spl_transfer(ctx: Context<ApproveAndExecuteSPLTransfe
     Ok(())
 }
 
+/// 1. Check if the guardian is valid for this transfer
+/// 2. Approve the transfer
+/// 3. Check if the transfer can be executed
+/// 4. If the transfer cannot be executed, then throw and error and undo the approval, as "approve" needs to be called, not "aprove_and_execute"
+pub fn approve_and_execute_sol_transfer(ctx: Context<ApproveAndExecuteSOLTransfer>) -> Result<()> {
+    let accounts = ctx.accounts;
+    let transfer_account = &mut accounts.transfer;
+
+    // Ensure that the transfer type is SPL only
+    invariant!(
+        !transfer_account.is_spl_transfer,
+        Errors::InvalidTransferType
+    );
+
+    // Ensure that the transfer account is valid
+    assert_keys_eq!(transfer_account.to.key(), accounts.to_account);
+
+    // Approve transfer and check if the transfer is executable
+    transfer_account.approve_transfer(accounts.guardian.key())?;
+    invariant!(
+        transfer_account.is_executable,
+        Errors::TransferNotExecutable
+    );
+
+    let wallet = accounts.wallet.clone();
+    assert!(!wallet.recovery_mode, "Payments are disabled");
+    let to = accounts.to_account.to_account_info();
+    let from = wallet.to_account_info();
+
+    **from.try_borrow_mut_lamports()? -= transfer_account.amount;
+    **to.try_borrow_mut_lamports()? += transfer_account.amount;
+
+    Ok(())
+}
+
 /// Request for a guarded transfer
 /// A new PDA for the transfer will be init'd and will be tracked in the wallet state
 pub fn request_guarded_transfer(
@@ -281,6 +316,26 @@ pub struct ApproveAndExecuteSPLTransfer<'info> {
     // TODO: Derive the token address from the base inside the program, instead of deriving it from the client
     /// CHECK: Account to check in whitelist
     reciever_base: AccountInfo<'info>,
+    system_program: Program<'info, System>,
+    token_program: Program<'info, Token>,
+    token_mint: Account<'info, Mint>,
+}
+
+/// Approve and Execute a new SOL Transfer
+#[derive(Accounts)]
+pub struct ApproveAndExecuteSOLTransfer<'info> {
+    // The wallet in context
+    #[account(mut)]
+    wallet: Box<Account<'info, Wallet>>,
+    // The guardian approving
+    #[account(mut)]
+    guardian: Signer<'info>,
+    /// CHECK: The account to which sol needs to be sent to
+    #[account(mut)]
+    to_account: AccountInfo<'info>,
+    // The GuardedTransfer Account containing the data
+    #[account(mut)]
+    transfer: Account<'info, GuardedTransfer>,
     system_program: Program<'info, System>,
     token_program: Program<'info, Token>,
     token_mint: Account<'info, Mint>,
