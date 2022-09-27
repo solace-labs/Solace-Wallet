@@ -167,6 +167,7 @@ pub struct GuardedTransferData {
     pub from_token_account: Option<Pubkey>,
     pub token_program: Option<Pubkey>,
     pub amount: u64,
+    pub threshold: u8,
     pub random: Pubkey,
 }
 
