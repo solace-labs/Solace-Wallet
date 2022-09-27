@@ -95,8 +95,8 @@ pub mod solace {
 
     /// Approve a SOL transaction and if applicable, execute it as well
     /// Else throw an error
-    pub fn approve_and_execute_sol_transfer(_ctx: Context<NoAccount>) -> Result<()> {
-        todo!("Based on the implementation of approve_and_execute_spl_transfer, implement sol transfer")
+    pub fn approve_and_execute_sol_transfer(_ctx: Context<ApproveAndExecuteSOLTransfer>) -> Result<()> {
+        instructions::transfers::approve_and_execute_sol_transfer(_ctx)
     }
 
     /// Execute a trasnfer, as long as a transfer is already approved
