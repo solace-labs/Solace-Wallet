@@ -57,10 +57,11 @@ describe("solace", () => {
     relayPair = Keypair.generate();
     usdcOwner = KeyPair.generate();
     await Promise.all([
-      // airdrop(signer.publicKey),
+      airdrop(signer.publicKey),
       airdrop(relayPair.publicKey),
       airdrop(newOwner.publicKey),
       airdrop(usdcOwner.publicKey),
+      airdrop(guardian1.publicKey),
     ]);
     await createMint();
     // Configure the client to use the local cluster.
@@ -85,27 +86,23 @@ describe("solace", () => {
     walletAddress = solaceSdk.wallet;
   });
 
-  // it("should fetch an existing wallet, and should have the same addr", async () => {
-  //   const _sdk = SolaceSDK.retrieveFromName("name.solace.io", {
-  //     programAddress: PROGRAM_ADDRESS,
-  //     owner,
-  //     network: "local",
-  //   });
-  //   assert((await _sdk).wallet.equals(solaceSdk.wallet));
-  // });
-  //
-  // it("should fetch an existing wallet, and should not have the same addr", async () => {
-  //   const _sdk = SolaceSDK.retrieveFromName("random.solace.io", {
-  //     programAddress: PROGRAM_ADDRESS,
-  //     owner,
-  //     network: "local",
-  //   });
-  //   assert(!(await _sdk).wallet.equals(solaceSdk.wallet));
-  // });
-  //
+  it("should fetch an existing wallet, and should have the same addr", async () => {
+    const _sdk = SolaceSDK.retrieveFromName("name.solace.io", {
+      programAddress: PROGRAM_ADDRESS,
+      owner,
+      network: "local",
+    });
+    assert((await _sdk).wallet.equals(solaceSdk.wallet));
+  });
 
-  // //99
-  //
+  it("should fetch an existing wallet, and should not have the same addr", async () => {
+    const _sdk = SolaceSDK.retrieveFromName("random.solace.io", {
+      programAddress: PROGRAM_ADDRESS,
+      owner,
+      network: "local",
+    });
+    assert(!(await _sdk).wallet.equals(solaceSdk.wallet));
+  });
 
   it("should mint USDC to the smart contract wallet", async () => {
     const tokenAccount = await USDC.getAssociatedTokenAccount(solaceSdk.wallet);
@@ -132,55 +129,27 @@ describe("solace", () => {
     console.log(tokenAccounts);
   });
 
-  // it("should send USDC to someone random", async () => {
-  //   const recieverTA = await USDC.createAssociatedTokenAccount(
-  //     newOwner.publicKey
-  //   );
-  //
-  //   const tx = await solaceSdk.requestSplTransfer(
-  //     {
-  //       mint: USDC.token,
-  //       recieverTokenAccount: recieverTA,
-  //       reciever: newOwner.publicKey,
-  //       amount: 101,
-  //     },
-  //     relayPair.publicKey
-  //   );
-  //   const sig = await relayTransaction(tx, relayPair);
-  //   await SolaceSDK.localConnection.confirmTransaction(sig);
-  //   const info = await SolaceSDK.localConnection.getAccountInfo(recieverTA);
-  //   const data = Buffer.from(info.data);
-  //   const accountInfo = AccountLayout.decode(data);
-  //   assert(accountInfo.amount.toString() === "101");
-  // });
+  it("should send USDC to someone random", async () => {
+    const recieverTA = await USDC.createAssociatedTokenAccount(
+      newOwner.publicKey
+    );
 
-  // it("should initate a non-incubated SPL transfer - without guardians", async () => {
-  //   const recieverTA = await USDC.getAssociatedTokenAccount(newOwner.publicKey);
-  //
-  //   const tx = await solaceSdk.requestSplTransfer(
-  //     {
-  //       mint: USDC.token,
-  //       recieverTokenAccount: recieverTA,
-  //       reciever: newOwner.publicKey,
-  //       amount: 101,
-  //     },
-  //     relayPair.publicKey
-  //   );
-  //   const sig = await relayTransaction(tx, relayPair);
-  //   await SolaceSDK.localConnection.confirmTransaction(sig);
-  //
-  //   const walletData = await solaceSdk.fetchWalletData();
-  //   assert(
-  //     walletData.ongoingTransfer.isComplete,
-  //     "Ongoing transfer should be complete"
-  //   );
-  //   const info = await SolaceSDK.localConnection.getAccountInfo(
-  //     walletData.ongoingTransfer.to
-  //   );
-  //   const data = Buffer.from(info.data);
-  //   const accountInfo = AccountLayout.decode(data);
-  //   assert(accountInfo.amount.toString() === "202", "Amount mismatch");
-  // });
+    const tx = await solaceSdk.requestSplTransfer(
+      {
+        mint: USDC.token,
+        recieverTokenAccount: recieverTA,
+        reciever: newOwner.publicKey,
+        amount: 101,
+      },
+      relayPair.publicKey
+    );
+    const sig = await relayTransaction(tx, relayPair);
+    await SolaceSDK.localConnection.confirmTransaction(sig);
+    const info = await SolaceSDK.localConnection.getAccountInfo(recieverTA);
+    const data = Buffer.from(info.data);
+    const accountInfo = AccountLayout.decode(data);
+    assert(accountInfo.amount.toString() === "101", "Amount mismatch");
+  });
 
   it("should request for guardianship and be auto-approved", async () => {
     const tx = await solaceSdk.addGuardian(
@@ -207,52 +176,6 @@ describe("solace", () => {
     // wallet = await getWallet();
     // assert(wallet.recoveryMode, "The wallet should be in recovery mode");
   });
-  // it("should initiate a non-incubated SPL transfer - with guardians", async () => {
-  //   const recieverTA = await USDC.getAssociatedTokenAccount(newOwner.publicKey);
-  //
-  //   const tx = await solaceSdk.requestSplTransfer(
-  //     {
-  //       mint: USDC.token,
-  //       recieverTokenAccount: recieverTA,
-  //       reciever: newOwner.publicKey,
-  //       amount: 101,
-  //     },
-  //     relayPair.publicKey
-  //   );
-  //   const sig = await relayTransaction(tx, relayPair);
-  //   await SolaceSDK.localConnection.confirmTransaction(sig);
-  //
-  //   const walletData = await solaceSdk.fetchWalletData();
-  //   assert(
-  //     !walletData.ongoingTransfer.isComplete,
-  //     "Ongoing transfer should not be complete"
-  //   );
-  // });
-
-  // it("should approve transfer from guardian and USDC should be transferred", async () => {
-  //   const tx = await SolaceSDK.approveSplTransfer({
-  //     guardianAddress: guardian1.publicKey.toString(),
-  //     solaceWalletAddress: solaceSdk.wallet.toString(),
-  //     programAddress: solaceSdk.program.programId.toString(),
-  //     network: "local",
-  //   });
-  //   const sig = await solaceSdk.program.provider.connection.sendTransaction(
-  //     tx,
-  //     [guardian1]
-  //   );
-  //   await SolaceSDK.localConnection.confirmTransaction(sig);
-  //   const walletData = await solaceSdk.fetchWalletData();
-  //   assert(
-  //     walletData.ongoingTransfer.isComplete,
-  //     "Ongoing transfer should be complete"
-  //   );
-  //   const info = await SolaceSDK.localConnection.getAccountInfo(
-  //     walletData.ongoingTransfer.to
-  //   );
-  //   const data = Buffer.from(info.data);
-  //   const accountInfo = AccountLayout.decode(data);
-  //   assert(accountInfo.amount.toString() === "303", "Amount mismatch");
-  // });
 
   it("should add a trusted pubkey", async () => {
     const recieverTA = await USDC.getAssociatedTokenAccount(newOwner.publicKey);
@@ -270,25 +193,45 @@ describe("solace", () => {
     await SolaceSDK.localConnection.confirmTransaction(sig);
   });
 
-  // it("should transfer USDC being non-incubation - with guardians - to a trusted pubkey", async () => {
-  //   const recieverTA = await USDC.getAssociatedTokenAccount(newOwner.publicKey);
-  //
-  //   const tx = await solaceSdk.requestSplTransfer(
-  //     {
-  //       mint: USDC.token,
-  //       recieverTokenAccount: recieverTA,
-  //       reciever: newOwner.publicKey,
-  //       amount: 101,
-  //     },
-  //     relayPair.publicKey
-  //   );
-  //   const sig = await relayTransaction(tx, relayPair);
-  //   await SolaceSDK.localConnection.confirmTransaction(sig);
-  //   const info = await SolaceSDK.localConnection.getAccountInfo(recieverTA);
-  //   const data = Buffer.from(info.data);
-  //   const accountInfo = AccountLayout.decode(data);
-  //   assert(accountInfo.amount.toString() === "404");
-  // });
+  it("2 should send USDC to someone random", async () => {
+    const recieverTA = await USDC.getAssociatedTokenAccount(newOwner.publicKey);
+
+    const tx = await solaceSdk.requestSplTransfer(
+      {
+        mint: USDC.token,
+        recieverTokenAccount: recieverTA,
+        reciever: newOwner.publicKey,
+        amount: 1,
+      },
+      relayPair.publicKey
+    );
+    const sig = await relayTransaction(tx, relayPair);
+    await SolaceSDK.localConnection.confirmTransaction(sig);
+  });
+
+  it("should approve & execute a guarded transfer", async () => {
+    const ongoingTransfers = await solaceSdk.fetchOngoingTransfers();
+    assert(ongoingTransfers.length === 1, "should have one ongoing transfer");
+    console.log(ongoingTransfers[0].guardianApprovals[0].guardian.toString());
+    console.log(guardian1.publicKey.toString());
+
+    const tx = await SolaceSDK.approveAndExecuteGuardedTransfer({
+      solaceWalletAddress: solaceSdk.wallet.toString(),
+      programAddress: PROGRAM_ADDRESS,
+      guardianAddress: guardian1.publicKey.toString(),
+      transferKeyAddress: ongoingTransfers[0].seedKey.toString(),
+      network: "local",
+    });
+    const sig = await SolaceSDK.localConnection.sendTransaction(tx, [
+      guardian1,
+    ]);
+    await SolaceSDK.localConnection.confirmTransaction(sig);
+    const recieverTA = await USDC.getAssociatedTokenAccount(newOwner.publicKey);
+    const info = await SolaceSDK.localConnection.getAccountInfo(recieverTA);
+    const data = Buffer.from(info.data);
+    const accountInfo = AccountLayout.decode(data);
+    assert(accountInfo.amount.toString() === "102", "Amount mismatch");
+  });
 
   it("should initiate wallet recovery", async () => {
     let wallet = await getWallet();

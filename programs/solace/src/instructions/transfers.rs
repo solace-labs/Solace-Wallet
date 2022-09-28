@@ -2,9 +2,7 @@ use anchor_lang::{prelude::*, Key};
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use vipers::{assert_keys_eq, invariant};
 
-use crate::{
-    errors::Errors, state::*, utils, Wallet,
-};
+use crate::{errors::Errors, state::*, utils, Wallet};
 
 /// Request instant sol transfer
 pub fn request_instant_sol_transfer(
@@ -64,7 +62,10 @@ pub fn approve_transfer(ctx: Context<ApproveTransfer>) -> Result<()> {
 /// 2. Approve the transfer
 /// 3. Check if the transfer can be executed
 /// 4. If the transfer cannot be executed, then throw and error and undo the approval, as "approve" needs to be called, not "aprove_and_execute"
-pub fn approve_and_execute_spl_transfer(ctx: Context<ApproveAndExecuteSPLTransfer>) -> Result<()> {
+pub fn approve_and_execute_spl_transfer(
+    ctx: Context<ApproveAndExecuteSPLTransfer>,
+    seed_key: Pubkey,
+) -> Result<()> {
     let accounts = ctx.accounts;
     let transfer_account = &mut accounts.transfer;
 
@@ -141,9 +142,9 @@ pub fn approve_and_execute_sol_transfer(ctx: Context<ApproveAndExecuteSOLTransfe
 
 /// Request for a guarded transfer
 /// A new PDA for the transfer will be init'd and will be tracked in the wallet state
-pub fn request_guarded_transfer(
+pub fn request_guarded_spl_transfer(
     ctx: Context<RequestGuardedTransfer>,
-    data: &crate::GuardedTransferData,
+    data: &crate::GuardedSPLTransferData,
 ) -> Result<()> {
     // Add the data to the PDA and append it to the vec inside the wallet
     let transfer_account = &mut ctx.accounts.transfer;
@@ -156,29 +157,49 @@ pub fn request_guarded_transfer(
     transfer_account.rent_payer = ctx.accounts.rent_payer.key();
 
     // The following will be none or some based on the case
-    transfer_account.token_mint = data.mint;
-    transfer_account.from_token_account = data.from_token_account;
-    transfer_account.program_id = data.token_program;
-    transfer_account.to_base = data.to_base;
+    transfer_account.token_mint = Some(data.mint);
+    transfer_account.from_token_account = Some(data.from_token_account);
+    transfer_account.program_id = Some(data.token_program);
+    transfer_account.to_base = Some(data.to_base);
+
     // Random key used to derive the address
     transfer_account.random = data.random;
 
     // Ensure that all the required data is provided and nothing is missing
-    if data.from_token_account.is_none()
-        && data.token_program.is_none()
-        && data.mint.is_none()
-        && data.to_base.is_none()
-    {
-        transfer_account.is_spl_transfer = false;
-    } else if data.from_token_account.is_some()
-        && data.token_program.is_some()
-        && data.mint.is_some()
-        && data.to_base.is_some()
-    {
-        transfer_account.is_spl_transfer = true;
-    } else {
-        return err!(Errors::InvalidTransferData);
-    }
+    transfer_account.is_spl_transfer = true;
+
+    ctx.accounts
+        .wallet
+        .ongoing_transfers
+        .push(transfer_account.key());
+
+    Ok(())
+}
+
+/// Request a new guarded SOL transfer
+pub fn request_guarded_sol_transfer(
+    ctx: Context<RequestGuardedTransfer>,
+    data: &crate::GuardedSOLTransferData,
+) -> Result<()> {
+    // Add the data to the PDA and append it to the vec inside the wallet
+    let transfer_account = &mut ctx.accounts.transfer;
+    transfer_account.to = data.to;
+    transfer_account.amount = data.amount;
+    transfer_account.approvers = ctx.accounts.wallet.approved_guardians.clone();
+    transfer_account.approvals = vec![false; ctx.accounts.wallet.approved_guardians.len()];
+    transfer_account.is_executable = false;
+    transfer_account.rent_payer = ctx.accounts.rent_payer.key();
+
+    transfer_account.token_mint = None;
+    transfer_account.from_token_account = None;
+    transfer_account.program_id = None;
+    transfer_account.to_base = None;
+
+    // Random key used to derive the address
+    transfer_account.random = data.random;
+
+    // Ensure that all the required data is provided and nothing is missing
+    transfer_account.is_spl_transfer = false;
 
     ctx.accounts
         .wallet
@@ -258,7 +279,9 @@ pub struct RequestInstantSOLTransfer<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(random_key: Pubkey)]
+#[instruction(
+    data: crate::GuardedSPLTransferData,
+)]
 pub struct RequestGuardedTransfer<'info> {
     #[account(mut)]
     wallet: Box<Account<'info, Wallet>>,
@@ -270,7 +293,7 @@ pub struct RequestGuardedTransfer<'info> {
         init,
         payer = rent_payer,
         space = GuardedTransfer::space(10),
-        seeds = [wallet.key().as_ref(), random_key.key().as_ref()],
+        seeds = [wallet.key().as_ref(), data.random.key().as_ref()],
         bump
     )]
     transfer: Account<'info, GuardedTransfer>,
