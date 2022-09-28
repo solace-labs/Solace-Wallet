@@ -796,62 +796,6 @@ export class SolaceSDK {
     return tx;
   }
 
-  // async executeSplTransfer(feePayer: anchor.web3.PublicKey) {
-  //   const transfer = (await this.fetchWalletData()).ongoingTransfer;
-  //   const tx = this.program.transaction.executeTransfer({
-  //     accounts: {
-  //       wallet: this.wallet,
-  //       recieverBase: transfer.toBase,
-  //       recieverAccount: transfer.to,
-  //       tokenMint: transfer.tokenMint,
-  //       tokenProgram: TOKEN_PROGRAM_ID,
-  //       tokenAccount: transfer.from,
-  //       systemProgram: anchor.web3.SystemProgram.programId,
-  //     },
-  //   });
-  //   return this.signTransaction(tx, feePayer);
-  // }
-
-  // static async approveSplTransfer(
-  //   data: ApproveGuardianshipData
-  // ): Promise<anchor.web3.Transaction> {
-  //   const provider = new Provider(
-  //     data.network == "local"
-  //       ? SolaceSDK.localConnection
-  //       : SolaceSDK.testnetConnection,
-  //     new Wallet(KeyPair.generate()),
-  //     Provider.defaultOptions()
-  //   );
-  //   const programId = new anchor.web3.PublicKey(data.programAddress);
-  //   const program = new Program<Solace>(
-  //     // @ts-ignore
-  //     IDL,
-  //     programId,
-  //     provider
-  //   );
-  //   const walletData = await SolaceSDK.fetchDataForWallet(
-  //     new anchor.web3.PublicKey(data.solaceWalletAddress),
-  //     // @ts-ignore
-  //     program
-  //   );
-  //   if (!walletData) {
-  //     throw "Solace wallet not found with the address";
-  //   }
-  //   const { ongoingTransfer } = walletData;
-  //   return program.transaction.approveAndExecuteTransfer({
-  //     accounts: {
-  //       wallet: new anchor.web3.PublicKey(data.solaceWalletAddress),
-  //       tokenAccount: ongoingTransfer.from,
-  //       tokenProgram: TOKEN_PROGRAM_ID,
-  //       tokenMint: ongoingTransfer.tokenMint,
-  //       recieverAccount: ongoingTransfer.to,
-  //       recieverBase: ongoingTransfer.toBase,
-  //       systemProgram: anchor.web3.SystemProgram.programId,
-  //       guardian: new PublicKey(data.guardianAddress),
-  //     },
-  //   });
-  // }
-  //
   endIncubation(feePayer: anchor.web3.PublicKey) {
     const tx = this.program.transaction.endIncubation({
       accounts: {
