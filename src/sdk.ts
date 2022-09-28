@@ -13,10 +13,29 @@ import {
   createAssociatedTokenAccountInstruction,
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  transfer,
 } from "@solana/spl-token";
 import { checkAccountExist } from "./utils/spl-util";
 
 const { web3, Provider, Wallet, setProvider, getProvider, Program } = anchor;
+
+type OngoingTransfer = {
+  isSplTransfer: boolean;
+  amount: number;
+  reciever: anchor.web3.PublicKey;
+  mint?: anchor.web3.PublicKey;
+  seedKey: anchor.web3.PublicKey;
+  senderTokenAccount?: anchor.web3.PublicKey;
+  guardianApprovals: {
+    guardian: anchor.web3.PublicKey;
+    isApproved: boolean;
+  }[];
+};
+
+type SendSOLData = {
+  amount: number;
+  reciever: anchor.web3.PublicKey;
+};
 
 type SendSPLTokenData = {
   mint: anchor.web3.PublicKey;
@@ -47,6 +66,14 @@ type ApproveGuardianshipData = {
   programAddress: string;
   solaceWalletAddress: string;
   guardianAddress: string;
+};
+
+type ApproveTransferData = {
+  network: "local" | "testnet";
+  programAddress: string;
+  solaceWalletAddress: string;
+  guardianAddress: string;
+  transferKeyAddress: string;
 };
 
 type SolaceSDKData = {
@@ -608,10 +635,11 @@ export class SolaceSDK {
 
     const guardedTransfer = async () => {
       const random = anchor.web3.Keypair.generate().publicKey;
-      return await this.program.rpc.requestGuardedTransfer(
+      const transferAccount = (await this.getTransferAddress(random))[0];
+      return this.program.transaction.requestGuardedSplTransfer(
         {
-          to: data.reciever,
-          toBase: data.recieverTokenAccount,
+          toBase: data.reciever,
+          to: data.recieverTokenAccount,
           mint: data.mint,
           fromTokenAccount: await this.getTokenAccount(data.mint),
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -622,17 +650,16 @@ export class SolaceSDK {
           accounts: {
             wallet: this.wallet,
             owner: this.owner.publicKey,
-            rentPayer: this.owner.publicKey,
-            transfer: await this.getTransferAddress(random),
+            rentPayer: feePayer,
+            transfer: transferAccount,
             systemProgram: anchor.web3.SystemProgram.programId,
           },
-          signers: [this.owner],
         }
       );
     };
 
     const instantTransfer = async () => {
-      return await this.program.rpc.requestInstantSplTransfer(
+      return this.program.transaction.requestInstantSplTransfer(
         new BN(data.amount),
         {
           accounts: {
@@ -645,46 +672,128 @@ export class SolaceSDK {
             tokenProgram: TOKEN_PROGRAM_ID,
             systemProgram: anchor.web3.SystemProgram.programId,
           },
-          signers: [this.owner],
         }
       );
     };
 
     // Check if instant transfer can be called or not
     const incubation = await this.checkIncubation(walletState);
+    console.log({ incubation });
     if (incubation) {
       // Instant transfer
-      const tx = await instantTransfer();
-      await this.confirmTx(tx);
+      return this.signTransaction(await instantTransfer(), feePayer);
     } else {
       // Check if trusted
-      if (this.isPubkeyTrusted(walletState, data.recieverTokenAccount)) {
+      if (await this.isPubkeyTrusted(walletState, data.recieverTokenAccount)) {
         // Instant transfer
-        // Instant transfer
-        const tx = await instantTransfer();
-        await this.confirmTx(tx);
+        return this.signTransaction(await instantTransfer(), feePayer);
       } else {
-        const tx = await guardedTransfer();
-        await this.confirmTx(tx);
+        return this.signTransaction(await guardedTransfer(), feePayer);
       }
     }
+  }
 
-    // const tx1 = this.program.transaction.requestTransaction(
-    //   new BN(data.amount),
-    //   {
-    //     accounts: {
-    //       owner: this.owner.publicKey,
-    //       wallet: this.wallet,
-    //       recieverAccount: data.recieverTokenAccount,
-    //       recieverBase: data.reciever,
-    //       tokenMint: data.mint,
-    //       tokenAccount: await this.getTokenAccount(data.mint),
-    //       tokenProgram: TOKEN_PROGRAM_ID,
-    //       systemProgram: anchor.web3.SystemProgram.programId,
-    //     },
-    //   }
-    // );
-    // return this.signTransaction(tx1, feePayer, false);
+  /**
+   *
+   * Fetch any ongoing transfer and populate the data for the same
+   */
+  async fetchOngoingTransfers(): Promise<OngoingTransfer[]> {
+    const walletData = await this.fetchWalletData();
+    const promises = [];
+    for (const transfer of walletData.ongoingTransfers) {
+      promises.push(this.program.account.guardedTransfer.fetch(transfer));
+    }
+    const transfers: Awaited<
+      ReturnType<typeof this.program.account.guardedTransfer.fetch>
+    >[] = await Promise.all(promises);
+
+    return transfers.map((transfer) => ({
+      mint: transfer.tokenMint as anchor.web3.PublicKey,
+      amount: transfer.amount.toNumber(),
+      reciever: transfer.to as anchor.web3.PublicKey,
+      seedKey: transfer.random as anchor.web3.PublicKey,
+      isSplTransfer: false,
+      senderTokenAccount: transfer.fromTokenAccount as anchor.web3.PublicKey,
+      guardianApprovals: transfer.approvers?.map((g, i) => ({
+        guardian: g,
+        isApproved: transfer.approvals[i],
+      })),
+    }));
+  }
+
+  /// Approve a guarded transfer
+  static async approveGuardedTransfer(data: ApproveTransferData) {
+    const provider = new Provider(
+      data.network == "local"
+        ? SolaceSDK.localConnection
+        : SolaceSDK.testnetConnection,
+      new Wallet(KeyPair.generate()),
+      Provider.defaultOptions()
+    );
+    const programId = new anchor.web3.PublicKey(data.programAddress);
+    const program = new Program<Solace>(
+      // @ts-ignore
+      IDL,
+      programId,
+      provider
+    );
+
+    const wallet = new anchor.web3.PublicKey(data.solaceWalletAddress);
+    const transferSeed = new anchor.web3.PublicKey(data.transferKeyAddress);
+    const [transferAddress, __] =
+      await anchor.web3.PublicKey.findProgramAddress(
+        [wallet.toBytes(), transferSeed.toBytes()],
+        program.programId
+      );
+    const tx = program.transaction.approveTransfer({
+      accounts: {
+        wallet,
+        transfer: transferAddress,
+        guardian: new anchor.web3.PublicKey(data.guardianAddress),
+      },
+    });
+    return tx;
+  }
+
+  static async approveAndExecuteGuardedTransfer(data: ApproveTransferData) {
+    const provider = new Provider(
+      data.network == "local"
+        ? SolaceSDK.localConnection
+        : SolaceSDK.testnetConnection,
+      new Wallet(KeyPair.generate()),
+      Provider.defaultOptions()
+    );
+    const programId = new anchor.web3.PublicKey(data.programAddress);
+    const program = new Program<Solace>(
+      // @ts-ignore
+      IDL,
+      programId,
+      provider
+    );
+    const wallet = new anchor.web3.PublicKey(data.solaceWalletAddress);
+    const transferSeed = new anchor.web3.PublicKey(data.transferKeyAddress);
+    const [transferAddress, __] =
+      await anchor.web3.PublicKey.findProgramAddress(
+        [wallet.toBytes(), transferSeed.toBytes()],
+        program.programId
+      );
+    const transferData = await program.account.guardedTransfer.fetch(
+      transferAddress
+    );
+    const tx = program.transaction.approveAndExecuteSplTransfer(transferSeed, {
+      accounts: {
+        wallet,
+        tokenMint: transferData.tokenMint,
+        transfer: transferAddress,
+        guardian: new anchor.web3.PublicKey(data.guardianAddress),
+        tokenAccount: transferData.fromTokenAccount,
+        recieverBase: transferData.toBase,
+        recieverAccount: transferData.to,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      },
+    });
+    return tx;
   }
 
   // async executeSplTransfer(feePayer: anchor.web3.PublicKey) {

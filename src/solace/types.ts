@@ -155,7 +155,7 @@ export type Solace = {
       ]
     },
     {
-      "name": "requestGuardedTransfer",
+      "name": "requestGuardedSplTransfer",
       "accounts": [
         {
           "name": "wallet",
@@ -186,8 +186,10 @@ export type Solace = {
               },
               {
                 "kind": "arg",
-                "type": "publicKey",
-                "path": "random_key"
+                "type": {
+                  "defined": "crate::GuardedSPLTransferData"
+                },
+                "path": "data.random"
               }
             ]
           }
@@ -202,10 +204,58 @@ export type Solace = {
         {
           "name": "data",
           "type": {
-            "defined": "GuardedTransferData"
+            "defined": "GuardedSPLTransferData"
           }
         }
       ]
+    },
+    {
+      "name": "requestGuardedSolTransfer",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "rentPayer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "transfer",
+          "isMut": true,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "Wallet",
+                "path": "wallet"
+              },
+              {
+                "kind": "arg",
+                "type": {
+                  "defined": "crate::GuardedSPLTransferData"
+                },
+                "path": "data.random"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     },
     {
       "name": "approveTransfer",
@@ -249,7 +299,22 @@ export type Solace = {
         {
           "name": "transfer",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "Wallet",
+                "path": "wallet"
+              },
+              {
+                "kind": "arg",
+                "type": "publicKey",
+                "path": "seed_key"
+              }
+            ]
+          }
         },
         {
           "name": "recieverAccount",
@@ -277,7 +342,12 @@ export type Solace = {
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "seedKey",
+          "type": "publicKey"
+        }
+      ]
     },
     {
       "name": "approveAndExecuteSolTransfer",
@@ -285,6 +355,36 @@ export type Solace = {
         {
           "name": "wallet",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "guardian",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "toAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "transfer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
           "isSigner": false
         }
       ],
@@ -738,7 +838,7 @@ export type Solace = {
   ],
   "types": [
     {
-      "name": "GuardedTransferData",
+      "name": "GuardedSPLTransferData",
       "type": {
         "kind": "struct",
         "fields": [
@@ -748,27 +848,39 @@ export type Solace = {
           },
           {
             "name": "toBase",
-            "type": {
-              "option": "publicKey"
-            }
+            "type": "publicKey"
           },
           {
             "name": "mint",
-            "type": {
-              "option": "publicKey"
-            }
+            "type": "publicKey"
           },
           {
             "name": "fromTokenAccount",
-            "type": {
-              "option": "publicKey"
-            }
+            "type": "publicKey"
           },
           {
             "name": "tokenProgram",
-            "type": {
-              "option": "publicKey"
-            }
+            "type": "publicKey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "random",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GuardedSOLTransferData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "to",
+            "type": "publicKey"
           },
           {
             "name": "amount",
@@ -1023,7 +1135,7 @@ export const IDL: Solace = {
       ]
     },
     {
-      "name": "requestGuardedTransfer",
+      "name": "requestGuardedSplTransfer",
       "accounts": [
         {
           "name": "wallet",
@@ -1054,8 +1166,10 @@ export const IDL: Solace = {
               },
               {
                 "kind": "arg",
-                "type": "publicKey",
-                "path": "random_key"
+                "type": {
+                  "defined": "crate::GuardedSPLTransferData"
+                },
+                "path": "data.random"
               }
             ]
           }
@@ -1070,10 +1184,58 @@ export const IDL: Solace = {
         {
           "name": "data",
           "type": {
-            "defined": "GuardedTransferData"
+            "defined": "GuardedSPLTransferData"
           }
         }
       ]
+    },
+    {
+      "name": "requestGuardedSolTransfer",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "rentPayer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "transfer",
+          "isMut": true,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "Wallet",
+                "path": "wallet"
+              },
+              {
+                "kind": "arg",
+                "type": {
+                  "defined": "crate::GuardedSPLTransferData"
+                },
+                "path": "data.random"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     },
     {
       "name": "approveTransfer",
@@ -1117,7 +1279,22 @@ export const IDL: Solace = {
         {
           "name": "transfer",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "Wallet",
+                "path": "wallet"
+              },
+              {
+                "kind": "arg",
+                "type": "publicKey",
+                "path": "seed_key"
+              }
+            ]
+          }
         },
         {
           "name": "recieverAccount",
@@ -1145,7 +1322,12 @@ export const IDL: Solace = {
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "seedKey",
+          "type": "publicKey"
+        }
+      ]
     },
     {
       "name": "approveAndExecuteSolTransfer",
@@ -1153,6 +1335,36 @@ export const IDL: Solace = {
         {
           "name": "wallet",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "guardian",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "toAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "transfer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
           "isSigner": false
         }
       ],
@@ -1606,7 +1818,7 @@ export const IDL: Solace = {
   ],
   "types": [
     {
-      "name": "GuardedTransferData",
+      "name": "GuardedSPLTransferData",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1616,27 +1828,39 @@ export const IDL: Solace = {
           },
           {
             "name": "toBase",
-            "type": {
-              "option": "publicKey"
-            }
+            "type": "publicKey"
           },
           {
             "name": "mint",
-            "type": {
-              "option": "publicKey"
-            }
+            "type": "publicKey"
           },
           {
             "name": "fromTokenAccount",
-            "type": {
-              "option": "publicKey"
-            }
+            "type": "publicKey"
           },
           {
             "name": "tokenProgram",
-            "type": {
-              "option": "publicKey"
-            }
+            "type": "publicKey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "random",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GuardedSOLTransferData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "to",
+            "type": "publicKey"
           },
           {
             "name": "amount",

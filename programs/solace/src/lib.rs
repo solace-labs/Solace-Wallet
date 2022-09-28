@@ -73,11 +73,15 @@ pub mod solace {
 
     /// Request for a new guarded transfer
     /// This can be used for both SOL and SPL transfers
-    pub fn request_guarded_transfer(
+    pub fn request_guarded_spl_transfer(
         ctx: Context<RequestGuardedTransfer>,
-        data: GuardedTransferData,
+        data: GuardedSPLTransferData,
     ) -> Result<()> {
-        instructions::transfers::request_guarded_transfer(ctx, &data)
+        instructions::transfers::request_guarded_spl_transfer(ctx, &data)
+    }
+
+    pub fn request_guarded_sol_transfer(ctx: Context<RequestGuardedTransfer>) -> Result<()> {
+        todo!()
     }
 
     /// Approve the transfer of funds by being a guardian signer
@@ -89,13 +93,16 @@ pub mod solace {
     /// Else throw an error
     pub fn approve_and_execute_spl_transfer(
         ctx: Context<ApproveAndExecuteSPLTransfer>,
+        seed_key: Pubkey,
     ) -> Result<()> {
-        instructions::transfers::approve_and_execute_spl_transfer(ctx)
+        instructions::transfers::approve_and_execute_spl_transfer(ctx, seed_key)
     }
 
     /// Approve a SOL transaction and if applicable, execute it as well
     /// Else throw an error
-    pub fn approve_and_execute_sol_transfer(_ctx: Context<ApproveAndExecuteSOLTransfer>) -> Result<()> {
+    pub fn approve_and_execute_sol_transfer(
+        _ctx: Context<ApproveAndExecuteSOLTransfer>,
+    ) -> Result<()> {
         instructions::transfers::approve_and_execute_sol_transfer(_ctx)
     }
 
@@ -160,12 +167,20 @@ pub mod solace {
 
 /// A helper struct to transfer data between the client and the program
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug)]
-pub struct GuardedTransferData {
+pub struct GuardedSPLTransferData {
     pub to: Pubkey,
-    pub to_base: Option<Pubkey>,
-    pub mint: Option<Pubkey>,
-    pub from_token_account: Option<Pubkey>,
-    pub token_program: Option<Pubkey>,
+    pub to_base: Pubkey,
+    pub mint: Pubkey,
+    pub from_token_account: Pubkey,
+    pub token_program: Pubkey,
+    pub amount: u64,
+    pub random: Pubkey,
+}
+
+/// A helper struct to transfer data between the client and the program
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug)]
+pub struct GuardedSOLTransferData {
+    pub to: Pubkey,
     pub amount: u64,
     pub random: Pubkey,
 }
