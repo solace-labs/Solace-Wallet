@@ -151,6 +151,7 @@ pub fn request_guarded_spl_transfer(
     transfer_account.to = data.to;
     transfer_account.amount = data.amount;
     transfer_account.approvers = ctx.accounts.wallet.approved_guardians.clone();
+    transfer_account.threshold = data.threshold;
     transfer_account.approvals = vec![false; ctx.accounts.wallet.approved_guardians.len()];
     transfer_account.is_executable = false;
     transfer_account.rent_payer = ctx.accounts.rent_payer.key();

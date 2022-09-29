@@ -182,6 +182,7 @@ pub struct GuardedSPLTransferData {
 pub struct GuardedSOLTransferData {
     pub to: Pubkey,
     pub amount: u64,
+    pub threshold: u8,
     pub random: Pubkey,
 }
 
