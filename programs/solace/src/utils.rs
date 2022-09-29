@@ -4,7 +4,7 @@ use crate::*;
 
 /// Logic to check if the owner can be updated or not
 pub fn can_update_owner(wallet: &Wallet, recovery: &RecoveryAttempt) -> Result<bool> {
-    let threshold = wallet.recovery_threshold;
+    let threshold = wallet.approval_threshold;
     let approvers = recovery.approvals.clone();
 
     let approval_count = approvers.iter().filter(|&&x| x).count();

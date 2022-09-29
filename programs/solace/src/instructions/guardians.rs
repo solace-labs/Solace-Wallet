@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use vipers::invariant;
 
-use crate::{utils, Wallet, Errors, Verified};
+use crate::{utils, Errors, Verified, Wallet};
 
 /// Add a new guardian to the wallet
 /// 1. Check if the account is in incubation or not
@@ -26,7 +26,7 @@ pub fn add_guardian(ctx: Context<AddGuardians>, guardian: Pubkey) -> Result<()> 
     if wallet.check_incubation() {
         wallet.approved_guardians.push(guardian);
         // TODO: Change this to consider for any external change in the recovery thresholds
-        wallet.recovery_threshold = wallet.approved_guardians.len() as u8;
+        wallet.approval_threshold = wallet.approved_guardians.len() as u8;
     } else {
         wallet.pending_guardians.push(guardian);
         wallet
@@ -57,7 +57,7 @@ pub fn approve_guardianship(ctx: Context<ApproveGuardian>, guardian: Pubkey) -> 
     // Add the guardian to the approved guardian vec
     wallet.approved_guardians.push(guardian);
     // TODO: Change this to consider for any external change in the recovery thresholds
-    wallet.recovery_threshold = wallet.approved_guardians.len() as u8;
+    wallet.approval_threshold = wallet.approved_guardians.len() as u8;
     Ok(())
 }
 

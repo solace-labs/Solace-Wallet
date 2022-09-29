@@ -34,7 +34,7 @@ pub mod solace {
         wallet.approved_guardians = vec![];
         wallet.pending_guardians = guardian_keys;
         wallet.recovery_mode = false;
-        wallet.recovery_threshold = recovery_threshold;
+        wallet.approval_threshold = recovery_threshold;
         wallet.wallet_recovery_sequence = 0;
         wallet.created_at = Clock::get().unwrap().unix_timestamp;
         wallet.incubation_mode = true;
@@ -101,9 +101,9 @@ pub mod solace {
     /// Approve a SOL transaction and if applicable, execute it as well
     /// Else throw an error
     pub fn approve_and_execute_sol_transfer(
-        _ctx: Context<ApproveAndExecuteSOLTransfer>,
+        ctx: Context<ApproveAndExecuteSOLTransfer>,
     ) -> Result<()> {
-        instructions::transfers::approve_and_execute_sol_transfer(_ctx)
+        instructions::transfers::approve_and_execute_sol_transfer(ctx)
     }
 
     /// Execute a trasnfer, as long as a transfer is already approved
@@ -182,7 +182,6 @@ pub struct GuardedSPLTransferData {
 pub struct GuardedSOLTransferData {
     pub to: Pubkey,
     pub amount: u64,
-    pub threshold: u8,
     pub random: Pubkey,
 }
 
