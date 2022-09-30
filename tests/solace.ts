@@ -12,7 +12,9 @@ import {
 
 const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
 
-const PROGRAM_ADDRESS = "8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U";
+const PROGRAM_ADDRESS = "55K8C3FfgRr6Nuwzw5gXV79hQUj3bVRpEPSjoF18HKfh";
+
+const walletName = "name.solace.io1"
 
 describe("solace", () => {
   let owner: anchor.web3.Keypair;
@@ -74,7 +76,7 @@ describe("solace", () => {
       programAddress: PROGRAM_ADDRESS,
     });
     const tx = await solaceSdk.createFromName(
-      "name.solace.io",
+      walletName,
       relayPair.publicKey
     );
     const res = await relayTransaction(
@@ -87,7 +89,7 @@ describe("solace", () => {
   });
 
   it("should fetch an existing wallet, and should have the same addr", async () => {
-    const _sdk = SolaceSDK.retrieveFromName("name.solace.io", {
+    const _sdk = SolaceSDK.retrieveFromName(walletName, {
       programAddress: PROGRAM_ADDRESS,
       owner,
       network: "local",
@@ -240,7 +242,7 @@ describe("solace", () => {
       programAddress: PROGRAM_ADDRESS,
       owner: newOwner,
     });
-    const tx = await sdk2.recoverWallet("name.solace.io", relayPair.publicKey);
+    const tx = await sdk2.recoverWallet(walletName, relayPair.publicKey);
     const sig = await relayTransaction(
       tx,
       relayPair,
@@ -254,7 +256,7 @@ describe("solace", () => {
       {
         network: "local",
         programAddress: PROGRAM_ADDRESS,
-        username: "name.solace.io",
+        username: walletName,
       },
       guardian1.publicKey.toString()
     );
@@ -263,7 +265,7 @@ describe("solace", () => {
     ]);
     await SolaceSDK.localConnection.confirmTransaction(sig);
     const data = await SolaceSDK.fetchDataForWallet(
-      SolaceSDK.getWalletFromName(PROGRAM_ADDRESS, "name.solace.io"),
+      SolaceSDK.getWalletFromName(PROGRAM_ADDRESS, walletName),
       solaceSdk.program
     );
     assert(data.owner.equals(newOwner.publicKey));

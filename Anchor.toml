@@ -2,10 +2,10 @@
 seeds = true
 
 [programs.localnet]
-solace = "8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U"
+solace = "55K8C3FfgRr6Nuwzw5gXV79hQUj3bVRpEPSjoF18HKfh"
 
 [programs.testnet]
-solace = "8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U"
+solace = "55K8C3FfgRr6Nuwzw5gXV79hQUj3bVRpEPSjoF18HKfh"
 
 [registry]
 url = "https://anchor.projectserum.com"

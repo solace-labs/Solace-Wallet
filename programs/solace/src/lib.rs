@@ -13,7 +13,7 @@ pub use instructions::*;
 pub use state::*;
 pub use validators::*;
 
-declare_id!("8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U");
+declare_id!("55K8C3FfgRr6Nuwzw5gXV79hQUj3bVRpEPSjoF18HKfh");
 
 #[program]
 pub mod solace {
