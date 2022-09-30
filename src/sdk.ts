@@ -636,7 +636,6 @@ export class SolaceSDK {
     const guardedTransfer = async () => {
       const random = anchor.web3.Keypair.generate().publicKey;
       const transferAccount = (await this.getTransferAddress(random))[0];
-
       return this.program.transaction.requestGuardedSplTransfer(
         {
           toBase: data.reciever,
