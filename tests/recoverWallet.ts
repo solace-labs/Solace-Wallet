@@ -9,6 +9,11 @@ import {
   mintTo,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
+import signerWallet from "../wallet/signer.json";
+import newOwnerWallet from "../wallet/newOwner.json";
+import guardian1Wallet from "../wallet/guardian1.json";
+import usdcOwnerWallet from "../wallet//usdcOwner.json";
+import relayPairWallet from "../wallet/relayPair.json";
 
 const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
 
@@ -17,28 +22,28 @@ const PROGRAM_ADDRESS = "55K8C3FfgRr6Nuwzw5gXV79hQUj3bVRpEPSjoF18HKfh";
 const walletName = "name.solace.io14111";
 
 describe("recover wallet", () => {
+  let signer: anchor.web3.Keypair = Keypair.fromSecretKey(
+    Uint8Array.from(signerWallet)
+  );
+  let guardian1: anchor.web3.Keypair = Keypair.fromSecretKey(
+    Uint8Array.from(guardian1Wallet)
+  );
+  let newOwner: anchor.web3.Keypair = Keypair.fromSecretKey(
+    Uint8Array.from(newOwnerWallet)
+  );
+  let relayPair: anchor.web3.Keypair = Keypair.fromSecretKey(
+    Uint8Array.from(relayPairWallet)
+  );
+  let usdcOwner: anchor.web3.Keypair = Keypair.fromSecretKey(
+    Uint8Array.from(usdcOwnerWallet)
+  );
   let owner: anchor.web3.Keypair;
-  let signer: anchor.web3.Keypair;
   let seedBase: anchor.web3.Keypair;
   let walletAddress: anchor.web3.PublicKey;
 
-  let guardian1: anchor.web3.Keypair;
   let guardian2: anchor.web3.Keypair;
-  let newOwner: anchor.web3.Keypair;
-  let relayPair: anchor.web3.Keypair;
-  let usdcOwner: anchor.web3.Keypair;
 
   const getWallet = () => solaceSdk.program.account.wallet.fetch(walletAddress);
-  const getRecoveryAccount = (address: anchor.web3.PublicKey) =>
-    solaceSdk.program.account.recoveryAttempt.fetch(address);
-  const airdrop = async (address: anchor.web3.PublicKey) => {
-    const sg = await SolaceSDK.localConnection.requestAirdrop(
-      address,
-
-      10 * LAMPORTS_PER_SOL
-    );
-    const confirmation = await SolaceSDK.localConnection.confirmTransaction(sg);
-  };
 
   let solaceSdk: SolaceSDK;
   let USDC: TokenMint;
@@ -52,19 +57,7 @@ describe("recover wallet", () => {
   before(async () => {
     owner = Keypair.generate();
     seedBase = Keypair.generate();
-    signer = Keypair.generate();
-    guardian1 = Keypair.generate();
     guardian2 = Keypair.generate();
-    newOwner = Keypair.generate();
-    relayPair = Keypair.generate();
-    usdcOwner = KeyPair.generate();
-    await Promise.all([
-      airdrop(signer.publicKey),
-      airdrop(relayPair.publicKey),
-      airdrop(newOwner.publicKey),
-      airdrop(usdcOwner.publicKey),
-      airdrop(guardian1.publicKey),
-    ]);
     await createMint();
     // Configure the client to use the local cluster.
   });
@@ -98,7 +91,6 @@ describe("recover wallet", () => {
     await SolaceSDK.localConnection.confirmTransaction(sig);
     let wallet = await getWallet();
     assert(wallet.owner.equals(signer.publicKey), "Wallet not owned by owner");
-    await airdrop(guardian1.publicKey);
 
     // it can be auto - approved because it is in incubation mode.
     const guardianInfo = await SolaceSDK.getWalletGuardianInfo({
