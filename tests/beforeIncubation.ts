@@ -7,7 +7,7 @@ import { AccountLayout, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import signerWallet from "../wallet/signer.json";
 import newOwnerWallet from "../wallet/newOwner.json";
 import guardian1Wallet from "../wallet/guardian1.json";
-import usdcOwnerWallet from "../wallet//usdcOwner.json";
+import usdcOwnerWallet from "../wallet/usdcOwner.json";
 import relayPairWallet from "../wallet/relayPair.json";
 
 const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
