@@ -3,6 +3,7 @@ import newOwnerWallet from "../wallet/newOwner.json";
 import guardian1Wallet from "../wallet/guardian1.json";
 import usdcOwnerWallet from "../wallet//usdcOwner.json";
 import relayPairWallet from "../wallet/relayPair.json";
+// import ownerWallet from "../wallet/owner.json";
 import mainWallet from "../wallet/id.json";
 import * as anchor from "anchor-rn";
 const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
@@ -31,6 +32,9 @@ let relayPair: anchor.web3.Keypair = Keypair.fromSecretKey(
 let usdcOwner: anchor.web3.Keypair = Keypair.fromSecretKey(
   Uint8Array.from(usdcOwnerWallet)
 );
+// let owner: anchor.web3.Keypair = Keypair.fromSecretKey(
+//   Uint8Array.from(ownerWallet)
+// );
 let main: anchor.web3.Keypair = Keypair.fromSecretKey(
   Uint8Array.from(mainWallet)
 );
@@ -44,6 +48,7 @@ const airdropSol = async () => {
     airdrop(newOwner.publicKey),
     airdrop(usdcOwner.publicKey),
     airdrop(guardian1.publicKey),
+    // airdrop(owner.publicKey),
     airdrop(main.publicKey),
   ]);
   console.log("airdrop is finished.");
