@@ -154,10 +154,4 @@ describe("check before incubation", () => {
     const sig = await relayTransaction(tx, relayPair);
     await SolaceSDK.localConnection.confirmTransaction(sig);
   });
-
-  it("should end incubation", async () => {
-    const tx = await solaceSdk.endIncubation(relayPair.publicKey);
-    const sig = await relayTransaction(tx, relayPair);
-    await SolaceSDK.localConnection.confirmTransaction(sig);
-  });
 });

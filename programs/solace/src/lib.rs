@@ -24,7 +24,7 @@ pub mod solace {
         ctx: Context<CreateWallet>,
         owner: Pubkey,
         guardian_keys: Vec<Pubkey>,
-        recovery_threshold: u8,
+        // recovery_threshold: u8,
         name: String,
     ) -> Result<()> {
         let wallet = &mut ctx.accounts.wallet;
@@ -34,7 +34,7 @@ pub mod solace {
         wallet.approved_guardians = vec![];
         wallet.pending_guardians = guardian_keys;
         wallet.recovery_mode = false;
-        wallet.approval_threshold = recovery_threshold;
+        wallet.approval_threshold = 0;
         wallet.wallet_recovery_sequence = 0;
         wallet.created_at = Clock::get().unwrap().unix_timestamp;
         wallet.incubation_mode = true;
@@ -116,6 +116,13 @@ pub mod solace {
     /// Access Control - Owner Only
     pub fn add_guardians(ctx: Context<AddGuardians>, guardian: Pubkey) -> Result<()> {
         instructions::guardians::add_guardian(ctx, guardian)
+    }
+
+    /// Set guardian threshold
+    /// must be less than the total number of guardians
+    /// use the same account - AddGuardians account, it is ok because we use the same account
+    pub fn set_guardian_threshold(ctx: Context<AddGuardians>, threshold: u8) -> Result<()> {
+        instructions::guardians::set_guardian_threshold(ctx, threshold)
     }
 
     /// Approve a guardian to the wallet
@@ -200,7 +207,7 @@ pub struct Verified<'info> {
 #[instruction(
     owner: Pubkey,
     guardian_keys: Vec<Pubkey>,
-    recovery_threshold: u8,
+    // recovery_threshold: u8,
     name: String,
 )]
 pub struct CreateWallet<'info> {

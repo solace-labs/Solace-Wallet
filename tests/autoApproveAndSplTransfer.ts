@@ -20,7 +20,7 @@ const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
 
 const PROGRAM_ADDRESS = "55K8C3FfgRr6Nuwzw5gXV79hQUj3bVRpEPSjoF18HKfh";
 
-const walletName = "name.solace.io1111111";
+const walletName = "name.solace.io22";
 
 describe("auto approve and transfer spl after incubation is disabled", () => {
   let signer: anchor.web3.Keypair = Keypair.fromSecretKey(
@@ -104,6 +104,29 @@ describe("auto approve and transfer spl after incubation is disabled", () => {
     console.log(tokenAccounts);
   });
 
+  it("should send USDC to someone random", async () => {
+    const recieverTA = await USDC.createAssociatedTokenAccount(
+      newOwner.publicKey
+    );
+
+    const tx = await solaceSdk.requestSplTransfer(
+      {
+        mint: USDC.token,
+        recieverTokenAccount: recieverTA,
+        reciever: newOwner.publicKey,
+        amount: 101,
+      },
+      relayPair.publicKey
+    );
+    const sig = await relayTransaction(tx, relayPair);
+    await SolaceSDK.localConnection.confirmTransaction(sig);
+    const info = await SolaceSDK.localConnection.getAccountInfo(recieverTA);
+    const data = Buffer.from(info.data);
+    const accountInfo = AccountLayout.decode(data);
+    // it is working properly because incubation mode is true. If incubation mode is false, it won't work.
+    assert(accountInfo.amount.toString() === "101", "Amount mismatch");
+  });
+
   it("should request for guardianship and be auto-approved", async () => {
     const tx = await solaceSdk.addGuardian(
       guardian1.publicKey,
@@ -160,15 +183,7 @@ describe("auto approve and transfer spl after incubation is disabled", () => {
       "ongoing transfer",
       ongoingTransfers[0].guardianApprovals[0].guardian.toString()
     );
-    console.log("guardian", guardian1.publicKey.toString());
-
-    console.log({
-      solaceWalletAddress: solaceSdk.wallet.toString(),
-      programAddress: PROGRAM_ADDRESS,
-      guardianAddress: guardian1.publicKey.toString(),
-      transferKeyAddress: ongoingTransfers[0].seedKey.toString(),
-      network: "local",
-    });
+    console.log(guardian1.publicKey.toString());
 
     const tx = await SolaceSDK.approveAndExecuteGuardedTransfer({
       solaceWalletAddress: solaceSdk.wallet.toString(),
@@ -185,6 +200,6 @@ describe("auto approve and transfer spl after incubation is disabled", () => {
     const info = await SolaceSDK.localConnection.getAccountInfo(recieverTA);
     const data = Buffer.from(info.data);
     const accountInfo = AccountLayout.decode(data);
-    assert(accountInfo.amount.toString() === "1", "Amount mismatch");
+    assert(accountInfo.amount.toString() === "102", "Amount mismatch");
   });
 });

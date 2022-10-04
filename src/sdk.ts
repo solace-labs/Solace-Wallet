@@ -321,7 +321,7 @@ export class SolaceSDK {
     const tx = this.program.transaction.createWallet(
       this.owner.publicKey, // Owner
       [], // Guardian
-      0, // Guardian Approval Threshold
+      // 0, // Guardian Approval Threshold
       name,
       {
         accounts: {
@@ -780,6 +780,7 @@ export class SolaceSDK {
     const transferData = await program.account.guardedTransfer.fetch(
       transferAddress
     );
+    // @ts-ignore
     const tx = program.transaction.approveAndExecuteSplTransfer(transferSeed, {
       accounts: {
         wallet,
@@ -802,6 +803,17 @@ export class SolaceSDK {
         wallet: this.wallet,
         owner: this.owner.publicKey,
       },
+    });
+    return this.signTransaction(tx, feePayer);
+  }
+
+  setGuardianThreshold(threshold: number, feePayer: anchor.web3.PublicKey) {
+    const tx = this.program.transaction.setGuardianThreshold(threshold, {
+      accounts: {
+        wallet: this.wallet,
+        owner: this.owner.publicKey,
+      },
+      signers: [this.owner],
     });
     return this.signTransaction(tx, feePayer);
   }

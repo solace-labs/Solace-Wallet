@@ -52,10 +52,6 @@
           }
         },
         {
-          "name": "recoveryThreshold",
-          "type": "u8"
-        },
-        {
           "name": "name",
           "type": "string"
         }
@@ -475,6 +471,32 @@
         {
           "name": "guardian",
           "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "setGuardianThreshold",
+      "docs": [
+        "Set guardian threshold",
+        "must be less than the total number of guardians",
+        "use the same account - AddGuardians account, it is ok because we use the same account"
+      ],
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "threshold",
+          "type": "u8"
         }
       ]
     },
@@ -966,61 +988,66 @@
     },
     {
       "code": 6004,
+      "name": "InvalidThreshold",
+      "msg": "Can't be bigger than the total guardian number"
+    },
+    {
+      "code": 6005,
       "name": "GuardianApprovalTimeNotElapsed",
       "msg": "Guardian approval time not elapsed"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "KeyNotFound",
       "msg": "Key not found"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "PaymentsDisabled",
       "msg": "Payments are disabled - Wallet in recovery mode"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "TransferNotExecutable",
       "msg": "Requested transfer is not executable"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "TransferAlreadyComplete",
       "msg": "Requested transfer is already completed"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "KeyMisMatch",
       "msg": "Keys mismatch"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "WalletNotInIncubation",
       "msg": "Wallet is not in incubation mode"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "TrustedPubkeyNoTransactions",
       "msg": "No transaction history with pub key"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "TrustedPubkeyAlreadyTrusted",
       "msg": "Pubkey is already trusted"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "OngoingTransferIncomplete",
       "msg": "Ongoing transfer is incomplete"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "InvalidTransferType",
       "msg": "The requested transfer type is invalid"
     },
     {
-      "code": 6015,
+      "code": 6016,
       "name": "InvalidTransferData",
       "msg": "Invalid transfer data"
     }
