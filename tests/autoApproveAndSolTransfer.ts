@@ -21,7 +21,7 @@ const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
 
 const PROGRAM_ADDRESS = "55K8C3FfgRr6Nuwzw5gXV79hQUj3bVRpEPSjoF18HKfh";
 
-const walletName = "name.solace.io211111111a11121";
+const walletName = "name.solace.io2111111111a11121";
 
 const airdrop = async (address: anchor.web3.PublicKey) => {
   const sg = await SolaceSDK.localConnection.requestAirdrop(
