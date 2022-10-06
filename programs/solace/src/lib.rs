@@ -192,9 +192,12 @@ pub struct GuardedSOLTransferData {
     pub random: Pubkey,
 }
 
+// checked - no needed
 #[derive(Accounts)]
 pub struct Initialize {}
 
+// checked - seems that these 2 constraints are just the same
+// has_one=owner, constraint=wallet.owner == owner.key()
 #[derive(Accounts)]
 pub struct Verified<'info> {
     #[account(mut, has_one=owner, constraint=wallet.owner == owner.key())]
@@ -202,6 +205,7 @@ pub struct Verified<'info> {
     owner: Signer<'info>,
 }
 
+//checked - fixed size issue
 // Access the name parameter passed to the txn
 #[derive(Accounts)]
 #[instruction(
