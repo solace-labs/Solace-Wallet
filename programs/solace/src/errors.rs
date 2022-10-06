@@ -14,6 +14,9 @@ pub enum Errors {
     #[msg("Guardian already added")]
     GuardianAlreadyAdded,
 
+    #[msg("Can't be bigger than the total guardian number")]
+    InvalidThreshold,
+
     #[msg("Guardian approval time not elapsed")]
     GuardianApprovalTimeNotElapsed,
 

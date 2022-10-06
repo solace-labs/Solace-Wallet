@@ -44,6 +44,11 @@ type SendSPLTokenData = {
   amount: number;
 };
 
+type SendSOLTokenData = {
+  reciever: anchor.web3.PublicKey;
+  amount: number;
+};
+
 type SolaceTokenAccount = {
   mint: anchor.web3.PublicKey;
   tokenAccount: anchor.web3.PublicKey;
@@ -321,7 +326,7 @@ export class SolaceSDK {
     const tx = this.program.transaction.createWallet(
       this.owner.publicKey, // Owner
       [], // Guardian
-      0, // Guardian Approval Threshold
+      // 0, // Guardian Approval Threshold
       name,
       {
         accounts: {
@@ -678,13 +683,71 @@ export class SolaceSDK {
 
     // Check if instant transfer can be called or not
     const incubation = await this.checkIncubation(walletState);
-    console.log({ incubation });
     if (incubation) {
       // Instant transfer
       return this.signTransaction(await instantTransfer(), feePayer);
     } else {
       // Check if trusted
       if (await this.isPubkeyTrusted(walletState, data.recieverTokenAccount)) {
+        // Instant transfer
+        return this.signTransaction(await instantTransfer(), feePayer);
+      } else {
+        return this.signTransaction(await guardedTransfer(), feePayer);
+      }
+    }
+  }
+
+  async requestSolTransfer(
+    data: SendSOLTokenData,
+    feePayer: anchor.web3.PublicKey
+  ) {
+    const walletState = await this.fetchWalletData();
+
+    const guardedTransfer = async () => {
+      console.log("guarded SOL transfer");
+      const random = anchor.web3.Keypair.generate().publicKey;
+      const transferAccount = (await this.getTransferAddress(random))[0];
+      return this.program.transaction.requestGuardedSolTransfer(
+        {
+          to: data.reciever,
+          random: random,
+          amount: new BN(data.amount),
+        },
+        {
+          accounts: {
+            wallet: this.wallet,
+            owner: this.owner.publicKey,
+            rentPayer: feePayer,
+            transfer: transferAccount,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          },
+        }
+      );
+    };
+
+    const instantTransfer = async () => {
+      console.log("instant SOL transfer");
+      return this.program.transaction.requestInstantSolTransfer(
+        new BN(data.amount),
+        {
+          accounts: {
+            wallet: this.wallet,
+            owner: this.owner.publicKey,
+            toAccount: data.reciever,
+          },
+        }
+      );
+    };
+
+    // Check if instant transfer can be called or not
+    const incubation = await this.checkIncubation(walletState);
+    // return this.signTransaction(await instantTransfer(), feePayer);
+    if (incubation) {
+      // Instant transfer
+      return this.signTransaction(await instantTransfer(), feePayer);
+    } else {
+      // Check if trusted
+      if (await this.isPubkeyTrusted(walletState, data.reciever)) {
         // Instant transfer
         return this.signTransaction(await instantTransfer(), feePayer);
       } else {
@@ -780,6 +843,7 @@ export class SolaceSDK {
     const transferData = await program.account.guardedTransfer.fetch(
       transferAddress
     );
+    // @ts-ignore
     const tx = program.transaction.approveAndExecuteSplTransfer(transferSeed, {
       accounts: {
         wallet,
@@ -802,6 +866,17 @@ export class SolaceSDK {
         wallet: this.wallet,
         owner: this.owner.publicKey,
       },
+    });
+    return this.signTransaction(tx, feePayer);
+  }
+
+  setGuardianThreshold(threshold: number, feePayer: anchor.web3.PublicKey) {
+    const tx = this.program.transaction.setGuardianThreshold(threshold, {
+      accounts: {
+        wallet: this.wallet,
+        owner: this.owner.publicKey,
+      },
+      signers: [this.owner],
     });
     return this.signTransaction(tx, feePayer);
   }

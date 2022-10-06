@@ -19,8 +19,8 @@ pub struct Wallet {
     pub bump: u8,
     // Checks if the wallet is in recovery mode
     pub recovery_mode: bool,
-    // The recovery threshold
-    pub recovery_threshold: u8,
+    // The threshold for approving recovery and transactions
+    pub approval_threshold: u8,
     // Wallet recovery sequence
     pub wallet_recovery_sequence: u64,
     // Current recovery address

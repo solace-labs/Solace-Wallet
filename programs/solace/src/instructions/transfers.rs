@@ -113,7 +113,7 @@ pub fn approve_and_execute_sol_transfer(ctx: Context<ApproveAndExecuteSOLTransfe
     let accounts = ctx.accounts;
     let transfer_account = &mut accounts.transfer;
 
-    // Ensure that the transfer type is SPL only
+    // Ensure that the transfer type is SOL only
     invariant!(
         !transfer_account.is_spl_transfer,
         Errors::InvalidTransferType
@@ -151,7 +151,7 @@ pub fn request_guarded_spl_transfer(
     transfer_account.to = data.to;
     transfer_account.amount = data.amount;
     transfer_account.approvers = ctx.accounts.wallet.approved_guardians.clone();
-    transfer_account.threshold = data.threshold;
+    transfer_account.threshold = ctx.accounts.wallet.approval_threshold;
     transfer_account.approvals = vec![false; ctx.accounts.wallet.approved_guardians.len()];
     transfer_account.is_executable = false;
     transfer_account.rent_payer = ctx.accounts.rent_payer.key();
@@ -189,6 +189,7 @@ pub fn request_guarded_sol_transfer(
     transfer_account.approvals = vec![false; ctx.accounts.wallet.approved_guardians.len()];
     transfer_account.is_executable = false;
     transfer_account.rent_payer = ctx.accounts.rent_payer.key();
+    transfer_account.threshold = ctx.accounts.wallet.approval_threshold;
 
     transfer_account.token_mint = None;
     transfer_account.from_token_account = None;

@@ -52,10 +52,6 @@ export type Solace = {
           }
         },
         {
-          "name": "recoveryThreshold",
-          "type": "u8"
-        },
-        {
           "name": "name",
           "type": "string"
         }
@@ -63,6 +59,9 @@ export type Solace = {
     },
     {
       "name": "endIncubation",
+      "docs": [
+        "End the incubation"
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -79,6 +78,11 @@ export type Solace = {
     },
     {
       "name": "requestInstantSplTransfer",
+      "docs": [
+        "Request an instant SPL transfer",
+        "This can only be called if the wallet is in incubation mode",
+        "Or if the address is trusted"
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -130,6 +134,11 @@ export type Solace = {
     },
     {
       "name": "requestInstantSolTransfer",
+      "docs": [
+        "Request an instant SOL transfer",
+        "This can only be called if the wallet is in incubation mode",
+        "Or if the address is trusted"
+      ],
       "accounts": [
         {
           "name": "toAccount",
@@ -156,6 +165,10 @@ export type Solace = {
     },
     {
       "name": "requestGuardedSplTransfer",
+      "docs": [
+        "Request for a new guarded transfer",
+        "This can be used for both SOL and SPL transfers"
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -259,6 +272,9 @@ export type Solace = {
     },
     {
       "name": "approveTransfer",
+      "docs": [
+        "Approve the transfer of funds by being a guardian signer"
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -280,6 +296,10 @@ export type Solace = {
     },
     {
       "name": "approveAndExecuteSplTransfer",
+      "docs": [
+        "Approve a SPL transaction and if applicable, execute it as well",
+        "Else throw an error"
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -299,22 +319,7 @@ export type Solace = {
         {
           "name": "transfer",
           "isMut": true,
-          "isSigner": false,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "type": "publicKey",
-                "account": "Wallet",
-                "path": "wallet"
-              },
-              {
-                "kind": "arg",
-                "type": "publicKey",
-                "path": "seed_key"
-              }
-            ]
-          }
+          "isSigner": false
         },
         {
           "name": "recieverAccount",
@@ -351,6 +356,10 @@ export type Solace = {
     },
     {
       "name": "approveAndExecuteSolTransfer",
+      "docs": [
+        "Approve a SOL transaction and if applicable, execute it as well",
+        "Else throw an error"
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -392,6 +401,10 @@ export type Solace = {
     },
     {
       "name": "executeTransfer",
+      "docs": [
+        "Execute a trasnfer, as long as a transfer is already approved",
+        "This acts as a proxy when all guardians have approved the transfer but the transfer is still not approved"
+      ],
       "accounts": [
         {
           "name": "transferAccount",
@@ -438,6 +451,10 @@ export type Solace = {
     },
     {
       "name": "addGuardians",
+      "docs": [
+        "Adds a guardian to the wallet appropriately",
+        "Access Control - Owner Only"
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -458,7 +475,39 @@ export type Solace = {
       ]
     },
     {
+      "name": "setGuardianThreshold",
+      "docs": [
+        "Set guardian threshold",
+        "must be less than the total number of guardians",
+        "use the same account - AddGuardians account, it is ok because we use the same account"
+      ],
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "threshold",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "approveGuardianship",
+      "docs": [
+        "Approve a guardian to the wallet",
+        "Remove the given guardian from the pending guardians vec and add them to the approved guardian vec",
+        "This requires the guardian to be a keypair guardian and not a solace-guardian",
+        "Check for time-lock"
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -475,6 +524,10 @@ export type Solace = {
     },
     {
       "name": "removeGuardians",
+      "docs": [
+        "Remove guardian",
+        "TODO: Add timelock to remove guardians"
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -496,6 +549,9 @@ export type Solace = {
     },
     {
       "name": "initiateWalletRecovery",
+      "docs": [
+        "Initiate wallet recovery for an account"
+      ],
       "accounts": [
         {
           "name": "rentPayer",
@@ -548,6 +604,9 @@ export type Solace = {
     },
     {
       "name": "approveRecoveryByKeypair",
+      "docs": [
+        "Approve the recovery attempt as a key pair guardian"
+      ],
       "accounts": [
         {
           "name": "walletToRecover",
@@ -569,6 +628,9 @@ export type Solace = {
     },
     {
       "name": "approveRecoveryBySolace",
+      "docs": [
+        "Approve the recovery attempt as a Solace Guardian"
+      ],
       "accounts": [
         {
           "name": "walletToRecover",
@@ -606,6 +668,9 @@ export type Solace = {
     },
     {
       "name": "addTrustedPubkey",
+      "docs": [
+        "Add a new trusted pubkey to the trusted list"
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -667,7 +732,7 @@ export type Solace = {
             "type": "bool"
           },
           {
-            "name": "recoveryThreshold",
+            "name": "approvalThreshold",
             "type": "u8"
           },
           {
@@ -839,6 +904,9 @@ export type Solace = {
   "types": [
     {
       "name": "GuardedSPLTransferData",
+      "docs": [
+        "A helper struct to transfer data between the client and the program"
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -875,6 +943,9 @@ export type Solace = {
     },
     {
       "name": "GuardedSOLTransferData",
+      "docs": [
+        "A helper struct to transfer data between the client and the program"
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -917,61 +988,66 @@ export type Solace = {
     },
     {
       "code": 6004,
+      "name": "InvalidThreshold",
+      "msg": "Can't be bigger than the total guardian number"
+    },
+    {
+      "code": 6005,
       "name": "GuardianApprovalTimeNotElapsed",
       "msg": "Guardian approval time not elapsed"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "KeyNotFound",
       "msg": "Key not found"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "PaymentsDisabled",
       "msg": "Payments are disabled - Wallet in recovery mode"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "TransferNotExecutable",
       "msg": "Requested transfer is not executable"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "TransferAlreadyComplete",
       "msg": "Requested transfer is already completed"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "KeyMisMatch",
       "msg": "Keys mismatch"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "WalletNotInIncubation",
       "msg": "Wallet is not in incubation mode"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "TrustedPubkeyNoTransactions",
       "msg": "No transaction history with pub key"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "TrustedPubkeyAlreadyTrusted",
       "msg": "Pubkey is already trusted"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "OngoingTransferIncomplete",
       "msg": "Ongoing transfer is incomplete"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "InvalidTransferType",
       "msg": "The requested transfer type is invalid"
     },
     {
-      "code": 6015,
+      "code": 6016,
       "name": "InvalidTransferData",
       "msg": "Invalid transfer data"
     }
@@ -1032,10 +1108,6 @@ export const IDL: Solace = {
           }
         },
         {
-          "name": "recoveryThreshold",
-          "type": "u8"
-        },
-        {
           "name": "name",
           "type": "string"
         }
@@ -1043,6 +1115,9 @@ export const IDL: Solace = {
     },
     {
       "name": "endIncubation",
+      "docs": [
+        "End the incubation"
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -1059,6 +1134,11 @@ export const IDL: Solace = {
     },
     {
       "name": "requestInstantSplTransfer",
+      "docs": [
+        "Request an instant SPL transfer",
+        "This can only be called if the wallet is in incubation mode",
+        "Or if the address is trusted"
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -1110,6 +1190,11 @@ export const IDL: Solace = {
     },
     {
       "name": "requestInstantSolTransfer",
+      "docs": [
+        "Request an instant SOL transfer",
+        "This can only be called if the wallet is in incubation mode",
+        "Or if the address is trusted"
+      ],
       "accounts": [
         {
           "name": "toAccount",
@@ -1136,6 +1221,10 @@ export const IDL: Solace = {
     },
     {
       "name": "requestGuardedSplTransfer",
+      "docs": [
+        "Request for a new guarded transfer",
+        "This can be used for both SOL and SPL transfers"
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -1239,6 +1328,9 @@ export const IDL: Solace = {
     },
     {
       "name": "approveTransfer",
+      "docs": [
+        "Approve the transfer of funds by being a guardian signer"
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -1260,6 +1352,10 @@ export const IDL: Solace = {
     },
     {
       "name": "approveAndExecuteSplTransfer",
+      "docs": [
+        "Approve a SPL transaction and if applicable, execute it as well",
+        "Else throw an error"
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -1279,22 +1375,7 @@ export const IDL: Solace = {
         {
           "name": "transfer",
           "isMut": true,
-          "isSigner": false,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "type": "publicKey",
-                "account": "Wallet",
-                "path": "wallet"
-              },
-              {
-                "kind": "arg",
-                "type": "publicKey",
-                "path": "seed_key"
-              }
-            ]
-          }
+          "isSigner": false
         },
         {
           "name": "recieverAccount",
@@ -1331,6 +1412,10 @@ export const IDL: Solace = {
     },
     {
       "name": "approveAndExecuteSolTransfer",
+      "docs": [
+        "Approve a SOL transaction and if applicable, execute it as well",
+        "Else throw an error"
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -1372,6 +1457,10 @@ export const IDL: Solace = {
     },
     {
       "name": "executeTransfer",
+      "docs": [
+        "Execute a trasnfer, as long as a transfer is already approved",
+        "This acts as a proxy when all guardians have approved the transfer but the transfer is still not approved"
+      ],
       "accounts": [
         {
           "name": "transferAccount",
@@ -1418,6 +1507,10 @@ export const IDL: Solace = {
     },
     {
       "name": "addGuardians",
+      "docs": [
+        "Adds a guardian to the wallet appropriately",
+        "Access Control - Owner Only"
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -1438,7 +1531,39 @@ export const IDL: Solace = {
       ]
     },
     {
+      "name": "setGuardianThreshold",
+      "docs": [
+        "Set guardian threshold",
+        "must be less than the total number of guardians",
+        "use the same account - AddGuardians account, it is ok because we use the same account"
+      ],
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "threshold",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "approveGuardianship",
+      "docs": [
+        "Approve a guardian to the wallet",
+        "Remove the given guardian from the pending guardians vec and add them to the approved guardian vec",
+        "This requires the guardian to be a keypair guardian and not a solace-guardian",
+        "Check for time-lock"
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -1455,6 +1580,10 @@ export const IDL: Solace = {
     },
     {
       "name": "removeGuardians",
+      "docs": [
+        "Remove guardian",
+        "TODO: Add timelock to remove guardians"
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -1476,6 +1605,9 @@ export const IDL: Solace = {
     },
     {
       "name": "initiateWalletRecovery",
+      "docs": [
+        "Initiate wallet recovery for an account"
+      ],
       "accounts": [
         {
           "name": "rentPayer",
@@ -1528,6 +1660,9 @@ export const IDL: Solace = {
     },
     {
       "name": "approveRecoveryByKeypair",
+      "docs": [
+        "Approve the recovery attempt as a key pair guardian"
+      ],
       "accounts": [
         {
           "name": "walletToRecover",
@@ -1549,6 +1684,9 @@ export const IDL: Solace = {
     },
     {
       "name": "approveRecoveryBySolace",
+      "docs": [
+        "Approve the recovery attempt as a Solace Guardian"
+      ],
       "accounts": [
         {
           "name": "walletToRecover",
@@ -1586,6 +1724,9 @@ export const IDL: Solace = {
     },
     {
       "name": "addTrustedPubkey",
+      "docs": [
+        "Add a new trusted pubkey to the trusted list"
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -1647,7 +1788,7 @@ export const IDL: Solace = {
             "type": "bool"
           },
           {
-            "name": "recoveryThreshold",
+            "name": "approvalThreshold",
             "type": "u8"
           },
           {
@@ -1819,6 +1960,9 @@ export const IDL: Solace = {
   "types": [
     {
       "name": "GuardedSPLTransferData",
+      "docs": [
+        "A helper struct to transfer data between the client and the program"
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -1855,6 +1999,9 @@ export const IDL: Solace = {
     },
     {
       "name": "GuardedSOLTransferData",
+      "docs": [
+        "A helper struct to transfer data between the client and the program"
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -1897,61 +2044,66 @@ export const IDL: Solace = {
     },
     {
       "code": 6004,
+      "name": "InvalidThreshold",
+      "msg": "Can't be bigger than the total guardian number"
+    },
+    {
+      "code": 6005,
       "name": "GuardianApprovalTimeNotElapsed",
       "msg": "Guardian approval time not elapsed"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "KeyNotFound",
       "msg": "Key not found"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "PaymentsDisabled",
       "msg": "Payments are disabled - Wallet in recovery mode"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "TransferNotExecutable",
       "msg": "Requested transfer is not executable"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "TransferAlreadyComplete",
       "msg": "Requested transfer is already completed"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "KeyMisMatch",
       "msg": "Keys mismatch"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "WalletNotInIncubation",
       "msg": "Wallet is not in incubation mode"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "TrustedPubkeyNoTransactions",
       "msg": "No transaction history with pub key"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "TrustedPubkeyAlreadyTrusted",
       "msg": "Pubkey is already trusted"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "OngoingTransferIncomplete",
       "msg": "Ongoing transfer is incomplete"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "InvalidTransferType",
       "msg": "The requested transfer type is invalid"
     },
     {
-      "code": 6015,
+      "code": 6016,
       "name": "InvalidTransferData",
       "msg": "Invalid transfer data"
     }

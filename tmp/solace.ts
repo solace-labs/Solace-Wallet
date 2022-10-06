@@ -12,7 +12,9 @@ import {
 
 const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
 
-const PROGRAM_ADDRESS = "8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U";
+const PROGRAM_ADDRESS = "55K8C3FfgRr6Nuwzw5gXV79hQUj3bVRpEPSjoF18HKfh";
+
+const walletName = "name.solace.io13";
 
 describe("solace", () => {
   let owner: anchor.web3.Keypair;
@@ -73,10 +75,7 @@ describe("solace", () => {
       network: "local",
       programAddress: PROGRAM_ADDRESS,
     });
-    const tx = await solaceSdk.createFromName(
-      "name.solace.io",
-      relayPair.publicKey
-    );
+    const tx = await solaceSdk.createFromName(walletName, relayPair.publicKey);
     const res = await relayTransaction(
       tx,
       relayPair,
@@ -87,7 +86,7 @@ describe("solace", () => {
   });
 
   it("should fetch an existing wallet, and should have the same addr", async () => {
-    const _sdk = SolaceSDK.retrieveFromName("name.solace.io", {
+    const _sdk = SolaceSDK.retrieveFromName(walletName, {
       programAddress: PROGRAM_ADDRESS,
       owner,
       network: "local",
@@ -148,6 +147,7 @@ describe("solace", () => {
     const info = await SolaceSDK.localConnection.getAccountInfo(recieverTA);
     const data = Buffer.from(info.data);
     const accountInfo = AccountLayout.decode(data);
+    // it is working properly because incubation mode is true. If incubation mode is false, it won't work.
     assert(accountInfo.amount.toString() === "101", "Amount mismatch");
   });
 
@@ -165,6 +165,8 @@ describe("solace", () => {
     let wallet = await getWallet();
     assert(wallet.owner.equals(signer.publicKey), "Wallet not owned by owner");
     await airdrop(guardian1.publicKey);
+
+    // it can be auto - approved because it is in incubation mode.
     const guardianInfo = await SolaceSDK.getWalletGuardianInfo({
       solaceWalletAddress: solaceSdk.wallet.toString(),
       programAddress: solaceSdk.program.programId.toString(),
@@ -212,7 +214,10 @@ describe("solace", () => {
   it("should approve & execute a guarded transfer", async () => {
     const ongoingTransfers = await solaceSdk.fetchOngoingTransfers();
     assert(ongoingTransfers.length === 1, "should have one ongoing transfer");
-    console.log(ongoingTransfers[0].guardianApprovals[0].guardian.toString());
+    console.log(
+      "ongoing transfer",
+      ongoingTransfers[0].guardianApprovals[0].guardian.toString()
+    );
     console.log(guardian1.publicKey.toString());
 
     const tx = await SolaceSDK.approveAndExecuteGuardedTransfer({
@@ -240,7 +245,7 @@ describe("solace", () => {
       programAddress: PROGRAM_ADDRESS,
       owner: newOwner,
     });
-    const tx = await sdk2.recoverWallet("name.solace.io", relayPair.publicKey);
+    const tx = await sdk2.recoverWallet(walletName, relayPair.publicKey);
     const sig = await relayTransaction(
       tx,
       relayPair,
@@ -254,7 +259,7 @@ describe("solace", () => {
       {
         network: "local",
         programAddress: PROGRAM_ADDRESS,
-        username: "name.solace.io",
+        username: walletName,
       },
       guardian1.publicKey.toString()
     );
@@ -263,7 +268,7 @@ describe("solace", () => {
     ]);
     await SolaceSDK.localConnection.confirmTransaction(sig);
     const data = await SolaceSDK.fetchDataForWallet(
-      SolaceSDK.getWalletFromName(PROGRAM_ADDRESS, "name.solace.io"),
+      SolaceSDK.getWalletFromName(PROGRAM_ADDRESS, walletName),
       solaceSdk.program
     );
     assert(data.owner.equals(newOwner.publicKey));

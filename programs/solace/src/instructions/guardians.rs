@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use vipers::invariant;
 
-use crate::{utils, Wallet, Errors, Verified};
+use crate::{guardians, utils, Errors, Verified, Wallet};
 
 /// Add a new guardian to the wallet
 /// 1. Check if the account is in incubation or not
@@ -26,7 +26,7 @@ pub fn add_guardian(ctx: Context<AddGuardians>, guardian: Pubkey) -> Result<()> 
     if wallet.check_incubation() {
         wallet.approved_guardians.push(guardian);
         // TODO: Change this to consider for any external change in the recovery thresholds
-        wallet.recovery_threshold = wallet.approved_guardians.len() as u8;
+        wallet.approval_threshold += 1;
     } else {
         wallet.pending_guardians.push(guardian);
         wallet
@@ -57,7 +57,28 @@ pub fn approve_guardianship(ctx: Context<ApproveGuardian>, guardian: Pubkey) -> 
     // Add the guardian to the approved guardian vec
     wallet.approved_guardians.push(guardian);
     // TODO: Change this to consider for any external change in the recovery thresholds
-    wallet.recovery_threshold = wallet.approved_guardians.len() as u8;
+    wallet.approval_threshold += 1;
+    Ok(())
+}
+
+/// Add a new guardian to the wallet
+/// 1. Check if the account is in incubation or not
+/// 2. If in incubation, add the guardian instantly
+/// 3. If not in incubation, add the guardian into the pending guardian list
+/// 4. Update the pending_guardian_approval_from vector
+pub fn set_guardian_threshold(ctx: Context<AddGuardians>, threshold: u8) -> Result<()> {
+    let wallet = &mut ctx.accounts.wallet;
+
+    let guardians_num = wallet.approved_guardians.len() as u8;
+    // Check if the threshold is bigger than the number of guardians
+    invariant!(
+        guardians_num >= threshold && threshold > 0,
+        Errors::InvalidThreshold
+    );
+
+    wallet.approval_threshold = threshold;
+
+    msg!("Set the guardian threshold");
     Ok(())
 }
 
