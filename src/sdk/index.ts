@@ -1,8 +1,8 @@
-import { Solace } from "./solace/types";
+import { Solace } from "../solace/types";
 import * as anchor from "anchor-rn";
 import { BN } from "bn.js";
-import IDL from "./solace/idl.json";
-import { RelayerIxData, relayTransaction } from "./relayer";
+import IDL from "../solace/idl.json";
+import { RelayerIxData, relayTransaction } from "../relayer";
 import bs58 from "bs58";
 import {
   AccountLayout,
@@ -15,7 +15,7 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   transfer,
 } from "@solana/spl-token";
-import { checkAccountExist } from "./utils/spl-util";
+import { checkAccountExist } from "../utils/spl-util";
 
 const { web3, Provider, Wallet, setProvider, getProvider, Program } = anchor;
 
