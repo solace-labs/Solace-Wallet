@@ -13,7 +13,7 @@ pub use instructions::*;
 pub use state::*;
 pub use validators::*;
 
-declare_id!("8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U");
+declare_id!("55K8C3FfgRr6Nuwzw5gXV79hQUj3bVRpEPSjoF18HKfh");
 
 #[program]
 pub mod solace {
@@ -24,7 +24,7 @@ pub mod solace {
         ctx: Context<CreateWallet>,
         owner: Pubkey,
         guardian_keys: Vec<Pubkey>,
-        recovery_threshold: u8,
+        // recovery_threshold: u8,
         name: String,
     ) -> Result<()> {
         let wallet = &mut ctx.accounts.wallet;
@@ -34,7 +34,7 @@ pub mod solace {
         wallet.approved_guardians = vec![];
         wallet.pending_guardians = guardian_keys;
         wallet.recovery_mode = false;
-        wallet.approval_threshold = recovery_threshold;
+        wallet.approval_threshold = 0;
         wallet.wallet_recovery_sequence = 0;
         wallet.created_at = Clock::get().unwrap().unix_timestamp;
         wallet.incubation_mode = true;
@@ -118,6 +118,13 @@ pub mod solace {
         instructions::guardians::add_guardian(ctx, guardian)
     }
 
+    /// Set guardian threshold
+    /// must be less than the total number of guardians
+    /// use the same account - AddGuardians account, it is ok because we use the same account
+    pub fn set_guardian_threshold(ctx: Context<AddGuardians>, threshold: u8) -> Result<()> {
+        instructions::guardians::set_guardian_threshold(ctx, threshold)
+    }
+
     /// Approve a guardian to the wallet
     /// Remove the given guardian from the pending guardians vec and add them to the approved guardian vec
     /// This requires the guardian to be a keypair guardian and not a solace-guardian
@@ -185,9 +192,12 @@ pub struct GuardedSOLTransferData {
     pub random: Pubkey,
 }
 
+// checked - no needed
 #[derive(Accounts)]
 pub struct Initialize {}
 
+// checked - seems that these 2 constraints are just the same
+// has_one=owner, constraint=wallet.owner == owner.key()
 #[derive(Accounts)]
 pub struct Verified<'info> {
     #[account(mut, has_one=owner, constraint=wallet.owner == owner.key())]
@@ -195,12 +205,13 @@ pub struct Verified<'info> {
     owner: Signer<'info>,
 }
 
+//checked - fixed size issue
 // Access the name parameter passed to the txn
 #[derive(Accounts)]
 #[instruction(
     owner: Pubkey,
     guardian_keys: Vec<Pubkey>,
-    recovery_threshold: u8,
+    // recovery_threshold: u8,
     name: String,
 )]
 pub struct CreateWallet<'info> {
