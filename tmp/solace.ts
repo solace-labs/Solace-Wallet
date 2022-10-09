@@ -12,7 +12,7 @@ import {
 
 const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
 
-const PROGRAM_ADDRESS = "55K8C3FfgRr6Nuwzw5gXV79hQUj3bVRpEPSjoF18HKfh";
+const PROGRAM_ADDRESS = "8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U";
 
 const walletName = "name.solace.io13";
 
@@ -37,7 +37,7 @@ describe("solace", () => {
 
       10 * LAMPORTS_PER_SOL
     );
-    const confirmation = await SolaceSDK.localConnection.confirmTransaction(sg);
+    await SolaceSDK.localConnection.confirmTransaction(sg);
   };
 
   let solaceSdk: SolaceSDK;
@@ -195,7 +195,7 @@ describe("solace", () => {
     await SolaceSDK.localConnection.confirmTransaction(sig);
   });
 
-  it("2 should send USDC to someone random", async () => {
+  it("should request for a USDC guarded transfer", async () => {
     const recieverTA = await USDC.getAssociatedTokenAccount(newOwner.publicKey);
 
     const tx = await solaceSdk.requestSplTransfer(
@@ -211,14 +211,9 @@ describe("solace", () => {
     await SolaceSDK.localConnection.confirmTransaction(sig);
   });
 
-  it("should approve & execute a guarded transfer", async () => {
+  it("should approve & execute a guarded SPL transfer", async () => {
     const ongoingTransfers = await solaceSdk.fetchOngoingTransfers();
     assert(ongoingTransfers.length === 1, "should have one ongoing transfer");
-    console.log(
-      "ongoing transfer",
-      ongoingTransfers[0].guardianApprovals[0].guardian.toString()
-    );
-    console.log(guardian1.publicKey.toString());
 
     const tx = await SolaceSDK.approveAndExecuteGuardedTransfer({
       solaceWalletAddress: solaceSdk.wallet.toString(),
@@ -236,6 +231,40 @@ describe("solace", () => {
     const data = Buffer.from(info.data);
     const accountInfo = AccountLayout.decode(data);
     assert(accountInfo.amount.toString() === "102", "Amount mismatch");
+  });
+
+  it("should request for a guarded SOL transfer", async () => {
+    await airdrop(solaceSdk.wallet);
+    const tx = await solaceSdk.requestSolTransfer(
+      {
+        amount: LAMPORTS_PER_SOL,
+        reciever: KeyPair.generate().publicKey,
+      },
+      relayPair.publicKey
+    );
+    const sig = await relayTransaction(
+      tx,
+      relayPair,
+      SolaceSDK.localConnection
+    );
+    await SolaceSDK.localConnection.confirmTransaction(sig);
+  });
+
+  it("should approve & execute a guarded SOL transfer", async () => {
+    const ongoingTransfers = await solaceSdk.fetchOngoingTransfers();
+    assert(ongoingTransfers.length === 1, "should have one ongoing transfer");
+
+    const tx = await SolaceSDK.approveAndExecuteGuardedTransfer({
+      solaceWalletAddress: solaceSdk.wallet.toString(),
+      programAddress: PROGRAM_ADDRESS,
+      guardianAddress: guardian1.publicKey.toString(),
+      transferKeyAddress: ongoingTransfers[0].seedKey.toString(),
+      network: "local",
+    });
+    const sig = await SolaceSDK.localConnection.sendTransaction(tx, [
+      guardian1,
+    ]);
+    await SolaceSDK.localConnection.confirmTransaction(sig);
   });
 
   it("should initiate wallet recovery", async () => {

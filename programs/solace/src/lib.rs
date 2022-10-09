@@ -13,7 +13,7 @@ pub use instructions::*;
 pub use state::*;
 pub use validators::*;
 
-declare_id!("55K8C3FfgRr6Nuwzw5gXV79hQUj3bVRpEPSjoF18HKfh");
+declare_id!("8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U");
 
 #[program]
 pub mod solace {
@@ -71,17 +71,20 @@ pub mod solace {
         instructions::transfers::request_instant_sol_transfer(ctx, amount)
     }
 
-    /// Request for a new guarded transfer
-    /// This can be used for both SOL and SPL transfers
+    /// Request for a new guarded SOL transfer
     pub fn request_guarded_spl_transfer(
-        ctx: Context<RequestGuardedTransfer>,
+        ctx: Context<RequestGuardedSplTransfer>,
         data: GuardedSPLTransferData,
     ) -> Result<()> {
         instructions::transfers::request_guarded_spl_transfer(ctx, &data)
     }
 
-    pub fn request_guarded_sol_transfer(ctx: Context<RequestGuardedTransfer>) -> Result<()> {
-        todo!()
+    /// Request for a new guarded SOL transfer
+    pub fn request_guarded_sol_transfer(
+        ctx: Context<RequestGuardedSolTransfer>,
+        data: GuardedSOLTransferData,
+    ) -> Result<()> {
+        instructions::transfers::request_guarded_sol_transfer(ctx, &data)
     }
 
     /// Approve the transfer of funds by being a guardian signer
@@ -108,20 +111,20 @@ pub mod solace {
 
     /// Execute a trasnfer, as long as a transfer is already approved
     /// This acts as a proxy when all guardians have approved the transfer but the transfer is still not approved
-    pub fn execute_transfer(ctx: Context<ExecuteTransfer>) -> Result<()> {
+    pub fn execute_transfer(ctx: Context<ExecuteSPLTransfer>) -> Result<()> {
         instructions::transfers::execute_transfer(ctx)
     }
 
     /// Adds a guardian to the wallet appropriately
     /// Access Control - Owner Only
-    pub fn add_guardians(ctx: Context<AddGuardians>, guardian: Pubkey) -> Result<()> {
+    pub fn add_guardians(ctx: Context<Verified>, guardian: Pubkey) -> Result<()> {
         instructions::guardians::add_guardian(ctx, guardian)
     }
 
     /// Set guardian threshold
     /// must be less than the total number of guardians
     /// use the same account - AddGuardians account, it is ok because we use the same account
-    pub fn set_guardian_threshold(ctx: Context<AddGuardians>, threshold: u8) -> Result<()> {
+    pub fn set_guardian_threshold(ctx: Context<Verified>, threshold: u8) -> Result<()> {
         instructions::guardians::set_guardian_threshold(ctx, threshold)
     }
 
@@ -192,15 +195,12 @@ pub struct GuardedSOLTransferData {
     pub random: Pubkey,
 }
 
-// checked - no needed
 #[derive(Accounts)]
 pub struct Initialize {}
 
-// checked - seems that these 2 constraints are just the same
-// has_one=owner, constraint=wallet.owner == owner.key()
 #[derive(Accounts)]
 pub struct Verified<'info> {
-    #[account(mut, has_one=owner, constraint=wallet.owner == owner.key())]
+    #[account(mut, has_one=owner)]
     wallet: Account<'info, Wallet>,
     owner: Signer<'info>,
 }

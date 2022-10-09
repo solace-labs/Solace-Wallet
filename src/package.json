@@ -1,6 +1,6 @@
 {
   "name": "solace-sdk",
-  "version": "2.0.15",
+  "version": "2.0.16",
   "description": "SDK to interact with the Solace Program",
   "main": "./dist/cjs/sdk.js",
   "type": "commonjs",

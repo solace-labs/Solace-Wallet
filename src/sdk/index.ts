@@ -706,7 +706,7 @@ export class SolaceSDK {
     const guardedTransfer = async () => {
       console.log("guarded SOL transfer");
       const random = anchor.web3.Keypair.generate().publicKey;
-      const transferAccount = (await this.getTransferAddress(random))[0];
+      const transfer = (await this.getTransferAddress(random))[0];
       return this.program.transaction.requestGuardedSolTransfer(
         {
           to: data.reciever,
@@ -717,10 +717,11 @@ export class SolaceSDK {
           accounts: {
             wallet: this.wallet,
             owner: this.owner.publicKey,
-            rentPayer: feePayer,
-            transfer: transferAccount,
+            rentPayer: this.owner.publicKey,
+            transfer: transfer,
             systemProgram: anchor.web3.SystemProgram.programId,
           },
+          signers: [this.owner],
         }
       );
     };
@@ -784,7 +785,9 @@ export class SolaceSDK {
     }));
   }
 
-  /// Approve a guarded transfer
+  /// For Guardian
+  /// Approve a Guarded Transfer without executing it
+  /// Will throw an error if the transfer data is incorrect or alreayd executed
   static async approveGuardedTransfer(data: ApproveTransferData) {
     const provider = new Provider(
       data.network == "local"
@@ -818,6 +821,9 @@ export class SolaceSDK {
     return tx;
   }
 
+  /// For Guardian
+  /// Approve a specific transfer as a Guardian and execute it
+  /// Throws an error if the transfer data is incorrect or transfer is already executed
   static async approveAndExecuteGuardedTransfer(data: ApproveTransferData) {
     const provider = new Provider(
       data.network == "local"
@@ -843,23 +849,40 @@ export class SolaceSDK {
     const transferData = await program.account.guardedTransfer.fetch(
       transferAddress
     );
-    // @ts-ignore
-    const tx = program.transaction.approveAndExecuteSplTransfer(transferSeed, {
-      accounts: {
-        wallet,
-        tokenMint: transferData.tokenMint,
-        transfer: transferAddress,
-        guardian: new anchor.web3.PublicKey(data.guardianAddress),
-        tokenAccount: transferData.fromTokenAccount,
-        recieverBase: transferData.toBase,
-        recieverAccount: transferData.to,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        systemProgram: anchor.web3.SystemProgram.programId,
-      },
-    });
-    return tx;
+    if (transferData.isSplTransfer) {
+      const tx = program.transaction.approveAndExecuteSplTransfer(
+        transferSeed,
+        {
+          accounts: {
+            wallet,
+            tokenMint: transferData.tokenMint,
+            transfer: transferAddress,
+            guardian: new anchor.web3.PublicKey(data.guardianAddress),
+            tokenAccount: transferData.fromTokenAccount,
+            recieverBase: transferData.toBase,
+            recieverAccount: transferData.to,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          },
+        }
+      );
+      return tx;
+    } else {
+      const tx = program.transaction.approveAndExecuteSolTransfer({
+        accounts: {
+          wallet,
+          transfer: transferAddress,
+          guardian: new anchor.web3.PublicKey(data.guardianAddress),
+          toAccount: transferData.to,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        },
+      });
+      return tx;
+    }
   }
 
+  /// For User
+  /// End the incubation period for the user
   endIncubation(feePayer: anchor.web3.PublicKey) {
     const tx = this.program.transaction.endIncubation({
       accounts: {
@@ -870,6 +893,11 @@ export class SolaceSDK {
     return this.signTransaction(tx, feePayer);
   }
 
+  /**
+   * For user
+   * Set the guardian threshold
+   * The guardian threshold should be lesser than the total number of guardians
+   */
   setGuardianThreshold(threshold: number, feePayer: anchor.web3.PublicKey) {
     const tx = this.program.transaction.setGuardianThreshold(threshold, {
       accounts: {
@@ -881,6 +909,10 @@ export class SolaceSDK {
     return this.signTransaction(tx, feePayer);
   }
 
+  /**
+   * For User
+   * Add a trusted pubkey to the smart wallet
+   */
   addTrustedPubkey(
     pubkey: anchor.web3.PublicKey,
     feePayer: anchor.web3.PublicKey

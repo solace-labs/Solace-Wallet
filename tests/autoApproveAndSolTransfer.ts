@@ -19,7 +19,7 @@ import ownerWallet from "../wallet/owner.json";
 
 const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
 
-const PROGRAM_ADDRESS = "55K8C3FfgRr6Nuwzw5gXV79hQUj3bVRpEPSjoF18HKfh";
+const PROGRAM_ADDRESS = "8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U";
 
 const walletName = "name.solace.io2111111111a11121";
 

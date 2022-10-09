@@ -8,7 +8,7 @@ use crate::{guardians, utils, Errors, Verified, Wallet};
 /// 2. If in incubation, add the guardian instantly
 /// 3. If not in incubation, add the guardian into the pending guardian list
 /// 4. Update the pending_guardian_approval_from vector
-pub fn add_guardian(ctx: Context<AddGuardians>, guardian: Pubkey) -> Result<()> {
+pub fn add_guardian(ctx: Context<Verified>, guardian: Pubkey) -> Result<()> {
     let wallet = &mut ctx.accounts.wallet;
     let now = Clock::get().unwrap().unix_timestamp;
 
@@ -66,7 +66,7 @@ pub fn approve_guardianship(ctx: Context<ApproveGuardian>, guardian: Pubkey) -> 
 /// 2. If in incubation, add the guardian instantly
 /// 3. If not in incubation, add the guardian into the pending guardian list
 /// 4. Update the pending_guardian_approval_from vector
-pub fn set_guardian_threshold(ctx: Context<AddGuardians>, threshold: u8) -> Result<()> {
+pub fn set_guardian_threshold(ctx: Context<Verified>, threshold: u8) -> Result<()> {
     let wallet = &mut ctx.accounts.wallet;
 
     let guardians_num = wallet.approved_guardians.len() as u8;
@@ -115,14 +115,6 @@ pub fn add_new_trusted_pubkey(ctx: Context<Verified>, pubkey: Pubkey) -> Result<
     trusted_pubkeys.push(pubkey);
 
     Ok(())
-}
-
-#[derive(Accounts)]
-pub struct AddGuardians<'info> {
-    #[account(mut, has_one = owner)]
-    wallet: Account<'info, Wallet>,
-    #[account(mut)]
-    owner: Signer<'info>,
 }
 
 /// Any keypair can invoke this transaction as

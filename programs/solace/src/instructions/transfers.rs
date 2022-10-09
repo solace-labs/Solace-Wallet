@@ -2,7 +2,12 @@ use anchor_lang::{prelude::*, Key};
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use vipers::{assert_keys_eq, invariant};
 
-use crate::{errors::Errors, state::*, utils, Wallet};
+use crate::{
+    errors::Errors,
+    state::*,
+    utils::{self, get_key_index},
+    Wallet,
+};
 
 /// Request instant sol transfer
 pub fn request_instant_sol_transfer(
@@ -102,6 +107,13 @@ pub fn approve_and_execute_spl_transfer(
         &seeds,
         &mut accounts.wallet,
     )?;
+
+    let index = get_key_index(
+        accounts.wallet.ongoing_transfers.clone(),
+        transfer_account.key(),
+    )
+    .unwrap();
+    accounts.wallet.ongoing_transfers.remove(index);
     Ok(())
 }
 
@@ -137,13 +149,20 @@ pub fn approve_and_execute_sol_transfer(ctx: Context<ApproveAndExecuteSOLTransfe
     **from.try_borrow_mut_lamports()? -= transfer_account.amount;
     **to.try_borrow_mut_lamports()? += transfer_account.amount;
 
+    let index = get_key_index(
+        accounts.wallet.ongoing_transfers.clone(),
+        transfer_account.key(),
+    )
+    .unwrap();
+    accounts.wallet.ongoing_transfers.remove(index);
+
     Ok(())
 }
 
 /// Request for a guarded transfer
 /// A new PDA for the transfer will be init'd and will be tracked in the wallet state
 pub fn request_guarded_spl_transfer(
-    ctx: Context<RequestGuardedTransfer>,
+    ctx: Context<RequestGuardedSplTransfer>,
     data: &crate::GuardedSPLTransferData,
 ) -> Result<()> {
     // Add the data to the PDA and append it to the vec inside the wallet
@@ -178,7 +197,7 @@ pub fn request_guarded_spl_transfer(
 
 /// Request a new guarded SOL transfer
 pub fn request_guarded_sol_transfer(
-    ctx: Context<RequestGuardedTransfer>,
+    ctx: Context<RequestGuardedSolTransfer>,
     data: &crate::GuardedSOLTransferData,
 ) -> Result<()> {
     // Add the data to the PDA and append it to the vec inside the wallet
@@ -211,7 +230,7 @@ pub fn request_guarded_sol_transfer(
 }
 
 /// Execute a guarded transfer, given the correct accounts
-pub fn execute_transfer(ctx: Context<ExecuteTransfer>) -> Result<()> {
+pub fn execute_transfer(ctx: Context<ExecuteSPLTransfer>) -> Result<()> {
     let bump = ctx.accounts.wallet.bump.clone().to_le_bytes();
     let wallet = ctx.accounts.wallet.clone();
     let inner = vec![b"SOLACE".as_ref(), wallet.name.as_str().as_ref(), &bump];
@@ -281,9 +300,31 @@ pub struct RequestInstantSOLTransfer<'info> {
 
 #[derive(Accounts)]
 #[instruction(
-    data: crate::GuardedSPLTransferData,
+    data: crate::GuardedSOLTransferData
 )]
-pub struct RequestGuardedTransfer<'info> {
+pub struct RequestGuardedSolTransfer<'info> {
+    #[account(mut)]
+    wallet: Box<Account<'info, Wallet>>,
+    #[account(mut)]
+    owner: Signer<'info>,
+    #[account(mut)]
+    rent_payer: Signer<'info>,
+    #[account(
+        init,
+        payer = rent_payer,
+        space = GuardedTransfer::space(10),
+        seeds = [wallet.key().as_ref(), data.random.key().as_ref()],
+        bump
+    )]
+    transfer: Account<'info, GuardedTransfer>,
+    system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+#[instruction(
+    data: crate::GuardedSPLTransferData
+)]
+pub struct RequestGuardedSplTransfer<'info> {
     #[account(mut)]
     wallet: Box<Account<'info, Wallet>>,
     #[account(mut)]
@@ -362,8 +403,6 @@ pub struct ApproveAndExecuteSOLTransfer<'info> {
     #[account(mut)]
     transfer: Account<'info, GuardedTransfer>,
     system_program: Program<'info, System>,
-    token_program: Program<'info, Token>,
-    token_mint: Account<'info, Mint>,
 }
 
 #[derive(Accounts)]
@@ -374,24 +413,24 @@ pub struct NoAccount<'info> {
 
 /// Execute a new SPL Transfer if the all the conditions are met
 #[derive(Accounts)]
-pub struct ExecuteTransfer<'info> {
+pub struct ExecuteSPLTransfer<'info> {
     #[account(mut)]
-    transfer_account: Account<'info, GuardedTransfer>,
+    pub transfer_account: Account<'info, GuardedTransfer>,
     #[account(mut)]
-    wallet: Box<Account<'info, Wallet>>,
+    pub wallet: Box<Account<'info, Wallet>>,
     #[account(
         mut,
         token::mint=token_mint,
         token::authority=wallet,
     )]
-    token_account: Account<'info, TokenAccount>,
+    pub token_account: Account<'info, TokenAccount>,
 
     #[account(mut)]
-    reciever_account: Account<'info, TokenAccount>,
+    pub reciever_account: Account<'info, TokenAccount>,
     // TODO: Derive the token address from the base inside the program, instead of deriving it from the client
     /// CHECK: Account to check in whitelist
-    reciever_base: AccountInfo<'info>,
-    system_program: Program<'info, System>,
-    token_program: Program<'info, Token>,
-    token_mint: Account<'info, Mint>,
+    pub reciever_base: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub token_mint: Account<'info, Mint>,
 }

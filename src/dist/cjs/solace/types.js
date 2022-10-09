@@ -65,183 +65,6 @@ exports.IDL = {
             ]
         },
         {
-            "name": "createAta",
-            "accounts": [
-                {
-                    "name": "wallet",
-                    "isMut": true,
-                    "isSigner": false
-                },
-                {
-                    "name": "owner",
-                    "isMut": true,
-                    "isSigner": true
-                },
-                {
-                    "name": "tokenAccount",
-                    "isMut": true,
-                    "isSigner": false,
-                    "pda": {
-                        "seeds": [
-                            {
-                                "kind": "const",
-                                "type": "string",
-                                "value": "wallet"
-                            },
-                            {
-                                "kind": "account",
-                                "type": "publicKey",
-                                "account": "Wallet",
-                                "path": "wallet"
-                            },
-                            {
-                                "kind": "account",
-                                "type": "publicKey",
-                                "account": "Mint",
-                                "path": "token_mint"
-                            }
-                        ]
-                    }
-                },
-                {
-                    "name": "rentPayer",
-                    "isMut": true,
-                    "isSigner": true
-                },
-                {
-                    "name": "systemProgram",
-                    "isMut": false,
-                    "isSigner": false
-                },
-                {
-                    "name": "tokenProgram",
-                    "isMut": false,
-                    "isSigner": false
-                },
-                {
-                    "name": "tokenMint",
-                    "isMut": false,
-                    "isSigner": false
-                },
-                {
-                    "name": "rent",
-                    "isMut": false,
-                    "isSigner": false
-                }
-            ],
-            "args": []
-        },
-        {
-            "name": "checkAta",
-            "accounts": [
-                {
-                    "name": "wallet",
-                    "isMut": true,
-                    "isSigner": false
-                },
-                {
-                    "name": "owner",
-                    "isMut": true,
-                    "isSigner": true
-                },
-                {
-                    "name": "rentPayer",
-                    "isMut": true,
-                    "isSigner": true
-                },
-                {
-                    "name": "tokenAccount",
-                    "isMut": false,
-                    "isSigner": false,
-                    "pda": {
-                        "seeds": [
-                            {
-                                "kind": "const",
-                                "type": "string",
-                                "value": "wallet"
-                            },
-                            {
-                                "kind": "account",
-                                "type": "publicKey",
-                                "account": "Wallet",
-                                "path": "wallet"
-                            },
-                            {
-                                "kind": "account",
-                                "type": "publicKey",
-                                "account": "Mint",
-                                "path": "token_mint"
-                            }
-                        ]
-                    }
-                },
-                {
-                    "name": "systemProgram",
-                    "isMut": false,
-                    "isSigner": false
-                },
-                {
-                    "name": "tokenProgram",
-                    "isMut": false,
-                    "isSigner": false
-                },
-                {
-                    "name": "tokenMint",
-                    "isMut": false,
-                    "isSigner": false
-                }
-            ],
-            "args": []
-        },
-        {
-            "name": "depositSplTokens",
-            "accounts": [
-                {
-                    "name": "wallet",
-                    "isMut": true,
-                    "isSigner": false
-                }
-            ],
-            "args": []
-        },
-        {
-            "name": "depositSol",
-            "accounts": [
-                {
-                    "name": "wallet",
-                    "isMut": true,
-                    "isSigner": false
-                }
-            ],
-            "args": []
-        },
-        {
-            "name": "sendSol",
-            "accounts": [
-                {
-                    "name": "toAccount",
-                    "isMut": true,
-                    "isSigner": false
-                },
-                {
-                    "name": "wallet",
-                    "isMut": true,
-                    "isSigner": false
-                },
-                {
-                    "name": "owner",
-                    "isMut": true,
-                    "isSigner": true
-                }
-            ],
-            "args": [
-                {
-                    "name": "amountOfLamports",
-                    "type": "u64"
-                }
-            ]
-        },
-        {
             "name": "endIncubation",
             "accounts": [
                 {
@@ -258,7 +81,7 @@ exports.IDL = {
             "args": []
         },
         {
-            "name": "requestTransaction",
+            "name": "requestInstantSplTransfer",
             "accounts": [
                 {
                     "name": "wallet",
@@ -309,6 +132,135 @@ exports.IDL = {
             ]
         },
         {
+            "name": "requestInstantSolTransfer",
+            "accounts": [
+                {
+                    "name": "toAccount",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "wallet",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "owner",
+                    "isMut": true,
+                    "isSigner": true
+                }
+            ],
+            "args": [
+                {
+                    "name": "amount",
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "requestGuardedSplTransfer",
+            "accounts": [
+                {
+                    "name": "wallet",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "owner",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "rentPayer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "transfer",
+                    "isMut": true,
+                    "isSigner": false,
+                    "pda": {
+                        "seeds": [
+                            {
+                                "kind": "account",
+                                "type": "publicKey",
+                                "account": "Wallet",
+                                "path": "wallet"
+                            },
+                            {
+                                "kind": "arg",
+                                "type": {
+                                    "defined": "crate::GuardedSPLTransferData"
+                                },
+                                "path": "data.random"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "data",
+                    "type": {
+                        "defined": "GuardedSPLTransferData"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "requestGuardedSolTransfer",
+            "accounts": [
+                {
+                    "name": "wallet",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "owner",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "rentPayer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "transfer",
+                    "isMut": true,
+                    "isSigner": false,
+                    "pda": {
+                        "seeds": [
+                            {
+                                "kind": "account",
+                                "type": "publicKey",
+                                "account": "Wallet",
+                                "path": "wallet"
+                            },
+                            {
+                                "kind": "arg",
+                                "type": {
+                                    "defined": "crate::GuardedSPLTransferData"
+                                },
+                                "path": "data.random"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": []
+        },
+        {
             "name": "approveTransfer",
             "accounts": [
                 {
@@ -318,14 +270,19 @@ exports.IDL = {
                 },
                 {
                     "name": "guardian",
-                    "isMut": false,
+                    "isMut": true,
                     "isSigner": true
+                },
+                {
+                    "name": "transfer",
+                    "isMut": true,
+                    "isSigner": false
                 }
             ],
             "args": []
         },
         {
-            "name": "approveAndExecuteTransfer",
+            "name": "approveAndExecuteSplTransfer",
             "accounts": [
                 {
                     "name": "wallet",
@@ -341,6 +298,26 @@ exports.IDL = {
                     "name": "tokenAccount",
                     "isMut": true,
                     "isSigner": false
+                },
+                {
+                    "name": "transfer",
+                    "isMut": true,
+                    "isSigner": false,
+                    "pda": {
+                        "seeds": [
+                            {
+                                "kind": "account",
+                                "type": "publicKey",
+                                "account": "Wallet",
+                                "path": "wallet"
+                            },
+                            {
+                                "kind": "arg",
+                                "type": "publicKey",
+                                "path": "seed_key"
+                            }
+                        ]
+                    }
                 },
                 {
                     "name": "recieverAccount",
@@ -368,11 +345,62 @@ exports.IDL = {
                     "isSigner": false
                 }
             ],
+            "args": [
+                {
+                    "name": "seedKey",
+                    "type": "publicKey"
+                }
+            ]
+        },
+        {
+            "name": "approveAndExecuteSolTransfer",
+            "accounts": [
+                {
+                    "name": "wallet",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "guardian",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "toAccount",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "transfer",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "tokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "tokenMint",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
             "args": []
         },
         {
             "name": "executeTransfer",
             "accounts": [
+                {
+                    "name": "transferAccount",
+                    "isMut": true,
+                    "isSigner": false
+                },
                 {
                     "name": "wallet",
                     "isMut": true,
@@ -429,10 +457,6 @@ exports.IDL = {
                 {
                     "name": "guardian",
                     "type": "publicKey"
-                },
-                {
-                    "name": "recoveryThreshold",
-                    "type": "u8"
                 }
             ]
         },
@@ -443,14 +467,14 @@ exports.IDL = {
                     "name": "wallet",
                     "isMut": true,
                     "isSigner": false
-                },
-                {
-                    "name": "guardian",
-                    "isMut": true,
-                    "isSigner": true
                 }
             ],
-            "args": []
+            "args": [
+                {
+                    "name": "guardian",
+                    "type": "publicKey"
+                }
+            ]
         },
         {
             "name": "removeGuardians",
@@ -686,9 +710,9 @@ exports.IDL = {
                         "type": "bool"
                     },
                     {
-                        "name": "ongoingTransfer",
+                        "name": "ongoingTransfers",
                         "type": {
-                            "defined": "OngoingTransfer"
+                            "vec": "publicKey"
                         }
                     }
                 ]
@@ -737,14 +761,16 @@ exports.IDL = {
                     }
                 ]
             }
-        }
-    ],
-    "types": [
+        },
         {
-            "name": "OngoingTransfer",
+            "name": "guardedTransfer",
             "type": {
                 "kind": "struct",
                 "fields": [
+                    {
+                        "name": "isSplTransfer",
+                        "type": "bool"
+                    },
                     {
                         "name": "from",
                         "type": "publicKey"
@@ -754,8 +780,22 @@ exports.IDL = {
                         "type": "publicKey"
                     },
                     {
+                        "name": "fromTokenAccount",
+                        "type": {
+                            "option": "publicKey"
+                        }
+                    },
+                    {
                         "name": "toBase",
-                        "type": "publicKey"
+                        "type": {
+                            "option": "publicKey"
+                        }
+                    },
+                    {
+                        "name": "tokenMint",
+                        "type": {
+                            "option": "publicKey"
+                        }
                     },
                     {
                         "name": "programId",
@@ -780,36 +820,78 @@ exports.IDL = {
                         }
                     },
                     {
+                        "name": "threshold",
+                        "type": "u8"
+                    },
+                    {
                         "name": "isExecutable",
                         "type": "bool"
                     },
                     {
-                        "name": "isComplete",
-                        "type": "bool"
+                        "name": "rentPayer",
+                        "type": "publicKey"
                     },
                     {
-                        "name": "tokenMint",
+                        "name": "random",
+                        "type": "publicKey"
+                    }
+                ]
+            }
+        }
+    ],
+    "types": [
+        {
+            "name": "GuardedSPLTransferData",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "to",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "toBase",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "mint",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "fromTokenAccount",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "tokenProgram",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "amount",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "random",
                         "type": "publicKey"
                     }
                 ]
             }
         },
         {
-            "name": "TXAccountMeta",
+            "name": "GuardedSOLTransferData",
             "type": {
                 "kind": "struct",
                 "fields": [
                     {
-                        "name": "pubkey",
+                        "name": "to",
                         "type": "publicKey"
                     },
                     {
-                        "name": "isSigner",
-                        "type": "bool"
+                        "name": "amount",
+                        "type": "u64"
                     },
                     {
-                        "name": "isWritable",
-                        "type": "bool"
+                        "name": "random",
+                        "type": "publicKey"
                     }
                 ]
             }
@@ -833,43 +915,68 @@ exports.IDL = {
         },
         {
             "code": 6003,
+            "name": "GuardianAlreadyAdded",
+            "msg": "Guardian already added"
+        },
+        {
+            "code": 6004,
+            "name": "GuardianApprovalTimeNotElapsed",
+            "msg": "Guardian approval time not elapsed"
+        },
+        {
+            "code": 6005,
             "name": "KeyNotFound",
             "msg": "Key not found"
         },
         {
-            "code": 6004,
+            "code": 6006,
             "name": "PaymentsDisabled",
             "msg": "Payments are disabled - Wallet in recovery mode"
         },
         {
-            "code": 6005,
+            "code": 6007,
             "name": "TransferNotExecutable",
             "msg": "Requested transfer is not executable"
         },
         {
-            "code": 6006,
+            "code": 6008,
             "name": "TransferAlreadyComplete",
             "msg": "Requested transfer is already completed"
         },
         {
-            "code": 6007,
+            "code": 6009,
             "name": "KeyMisMatch",
             "msg": "Keys mismatch"
         },
         {
-            "code": 6008,
+            "code": 6010,
             "name": "WalletNotInIncubation",
             "msg": "Wallet is not in incubation mode"
         },
         {
-            "code": 6009,
+            "code": 6011,
             "name": "TrustedPubkeyNoTransactions",
             "msg": "No transaction history with pub key"
         },
         {
-            "code": 6010,
+            "code": 6012,
             "name": "TrustedPubkeyAlreadyTrusted",
             "msg": "Pubkey is already trusted"
+        },
+        {
+            "code": 6013,
+            "name": "OngoingTransferIncomplete",
+            "msg": "Ongoing transfer is incomplete"
+        },
+        {
+            "code": 6014,
+            "name": "InvalidTransferType",
+            "msg": "The requested transfer type is invalid"
+        },
+        {
+            "code": 6015,
+            "name": "InvalidTransferData",
+            "msg": "Invalid transfer data"
         }
     ]
 };
