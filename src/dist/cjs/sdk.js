@@ -209,30 +209,56 @@ class SolaceSDK {
         return this.signTransaction(tx, feePayer);
     }
     /**
+     * Check if the wallet is in incubation mode or not
+     *
+     */
+    async checkIncubation(data) {
+        const incubationEnd = new Date(data.createdAt.toNumber());
+        incubationEnd.setHours(incubationEnd.getHours() + 12);
+        const now = new Date().getTime() / 1000;
+        if (now < incubationEnd.getTime()) {
+            return data.incubationMode;
+        }
+        return false;
+    }
+    /**
+     * Check if the given pubkey is trusted or not
+     */
+    async isPubkeyTrusted(data, pubkey) {
+        return data.trustedPubkeys.includes(pubkey);
+    }
+    /**
      * Should send some amount of SOL to the `toAddress`
      */
-    // async sendSol(
-    //   toAddress: anchor.web3.PublicKey,
-    //   lamports: number,
-    //   feePayer: anchor.web3.PublicKey
-    // ) {
-    //   const tx = this.program.transaction.sendSol([new BN(lamports)], {
-    //     accounts: {
-    //       toAccount: toAddress,
-    //       wallet: this.wallet,
-    //       owner: this.owner.publicKey,
-    //     },
-    //     signers: [this.owner],
-    //   });
-    //   return this.signTransaction(tx, feePayer);
-    // }
+    async sendSol(toAddress, lamports, feePayer) {
+        const walletState = await this.fetchWalletData();
+        // Check if instant transfer can be called or not
+        const incubation = await this.checkIncubation(walletState);
+        if (incubation) {
+            // Instant transfer
+        }
+        else {
+            // Check if trusted
+            if (this.isPubkeyTrusted(walletState, toAddress)) {
+                // Instant transfer
+            }
+        }
+        // const tx = this.program.transaction.sendSol([new BN(lamports)], {
+        //   accounts: {
+        //     toAccount: toAddress,
+        //     wallet: this.wallet,
+        //     owner: this.owner.publicKey,
+        //   },
+        //   signers: [this.owner],
+        // });
+        // return this.signTransaction(tx, feePayer);
+    }
     /**
      * Add a guardian to the wallet, signed by the owner
      * @param {anchor.web3.PublicKey} guardianPublicKey
      */
     async addGuardian(guardianPublicKey, payer) {
-        const walletData = await this.fetchWalletData();
-        const tx = this.program.transaction.addGuardians(guardianPublicKey, walletData.approvedGuardians.length + 1, {
+        const tx = this.program.transaction.addGuardians(guardianPublicKey, {
             accounts: {
                 wallet: this.wallet,
                 owner: this.owner.publicKey,
@@ -256,7 +282,6 @@ class SolaceSDK {
         return program.transaction.approveGuardianship({
             accounts: {
                 wallet: new exports.PublicKey(data.solaceWalletAddress),
-                guardian: new exports.PublicKey(data.guardianAddress),
             },
         });
         // In this case, the owner is assumed to be the guardian
@@ -364,37 +389,93 @@ class SolaceSDK {
         const tx = await this.signTransaction(transaction, feePayer, true);
         return tx;
     }
+    async getTransferAddress(random) {
+        return anchor.web3.PublicKey.findProgramAddress([this.wallet.toBytes(), random.toBytes()], this.program.programId);
+    }
     async requestSplTransfer(data, feePayer) {
-        const tx1 = this.program.transaction.requestTransaction(new bn_js_1.BN(data.amount), {
-            accounts: {
-                owner: this.owner.publicKey,
-                wallet: this.wallet,
-                recieverAccount: data.recieverTokenAccount,
-                recieverBase: data.reciever,
-                tokenMint: data.mint,
-                tokenAccount: await this.getTokenAccount(data.mint),
+        const walletState = await this.fetchWalletData();
+        const guardedTransfer = async () => {
+            const random = anchor.web3.Keypair.generate().publicKey;
+            const transferAccount = (await this.getTransferAddress(random))[0];
+            return this.program.transaction.requestGuardedSplTransfer({
+                toBase: data.reciever,
+                to: data.recieverTokenAccount,
+                mint: data.mint,
+                fromTokenAccount: await this.getTokenAccount(data.mint),
                 tokenProgram: spl_token_1.TOKEN_PROGRAM_ID,
-                systemProgram: anchor.web3.SystemProgram.programId,
-            },
-        });
-        return this.signTransaction(tx1, feePayer, false);
+                random: random,
+                amount: new bn_js_1.BN(data.amount),
+            }, {
+                accounts: {
+                    wallet: this.wallet,
+                    owner: this.owner.publicKey,
+                    rentPayer: feePayer,
+                    transfer: transferAccount,
+                    systemProgram: anchor.web3.SystemProgram.programId,
+                },
+            });
+        };
+        const instantTransfer = async () => {
+            return this.program.transaction.requestInstantSplTransfer(new bn_js_1.BN(data.amount), {
+                accounts: {
+                    wallet: this.wallet,
+                    owner: this.owner.publicKey,
+                    tokenAccount: await this.getTokenAccount(data.mint),
+                    recieverAccount: data.recieverTokenAccount,
+                    recieverBase: data.reciever,
+                    tokenMint: data.mint,
+                    tokenProgram: spl_token_1.TOKEN_PROGRAM_ID,
+                    systemProgram: anchor.web3.SystemProgram.programId,
+                },
+            });
+        };
+        // Check if instant transfer can be called or not
+        const incubation = await this.checkIncubation(walletState);
+        console.log({ incubation });
+        if (incubation) {
+            // Instant transfer
+            return this.signTransaction(await instantTransfer(), feePayer);
+        }
+        else {
+            // Check if trusted
+            if (await this.isPubkeyTrusted(walletState, data.recieverTokenAccount)) {
+                // Instant transfer
+                return this.signTransaction(await instantTransfer(), feePayer);
+            }
+            else {
+                return this.signTransaction(await guardedTransfer(), feePayer);
+            }
+        }
     }
-    async executeSplTransfer(feePayer) {
-        const transfer = (await this.fetchWalletData()).ongoingTransfer;
-        const tx = this.program.transaction.executeTransfer({
-            accounts: {
-                wallet: this.wallet,
-                recieverBase: transfer.toBase,
-                recieverAccount: transfer.to,
-                tokenMint: transfer.tokenMint,
-                tokenProgram: spl_token_1.TOKEN_PROGRAM_ID,
-                tokenAccount: transfer.from,
-                systemProgram: anchor.web3.SystemProgram.programId,
-            },
+    /**
+     *
+     * Fetch any ongoing transfer and populate the data for the same
+     */
+    async fetchOngoingTransfers() {
+        const walletData = await this.fetchWalletData();
+        const promises = [];
+        for (const transfer of walletData.ongoingTransfers) {
+            promises.push(this.program.account.guardedTransfer.fetch(transfer));
+        }
+        const transfers = await Promise.all(promises);
+        return transfers.map((transfer) => {
+            var _a;
+            return ({
+                mint: transfer.tokenMint,
+                amount: transfer.amount.toNumber(),
+                reciever: transfer.to,
+                seedKey: transfer.random,
+                isSplTransfer: false,
+                senderTokenAccount: transfer.fromTokenAccount,
+                guardianApprovals: (_a = transfer.approvers) === null || _a === void 0 ? void 0 : _a.map((g, i) => ({
+                    guardian: g,
+                    isApproved: transfer.approvals[i],
+                })),
+            });
         });
-        return this.signTransaction(tx, feePayer);
     }
-    static async approveSplTransfer(data) {
+    /// Approve a guarded transfer
+    static async approveGuardedTransfer(data) {
         const provider = new Provider(data.network == "local"
             ? SolaceSDK.localConnection
             : SolaceSDK.testnetConnection, new Wallet(exports.KeyPair.generate()), Provider.defaultOptions());
@@ -402,25 +483,44 @@ class SolaceSDK {
         const program = new Program(
         // @ts-ignore
         idl_json_1.default, programId, provider);
-        const walletData = await SolaceSDK.fetchDataForWallet(new anchor.web3.PublicKey(data.solaceWalletAddress), 
-        // @ts-ignore
-        program);
-        if (!walletData) {
-            throw "Solace wallet not found with the address";
-        }
-        const { ongoingTransfer } = walletData;
-        return program.transaction.approveAndExecuteTransfer({
+        const wallet = new anchor.web3.PublicKey(data.solaceWalletAddress);
+        const transferSeed = new anchor.web3.PublicKey(data.transferKeyAddress);
+        const [transferAddress, __] = await anchor.web3.PublicKey.findProgramAddress([wallet.toBytes(), transferSeed.toBytes()], program.programId);
+        const tx = program.transaction.approveTransfer({
             accounts: {
-                wallet: new anchor.web3.PublicKey(data.solaceWalletAddress),
-                tokenAccount: ongoingTransfer.from,
-                tokenProgram: spl_token_1.TOKEN_PROGRAM_ID,
-                tokenMint: ongoingTransfer.tokenMint,
-                recieverAccount: ongoingTransfer.to,
-                recieverBase: ongoingTransfer.toBase,
-                systemProgram: anchor.web3.SystemProgram.programId,
-                guardian: new exports.PublicKey(data.guardianAddress),
+                wallet,
+                transfer: transferAddress,
+                guardian: new anchor.web3.PublicKey(data.guardianAddress),
             },
         });
+        return tx;
+    }
+    static async approveAndExecuteGuardedTransfer(data) {
+        const provider = new Provider(data.network == "local"
+            ? SolaceSDK.localConnection
+            : SolaceSDK.testnetConnection, new Wallet(exports.KeyPair.generate()), Provider.defaultOptions());
+        const programId = new anchor.web3.PublicKey(data.programAddress);
+        const program = new Program(
+        // @ts-ignore
+        idl_json_1.default, programId, provider);
+        const wallet = new anchor.web3.PublicKey(data.solaceWalletAddress);
+        const transferSeed = new anchor.web3.PublicKey(data.transferKeyAddress);
+        const [transferAddress, __] = await anchor.web3.PublicKey.findProgramAddress([wallet.toBytes(), transferSeed.toBytes()], program.programId);
+        const transferData = await program.account.guardedTransfer.fetch(transferAddress);
+        const tx = program.transaction.approveAndExecuteSplTransfer(transferSeed, {
+            accounts: {
+                wallet,
+                tokenMint: transferData.tokenMint,
+                transfer: transferAddress,
+                guardian: new anchor.web3.PublicKey(data.guardianAddress),
+                tokenAccount: transferData.fromTokenAccount,
+                recieverBase: transferData.toBase,
+                recieverAccount: transferData.to,
+                tokenProgram: spl_token_1.TOKEN_PROGRAM_ID,
+                systemProgram: anchor.web3.SystemProgram.programId,
+            },
+        });
+        return tx;
     }
     endIncubation(feePayer) {
         const tx = this.program.transaction.endIncubation({

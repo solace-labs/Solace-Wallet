@@ -11,6 +11,15 @@ pub enum Errors {
     #[msg("No approved guardian")]
     NoApprovedGuardians,
 
+    #[msg("Guardian already added")]
+    GuardianAlreadyAdded,
+
+    #[msg("Can't be bigger than the total guardian number")]
+    InvalidThreshold,
+
+    #[msg("Guardian approval time not elapsed")]
+    GuardianApprovalTimeNotElapsed,
+
     #[msg("Key not found")]
     KeyNotFound,
 
@@ -34,4 +43,13 @@ pub enum Errors {
 
     #[msg("Pubkey is already trusted")]
     TrustedPubkeyAlreadyTrusted,
+
+    #[msg("Ongoing transfer is incomplete")]
+    OngoingTransferIncomplete,
+
+    #[msg("The requested transfer type is invalid")]
+    InvalidTransferType,
+
+    #[msg("Invalid transfer data")]
+    InvalidTransferData,
 }

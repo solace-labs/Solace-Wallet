@@ -1,4 +1,5 @@
 use crate::*;
+use crate::{instructions::*, Errors};
 
 impl<'info> Validate<'info> for CreateWallet<'info> {
     fn validate(&self) -> Result<()> {
@@ -50,6 +51,58 @@ impl<'info> Validate<'info> for ApproveRecoveryBySolace<'info> {
             .unwrap();
         assert_keys_eq!(wallet.approved_guardians[index], self.guardian_wallet);
 
+        Ok(())
+    }
+}
+
+impl<'info> Validate<'info> for ExecuteSPLTransfer<'info> {
+    fn validate(&self) -> Result<()> {
+        let wallet = &self.wallet;
+        let transfers = wallet.ongoing_transfers.clone();
+        let transfer = &self.transfer_account;
+        // Ensure that the transfer account exists in the ongoing transfers vec
+        invariant!(transfers.contains(&transfer.key()));
+        invariant!(transfer.is_executable);
+        assert_keys_eq!(transfer.to, self.reciever_account);
+        assert_keys_eq!(transfer.to_base.unwrap().key(), self.reciever_base);
+        Ok(())
+    }
+}
+
+impl<'info> Validate<'info> for ApproveAndExecuteSOLTransfer<'info> {
+    fn validate(&self) -> Result<()> {
+        let wallet = &self.wallet;
+        let transfers = wallet.ongoing_transfers.clone();
+        let transfer = &self.transfer;
+        invariant!(transfers.contains(&transfer.key()));
+        invariant!(wallet.approved_guardians.contains(&self.guardian.key()));
+        invariant!(!transfer.is_executable);
+        assert_keys_eq!(self.to_account.key(), transfer.to.key());
+        Ok(())
+    }
+}
+
+impl<'info> Validate<'info> for ApproveAndExecuteSPLTransfer<'info> {
+    fn validate(&self) -> Result<()> {
+        let wallet = &self.wallet;
+        let transfers = wallet.ongoing_transfers.clone();
+        let transfer = &self.transfer;
+        invariant!(transfers.contains(&transfer.key()));
+        invariant!(wallet.approved_guardians.contains(&self.guardian.key()));
+        invariant!(!transfer.is_executable);
+        assert_keys_eq!(self.reciever_account.key(), transfer.to.key());
+        Ok(())
+    }
+}
+
+impl<'info> Validate<'info> for ApproveTransfer<'info> {
+    fn validate(&self) -> Result<()> {
+        let wallet = &self.wallet;
+        let transfer = &self.transfer;
+        let transfers = wallet.ongoing_transfers.clone();
+        invariant!(wallet.approved_guardians.contains(&self.guardian.key()));
+        invariant!(transfers.contains(&transfer.key()));
+        invariant!(!transfer.is_executable);
         Ok(())
     }
 }

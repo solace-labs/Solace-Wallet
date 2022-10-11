@@ -2,6 +2,18 @@ import { Solace } from "./solace/types";
 import * as anchor from "anchor-rn";
 import { RelayerIxData } from "./relayer";
 import { RawAccount } from "@solana/spl-token";
+declare type OngoingTransfer = {
+    isSplTransfer: boolean;
+    amount: number;
+    reciever: anchor.web3.PublicKey;
+    mint?: anchor.web3.PublicKey;
+    seedKey: anchor.web3.PublicKey;
+    senderTokenAccount?: anchor.web3.PublicKey;
+    guardianApprovals: {
+        guardian: anchor.web3.PublicKey;
+        isApproved: boolean;
+    }[];
+};
 declare type SendSPLTokenData = {
     mint: anchor.web3.PublicKey;
     recieverTokenAccount: anchor.web3.PublicKey;
@@ -27,6 +39,13 @@ declare type ApproveGuardianshipData = {
     programAddress: string;
     solaceWalletAddress: string;
     guardianAddress: string;
+};
+declare type ApproveTransferData = {
+    network: "local" | "testnet";
+    programAddress: string;
+    solaceWalletAddress: string;
+    guardianAddress: string;
+    transferKeyAddress: string;
 };
 declare type SolaceSDKData = {
     owner: anchor.web3.Keypair;
@@ -109,12 +128,7 @@ export declare class SolaceSDK {
         type: {
             kind: "struct";
             fields: [{
-                name: "pendingGuardians"; /**
-                 * Approve recovery with a solace wallet
-                 * @param data
-                 * @param guardianAddress
-                 * @returns
-                 */
+                name: "pendingGuardians";
                 type: {
                     vec: "publicKey";
                 };
@@ -173,14 +187,9 @@ export declare class SolaceSDK {
                 name: "incubationMode";
                 type: "bool";
             }, {
-                /**
-                 * Create an account, just to recover an existing one
-                 * @param data
-                 * @param feePayer
-                 */
-                name: "ongoingTransfer";
+                name: "ongoingTransfers";
                 type: {
-                    defined: "OngoingTransfer";
+                    vec: "publicKey";
                 };
             }];
         };
@@ -216,6 +225,66 @@ export declare class SolaceSDK {
             }, {
                 name: "isExecuted";
                 type: "bool";
+            }];
+        };
+    } | {
+        name: "guardedTransfer";
+        type: {
+            kind: "struct";
+            fields: [{
+                name: "isSplTransfer";
+                type: "bool";
+            }, {
+                name: "from";
+                type: "publicKey";
+            }, {
+                name: "to";
+                type: "publicKey";
+            }, {
+                name: "fromTokenAccount";
+                type: {
+                    option: "publicKey";
+                };
+            }, {
+                name: "toBase";
+                type: {
+                    option: "publicKey";
+                };
+            }, {
+                name: "tokenMint";
+                type: {
+                    option: "publicKey";
+                };
+            }, {
+                name: "programId";
+                type: {
+                    option: "publicKey";
+                };
+            }, {
+                name: "amount";
+                type: "u64";
+            }, {
+                name: "approvers";
+                type: {
+                    vec: "publicKey";
+                };
+            }, {
+                name: "approvals";
+                type: {
+                    vec: "bool";
+                };
+            }, {
+                name: "threshold";
+                type: "u8";
+            }, {
+                name: "isExecutable";
+                type: "bool";
+            }, {
+                name: "rentPayer";
+                type: "publicKey";
+            }, {
+                name: "random";
+                type: "publicKey";
             }];
         };
     }, anchor.IdlTypes<Solace>>>;
@@ -227,12 +296,7 @@ export declare class SolaceSDK {
         type: {
             kind: "struct";
             fields: [{
-                name: "pendingGuardians"; /**
-                 * Approve recovery with a solace wallet
-                 * @param data
-                 * @param guardianAddress
-                 * @returns
-                 */
+                name: "pendingGuardians";
                 type: {
                     vec: "publicKey";
                 };
@@ -291,14 +355,9 @@ export declare class SolaceSDK {
                 name: "incubationMode";
                 type: "bool";
             }, {
-                /**
-                 * Create an account, just to recover an existing one
-                 * @param data
-                 * @param feePayer
-                 */
-                name: "ongoingTransfer";
+                name: "ongoingTransfers";
                 type: {
-                    defined: "OngoingTransfer";
+                    vec: "publicKey";
                 };
             }];
         };
@@ -336,12 +395,82 @@ export declare class SolaceSDK {
                 type: "bool";
             }];
         };
+    } | {
+        name: "guardedTransfer";
+        type: {
+            kind: "struct";
+            fields: [{
+                name: "isSplTransfer";
+                type: "bool";
+            }, {
+                name: "from";
+                type: "publicKey";
+            }, {
+                name: "to";
+                type: "publicKey";
+            }, {
+                name: "fromTokenAccount";
+                type: {
+                    option: "publicKey";
+                };
+            }, {
+                name: "toBase";
+                type: {
+                    option: "publicKey";
+                };
+            }, {
+                name: "tokenMint";
+                type: {
+                    option: "publicKey";
+                };
+            }, {
+                name: "programId";
+                type: {
+                    option: "publicKey";
+                };
+            }, {
+                name: "amount";
+                type: "u64";
+            }, {
+                name: "approvers";
+                type: {
+                    vec: "publicKey";
+                };
+            }, {
+                name: "approvals";
+                type: {
+                    vec: "bool";
+                };
+            }, {
+                name: "threshold";
+                type: "u8";
+            }, {
+                name: "isExecutable";
+                type: "bool";
+            }, {
+                name: "rentPayer";
+                type: "publicKey";
+            }, {
+                name: "random";
+                type: "publicKey";
+            }];
+        };
     }, anchor.IdlTypes<Solace>>>;
     /** Helper to confirm transactions */
     confirmTx: (tx: any) => Promise<anchor.web3.RpcResponseAndContext<anchor.web3.SignatureResult>>;
     /**
+     * Check if the wallet is in incubation mode or not
+     *
+     */
+    checkIncubation(data: Awaited<ReturnType<typeof SolaceSDK.fetchDataForWallet>>): Promise<boolean>;
+    /**
+     * Check if the given pubkey is trusted or not
+     */
+    isPubkeyTrusted(data: Awaited<ReturnType<typeof SolaceSDK.fetchDataForWallet>>, pubkey: anchor.web3.PublicKey): Promise<boolean>;
+    /**
      * Should send some amount of SOL to the `toAddress`
      */
+    sendSol(toAddress: anchor.web3.PublicKey, lamports: number, feePayer: anchor.web3.PublicKey): Promise<void>;
     /**
      * Add a guardian to the wallet, signed by the owner
      * @param {anchor.web3.PublicKey} guardianPublicKey
@@ -387,9 +516,15 @@ export declare class SolaceSDK {
      * Create a token account for a given mint. Only create if it doesn't already exists
      */
     createTokenAccount(data: ATAData, feePayer: anchor.web3.PublicKey): Promise<RelayerIxData>;
+    getTransferAddress(random: anchor.web3.PublicKey): Promise<[anchor.web3.PublicKey, number]>;
     requestSplTransfer(data: SendSPLTokenData, feePayer: anchor.web3.PublicKey): Promise<RelayerIxData>;
-    executeSplTransfer(feePayer: anchor.web3.PublicKey): Promise<RelayerIxData>;
-    static approveSplTransfer(data: ApproveGuardianshipData): Promise<anchor.web3.Transaction>;
+    /**
+     *
+     * Fetch any ongoing transfer and populate the data for the same
+     */
+    fetchOngoingTransfers(): Promise<OngoingTransfer[]>;
+    static approveGuardedTransfer(data: ApproveTransferData): Promise<anchor.web3.Transaction>;
+    static approveAndExecuteGuardedTransfer(data: ApproveTransferData): Promise<anchor.web3.Transaction>;
     endIncubation(feePayer: anchor.web3.PublicKey): Promise<RelayerIxData>;
     addTrustedPubkey(pubkey: anchor.web3.PublicKey, feePayer: anchor.web3.PublicKey): Promise<RelayerIxData>;
 }
