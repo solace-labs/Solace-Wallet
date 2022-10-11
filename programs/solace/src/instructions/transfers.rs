@@ -270,11 +270,8 @@ pub struct RequestInstantSPLTransfer<'info> {
     token_account: Account<'info, TokenAccount>,
     // [owner.toBuffer(), programId.toBuffer(), mint.toBuffer()],
     // associatedTokenProgramId
-    #[account(mut)]
+    #[account(mut, token::mint=token_mint)]
     reciever_account: Account<'info, TokenAccount>,
-    // TODO: Derive the token address from the base inside the program, instead of deriving it from the client
-    /// CHECK: Account to check in whitelist
-    reciever_base: AccountInfo<'info>,
     system_program: Program<'info, System>,
     token_program: Program<'info, Token>,
     token_mint: Account<'info, Mint>,
@@ -283,15 +280,16 @@ pub struct RequestInstantSPLTransfer<'info> {
 /// Request an instant SOL Transfer
 #[derive(Accounts)]
 pub struct RequestInstantSOLTransfer<'info> {
-    /// CHECK: The account to which sol needs to be sent to
+    /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(mut)]
-    to_account: AccountInfo<'info>,
+    to_account: UncheckedAccount<'info>,
 
     #[account(mut, has_one = owner)]
     wallet: Account<'info, Wallet>,
 
     #[account(mut)]
     owner: Signer<'info>,
+    system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -377,7 +375,6 @@ pub struct ApproveAndExecuteSPLTransfer<'info> {
         token::mint=token_mint,
     )]
     pub reciever_account: Account<'info, TokenAccount>,
-    // TODO: Derive the token address from the base inside the program, instead of deriving it from the client
     system_program: Program<'info, System>,
     token_program: Program<'info, Token>,
     token_mint: Account<'info, Mint>,

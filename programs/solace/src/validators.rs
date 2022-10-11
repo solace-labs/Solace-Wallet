@@ -64,7 +64,7 @@ impl<'info> Validate<'info> for ExecuteSPLTransfer<'info> {
         invariant!(transfers.contains(&transfer.key()));
         invariant!(transfer.is_executable);
         assert_keys_eq!(transfer.to, self.reciever_account);
-        assert_keys_eq!(transfer.to_base.unwrap().key(), self.reciever_base);
+        // assert_keys_eq!(transfer.to_base.unwrap().key(), self.reciever_base);
         Ok(())
     }
 }
