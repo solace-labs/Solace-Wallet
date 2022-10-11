@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use vipers::invariant;
 
-use crate::{guardians, utils, Errors, Verified, Wallet};
+use crate::{utils, Errors, Verified, Wallet};
 
 /// Add a new guardian to the wallet
 /// 1. Check if the account is in incubation or not
@@ -129,9 +129,9 @@ pub struct ApproveGuardian<'info> {
 pub struct RemoveGuardian<'info> {
     #[account(mut, has_one = owner)]
     wallet: Account<'info, Wallet>,
-    /// CHECK: The guardian account to remove
-    #[account()]
-    guardian: AccountInfo<'info>,
+    /// CHECK: Guardian to be removed
+    #[account(constraint = wallet.approved_guardians.contains(&guardian.key()))]
+    guardian: UncheckedAccount<'info>,
     #[account(mut)]
     owner: Signer<'info>,
 }
