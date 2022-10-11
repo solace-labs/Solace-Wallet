@@ -82,10 +82,6 @@ pub fn approve_and_execute_spl_transfer(
 
     // Ensure that the transfer account is valid
     assert_keys_eq!(transfer_account.to.key(), accounts.reciever_account);
-    assert_keys_eq!(
-        transfer_account.to_base.unwrap().key(),
-        accounts.reciever_base
-    );
 
     // Approve transfer and check if the transfer is executable
     transfer_account.approve_transfer(accounts.guardian.key())?;
@@ -377,11 +373,11 @@ pub struct ApproveAndExecuteSPLTransfer<'info> {
     #[account(mut)]
     pub transfer: Account<'info, GuardedTransfer>,
     // The reciever token account
-    #[account(mut)]
+    #[account(mut,
+        token::mint=token_mint,
+    )]
     pub reciever_account: Account<'info, TokenAccount>,
     // TODO: Derive the token address from the base inside the program, instead of deriving it from the client
-    /// CHECK: Account to check in whitelist
-    pub reciever_base: AccountInfo<'info>,
     system_program: Program<'info, System>,
     token_program: Program<'info, Token>,
     token_mint: Account<'info, Mint>,
