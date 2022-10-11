@@ -7,6 +7,7 @@ import {
   ApproveGuardianshipData,
   RequestWalletInformationData,
 } from "../types";
+import IDL from "../../solace/idl.json";
 
 /**
  * Add a guardian to the wallet, signed by the owner

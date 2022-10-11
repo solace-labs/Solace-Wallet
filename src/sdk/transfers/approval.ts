@@ -7,6 +7,7 @@ import { KeyPair, SolaceSDK } from "..";
 import { Solace } from "../../solace/types";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { ApproveTransferData } from "../types";
+import IDL from "../../solace/idl.json";
 
 export class SolaceApprovals {
   /// Will throw an error if the transfer data is incorrect or alreayd executed
