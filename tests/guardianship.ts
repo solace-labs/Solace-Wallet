@@ -1,6 +1,7 @@
 import { assert } from "chai";
 import { relayTransaction } from "../src/relayer";
 import { SolaceSDK } from "../src/sdk";
+import { SolaceGuardian } from "../src/sdk/setup/guardian";
 import { airdrop, guardian1, relayPair, signer } from "./airdrop";
 import { getWallet, solaceSdk } from "./solace";
 
@@ -16,7 +17,7 @@ export const requestGuardianship = async () => {
   await airdrop(guardian1.publicKey);
 
   // it can be auto - approved because it is in incubation mode.
-  const guardianInfo = await SolaceSDK.getWalletGuardianInfo({
+  const guardianInfo = await SolaceGuardian.getWalletGuardianInfo({
     solaceWalletAddress: solaceSdk.wallet.toString(),
     programAddress: solaceSdk.program.programId.toString(),
     network: "local",
