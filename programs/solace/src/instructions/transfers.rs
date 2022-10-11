@@ -421,11 +421,8 @@ pub struct ExecuteSPLTransfer<'info> {
     )]
     pub token_account: Account<'info, TokenAccount>,
 
-    #[account(mut)]
+    #[account(mut, token::mint=token_mint)]
     pub reciever_account: Account<'info, TokenAccount>,
-    // TODO: Derive the token address from the base inside the program, instead of deriving it from the client
-    /// CHECK: Account to check in whitelist
-    pub reciever_base: AccountInfo<'info>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub token_mint: Account<'info, Mint>,
