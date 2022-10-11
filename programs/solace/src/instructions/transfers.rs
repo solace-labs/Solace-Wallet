@@ -348,13 +348,13 @@ pub struct RequestGuardedSplTransfer<'info> {
 pub struct ApproveTransfer<'info> {
     // The wallet in context
     #[account(mut)]
-    wallet: Box<Account<'info, Wallet>>,
+    pub wallet: Box<Account<'info, Wallet>>,
     // The guardian approving
     #[account(mut)]
-    guardian: Signer<'info>,
+    pub guardian: Signer<'info>,
     // The GuardedTransfer Account containing the data
     #[account(mut)]
-    transfer: Account<'info, GuardedTransfer>,
+    pub transfer: Account<'info, GuardedTransfer>,
 }
 
 /// Approve and Execute a new SPL Transfer
@@ -362,26 +362,26 @@ pub struct ApproveTransfer<'info> {
 pub struct ApproveAndExecuteSPLTransfer<'info> {
     // The wallet in context
     #[account(mut)]
-    wallet: Box<Account<'info, Wallet>>,
+    pub wallet: Box<Account<'info, Wallet>>,
     // The guardian approving
     #[account(mut)]
-    guardian: Signer<'info>,
+    pub guardian: Signer<'info>,
     // The token account transferring the funds
     #[account(
         mut,
         token::mint=token_mint,
         token::authority=wallet,
     )]
-    token_account: Account<'info, TokenAccount>,
+    pub token_account: Account<'info, TokenAccount>,
     // The GuardedTransfer Account containing the data
     #[account(mut)]
-    transfer: Account<'info, GuardedTransfer>,
+    pub transfer: Account<'info, GuardedTransfer>,
     // The reciever token account
     #[account(mut)]
-    reciever_account: Account<'info, TokenAccount>,
+    pub reciever_account: Account<'info, TokenAccount>,
     // TODO: Derive the token address from the base inside the program, instead of deriving it from the client
     /// CHECK: Account to check in whitelist
-    reciever_base: AccountInfo<'info>,
+    pub reciever_base: AccountInfo<'info>,
     system_program: Program<'info, System>,
     token_program: Program<'info, Token>,
     token_mint: Account<'info, Mint>,
@@ -392,16 +392,16 @@ pub struct ApproveAndExecuteSPLTransfer<'info> {
 pub struct ApproveAndExecuteSOLTransfer<'info> {
     // The wallet in context
     #[account(mut)]
-    wallet: Box<Account<'info, Wallet>>,
+    pub wallet: Box<Account<'info, Wallet>>,
     // The guardian approving
     #[account(mut)]
-    guardian: Signer<'info>,
+    pub guardian: Signer<'info>,
     /// CHECK: The account to which sol needs to be sent to
     #[account(mut)]
-    to_account: AccountInfo<'info>,
+    pub to_account: AccountInfo<'info>,
     // The GuardedTransfer Account containing the data
     #[account(mut)]
-    transfer: Account<'info, GuardedTransfer>,
+    pub transfer: Account<'info, GuardedTransfer>,
     system_program: Program<'info, System>,
 }
 

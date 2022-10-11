@@ -71,18 +71,38 @@ impl<'info> Validate<'info> for ExecuteSPLTransfer<'info> {
 
 impl<'info> Validate<'info> for ApproveAndExecuteSOLTransfer<'info> {
     fn validate(&self) -> Result<()> {
-        // Ensure the guardians are legit
-        // Ensure the transaction accounts are legit
-        // Ensure the transfer acount is legit
+        let wallet = &self.wallet;
+        let transfers = wallet.ongoing_transfers.clone();
+        let transfer = &self.transfer;
+        invariant!(transfers.contains(&transfer.key()));
+        invariant!(wallet.approved_guardians.contains(&self.guardian.key()));
+        invariant!(!transfer.is_executable);
+        assert_keys_eq!(self.to_account.key(), transfer.to.key());
         Ok(())
     }
 }
 
 impl<'info> Validate<'info> for ApproveAndExecuteSPLTransfer<'info> {
     fn validate(&self) -> Result<()> {
-        // Ensure the guardians are legit
-        // Ensure the transaction accounts are legit
-        // Ensure the transfer acount is legit
+        let wallet = &self.wallet;
+        let transfers = wallet.ongoing_transfers.clone();
+        let transfer = &self.transfer;
+        invariant!(transfers.contains(&transfer.key()));
+        invariant!(wallet.approved_guardians.contains(&self.guardian.key()));
+        invariant!(!transfer.is_executable);
+        assert_keys_eq!(self.reciever_account.key(), transfer.to.key());
+        Ok(())
+    }
+}
+
+impl<'info> Validate<'info> for ApproveTransfer<'info> {
+    fn validate(&self) -> Result<()> {
+        let wallet = &self.wallet;
+        let transfer = &self.transfer;
+        let transfers = wallet.ongoing_transfers.clone();
+        invariant!(wallet.approved_guardians.contains(&self.guardian.key()));
+        invariant!(transfers.contains(&transfer.key()));
+        invariant!(!transfer.is_executable);
         Ok(())
     }
 }

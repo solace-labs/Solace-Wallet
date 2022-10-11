@@ -94,6 +94,7 @@ pub mod solace {
 
     /// Approve a SPL transaction and if applicable, execute it as well
     /// Else throw an error
+    #[access_control(ctx.accounts.validate())]
     pub fn approve_and_execute_spl_transfer(
         ctx: Context<ApproveAndExecuteSPLTransfer>,
         seed_key: Pubkey,
@@ -103,6 +104,7 @@ pub mod solace {
 
     /// Approve a SOL transaction and if applicable, execute it as well
     /// Else throw an error
+    #[access_control(ctx.accounts.validate())]
     pub fn approve_and_execute_sol_transfer(
         ctx: Context<ApproveAndExecuteSOLTransfer>,
     ) -> Result<()> {
@@ -111,6 +113,7 @@ pub mod solace {
 
     /// Execute a trasnfer, as long as a transfer is already approved
     /// This acts as a proxy when all guardians have approved the transfer but the transfer is still not approved
+    #[access_control(ctx.accounts.validate())]
     pub fn execute_transfer(ctx: Context<ExecuteSPLTransfer>) -> Result<()> {
         instructions::transfers::execute_transfer(ctx)
     }

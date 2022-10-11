@@ -17,6 +17,4 @@ cluster = "localnet"
 wallet = "./wallet/id.json"
 
 [scripts]
-airdrop = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tmp/airdrop.ts"
-test1 = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/autoApproveAndSolTransfer.ts"
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tmp/**/*.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
