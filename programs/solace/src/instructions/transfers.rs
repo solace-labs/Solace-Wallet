@@ -270,7 +270,7 @@ pub struct RequestInstantSPLTransfer<'info> {
     token_account: Account<'info, TokenAccount>,
     // [owner.toBuffer(), programId.toBuffer(), mint.toBuffer()],
     // associatedTokenProgramId
-    #[account(mut, token::mint=token_mint)]
+    #[account(mut)]
     reciever_account: Account<'info, TokenAccount>,
     system_program: Program<'info, System>,
     token_program: Program<'info, Token>,

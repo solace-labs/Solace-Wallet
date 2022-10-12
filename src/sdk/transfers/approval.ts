@@ -82,7 +82,6 @@ export class SolaceApprovals {
             transfer: transferAddress,
             guardian: new anchor.web3.PublicKey(data.guardianAddress),
             tokenAccount: transferData.fromTokenAccount,
-            recieverBase: transferData.toBase,
             recieverAccount: transferData.to,
             tokenProgram: TOKEN_PROGRAM_ID,
             systemProgram: anchor.web3.SystemProgram.programId,

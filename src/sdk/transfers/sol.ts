@@ -1,7 +1,7 @@
-import { SendSOLTokenData, SolaceSDK } from "..";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { SolaceSDK } from "..";
 import * as anchor from "anchor-rn";
 import { BN } from "bn.js";
+import { SendSOLTokenData } from "../types";
 
 export async function requestSolTransfer(
   this: SolaceSDK,
@@ -42,6 +42,7 @@ export async function requestSolTransfer(
           wallet: this.wallet,
           owner: this.owner.publicKey,
           toAccount: data.reciever,
+          systemProgram: anchor.web3.SystemProgram.programId,
         },
       }
     );

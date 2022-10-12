@@ -97,11 +97,6 @@ export type Solace = {
           "isSigner": false
         },
         {
-          "name": "recieverBase",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -141,6 +136,11 @@ export type Solace = {
           "name": "owner",
           "isMut": true,
           "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
@@ -310,11 +310,6 @@ export type Solace = {
           "isSigner": false
         },
         {
-          "name": "recieverBase",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -392,11 +387,6 @@ export type Solace = {
           "isSigner": false
         },
         {
-          "name": "recieverBase",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -424,7 +414,7 @@ export type Solace = {
         },
         {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         }
       ],
@@ -445,7 +435,7 @@ export type Solace = {
         },
         {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         }
       ],
@@ -1081,11 +1071,6 @@ export const IDL: Solace = {
           "isSigner": false
         },
         {
-          "name": "recieverBase",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -1125,6 +1110,11 @@ export const IDL: Solace = {
           "name": "owner",
           "isMut": true,
           "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
@@ -1294,11 +1284,6 @@ export const IDL: Solace = {
           "isSigner": false
         },
         {
-          "name": "recieverBase",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -1376,11 +1361,6 @@ export const IDL: Solace = {
           "isSigner": false
         },
         {
-          "name": "recieverBase",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -1408,7 +1388,7 @@ export const IDL: Solace = {
         },
         {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         }
       ],
@@ -1429,7 +1409,7 @@ export const IDL: Solace = {
         },
         {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         }
       ],

@@ -90,7 +90,7 @@ export class SolaceSDK {
   createTokenAccount: typeof createTokenAccount = createTokenAccount.bind(this);
   getTransferAddress: typeof getTransferAddress = getTransferAddress.bind(this);
   requestSolTransfer: typeof requestSolTransfer = requestSolTransfer.bind(this);
-  requestSplTransfer: typeof requestSolTransfer = requestSplTransfer.bind(this);
+  requestSplTransfer: typeof requestSplTransfer = requestSplTransfer.bind(this);
   fetchOngoingTransfers: typeof fetchOngoingTransfers =
     fetchOngoingTransfers.bind(this);
   endIncubation: typeof endIncubation = endIncubation.bind(this);

@@ -45,11 +45,11 @@ export async function requestSplTransfer(
           owner: this.owner.publicKey,
           tokenAccount: await this.getTokenAccount(data.mint),
           recieverAccount: data.recieverTokenAccount,
-          recieverBase: data.reciever,
           tokenMint: data.mint,
           tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: anchor.web3.SystemProgram.programId,
         },
+        signers: [this.owner],
       }
     );
   };
@@ -58,6 +58,7 @@ export async function requestSplTransfer(
   const incubation = await this.checkIncubation(walletState);
   if (incubation) {
     // Instant transfer
+    // return await instantTransfer();
     return this.signTransaction(await instantTransfer(), feePayer);
   } else {
     // Check if trusted
