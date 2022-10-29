@@ -1,5 +1,5 @@
 import * as anchor from "anchor-rn";
-import { SolaceSDK } from "..";
+import { SolaceSDK } from "../solace";
 import { RelayerIxData } from "../../relayer";
 
 /**

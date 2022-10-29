@@ -7,6 +7,8 @@ export type OngoingTransfer = {
   mint?: anchor.web3.PublicKey;
   seedKey: anchor.web3.PublicKey;
   senderTokenAccount?: anchor.web3.PublicKey;
+  threshold: number;
+  totalApprovals: number;
   guardianApprovals: {
     guardian: anchor.web3.PublicKey;
     isApproved: boolean;
@@ -18,10 +20,21 @@ export type SendSOLData = {
   reciever: anchor.web3.PublicKey;
 };
 
+export type SendSOLByNameData = {
+  amount: number;
+  recieverName: string;
+};
+
 export type SendSPLTokenData = {
   mint: anchor.web3.PublicKey;
   recieverTokenAccount: anchor.web3.PublicKey;
   reciever: anchor.web3.PublicKey;
+  amount: number;
+};
+
+export type SendSPLTokenByNameData = {
+  mint: anchor.web3.PublicKey;
+  recieverName: string;
   amount: number;
 };
 
@@ -65,4 +78,9 @@ export type SolaceSDKData = {
 export type ATAData = {
   tokenMint: anchor.web3.PublicKey;
   tokenAccount: anchor.web3.PublicKey;
+};
+
+export type GuardianTimeData = {
+  guardian: anchor.web3.PublicKey;
+  time: number;
 };

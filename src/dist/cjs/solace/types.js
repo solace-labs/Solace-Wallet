@@ -55,10 +55,6 @@ exports.IDL = {
                     }
                 },
                 {
-                    "name": "recoveryThreshold",
-                    "type": "u8"
-                },
-                {
                     "name": "name",
                     "type": "string"
                 }
@@ -104,11 +100,6 @@ exports.IDL = {
                     "isSigner": false
                 },
                 {
-                    "name": "recieverBase",
-                    "isMut": false,
-                    "isSigner": false
-                },
-                {
                     "name": "systemProgram",
                     "isMut": false,
                     "isSigner": false
@@ -148,6 +139,11 @@ exports.IDL = {
                     "name": "owner",
                     "isMut": true,
                     "isSigner": true
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
                 }
             ],
             "args": [
@@ -245,7 +241,7 @@ exports.IDL = {
                             {
                                 "kind": "arg",
                                 "type": {
-                                    "defined": "crate::GuardedSPLTransferData"
+                                    "defined": "crate::GuardedSOLTransferData"
                                 },
                                 "path": "data.random"
                             }
@@ -258,7 +254,14 @@ exports.IDL = {
                     "isSigner": false
                 }
             ],
-            "args": []
+            "args": [
+                {
+                    "name": "data",
+                    "type": {
+                        "defined": "GuardedSOLTransferData"
+                    }
+                }
+            ]
         },
         {
             "name": "approveTransfer",
@@ -302,31 +305,11 @@ exports.IDL = {
                 {
                     "name": "transfer",
                     "isMut": true,
-                    "isSigner": false,
-                    "pda": {
-                        "seeds": [
-                            {
-                                "kind": "account",
-                                "type": "publicKey",
-                                "account": "Wallet",
-                                "path": "wallet"
-                            },
-                            {
-                                "kind": "arg",
-                                "type": "publicKey",
-                                "path": "seed_key"
-                            }
-                        ]
-                    }
+                    "isSigner": false
                 },
                 {
                     "name": "recieverAccount",
                     "isMut": true,
-                    "isSigner": false
-                },
-                {
-                    "name": "recieverBase",
-                    "isMut": false,
                     "isSigner": false
                 },
                 {
@@ -379,16 +362,6 @@ exports.IDL = {
                     "name": "systemProgram",
                     "isMut": false,
                     "isSigner": false
-                },
-                {
-                    "name": "tokenProgram",
-                    "isMut": false,
-                    "isSigner": false
-                },
-                {
-                    "name": "tokenMint",
-                    "isMut": false,
-                    "isSigner": false
                 }
             ],
             "args": []
@@ -414,11 +387,6 @@ exports.IDL = {
                 {
                     "name": "recieverAccount",
                     "isMut": true,
-                    "isSigner": false
-                },
-                {
-                    "name": "recieverBase",
-                    "isMut": false,
                     "isSigner": false
                 },
                 {
@@ -449,7 +417,7 @@ exports.IDL = {
                 },
                 {
                     "name": "owner",
-                    "isMut": true,
+                    "isMut": false,
                     "isSigner": true
                 }
             ],
@@ -457,6 +425,27 @@ exports.IDL = {
                 {
                     "name": "guardian",
                     "type": "publicKey"
+                }
+            ]
+        },
+        {
+            "name": "setGuardianThreshold",
+            "accounts": [
+                {
+                    "name": "wallet",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "owner",
+                    "isMut": false,
+                    "isSigner": true
+                }
+            ],
+            "args": [
+                {
+                    "name": "threshold",
+                    "type": "u8"
                 }
             ]
         },
@@ -477,7 +466,7 @@ exports.IDL = {
             ]
         },
         {
-            "name": "removeGuardians",
+            "name": "requestRemoveGuardian",
             "accounts": [
                 {
                     "name": "wallet",
@@ -485,17 +474,33 @@ exports.IDL = {
                     "isSigner": false
                 },
                 {
-                    "name": "guardian",
-                    "isMut": false,
-                    "isSigner": false
-                },
-                {
                     "name": "owner",
-                    "isMut": true,
+                    "isMut": false,
                     "isSigner": true
                 }
             ],
-            "args": []
+            "args": [
+                {
+                    "name": "guardian",
+                    "type": "publicKey"
+                }
+            ]
+        },
+        {
+            "name": "confirmGuardianRemoval",
+            "accounts": [
+                {
+                    "name": "wallet",
+                    "isMut": true,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "guardian",
+                    "type": "publicKey"
+                }
+            ]
         },
         {
             "name": "initiateWalletRecovery",
@@ -670,7 +675,7 @@ exports.IDL = {
                         "type": "bool"
                     },
                     {
-                        "name": "recoveryThreshold",
+                        "name": "approvalThreshold",
                         "type": "u8"
                     },
                     {
@@ -713,6 +718,18 @@ exports.IDL = {
                         "name": "ongoingTransfers",
                         "type": {
                             "vec": "publicKey"
+                        }
+                    },
+                    {
+                        "name": "guardiansToRemove",
+                        "type": {
+                            "vec": "publicKey"
+                        }
+                    },
+                    {
+                        "name": "guardiansToRemoveFrom",
+                        "type": {
+                            "vec": "i64"
                         }
                     }
                 ]
@@ -920,61 +937,66 @@ exports.IDL = {
         },
         {
             "code": 6004,
+            "name": "InvalidThreshold",
+            "msg": "Can't be bigger than the total guardian number"
+        },
+        {
+            "code": 6005,
             "name": "GuardianApprovalTimeNotElapsed",
             "msg": "Guardian approval time not elapsed"
         },
         {
-            "code": 6005,
+            "code": 6006,
             "name": "KeyNotFound",
             "msg": "Key not found"
         },
         {
-            "code": 6006,
+            "code": 6007,
             "name": "PaymentsDisabled",
             "msg": "Payments are disabled - Wallet in recovery mode"
         },
         {
-            "code": 6007,
+            "code": 6008,
             "name": "TransferNotExecutable",
             "msg": "Requested transfer is not executable"
         },
         {
-            "code": 6008,
+            "code": 6009,
             "name": "TransferAlreadyComplete",
             "msg": "Requested transfer is already completed"
         },
         {
-            "code": 6009,
+            "code": 6010,
             "name": "KeyMisMatch",
             "msg": "Keys mismatch"
         },
         {
-            "code": 6010,
+            "code": 6011,
             "name": "WalletNotInIncubation",
             "msg": "Wallet is not in incubation mode"
         },
         {
-            "code": 6011,
+            "code": 6012,
             "name": "TrustedPubkeyNoTransactions",
             "msg": "No transaction history with pub key"
         },
         {
-            "code": 6012,
+            "code": 6013,
             "name": "TrustedPubkeyAlreadyTrusted",
             "msg": "Pubkey is already trusted"
         },
         {
-            "code": 6013,
+            "code": 6014,
             "name": "OngoingTransferIncomplete",
             "msg": "Ongoing transfer is incomplete"
         },
         {
-            "code": 6014,
+            "code": 6015,
             "name": "InvalidTransferType",
             "msg": "The requested transfer type is invalid"
         },
         {
-            "code": 6015,
+            "code": 6016,
             "name": "InvalidTransferData",
             "msg": "Invalid transfer data"
         }

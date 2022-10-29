@@ -1,13 +1,39 @@
 import * as anchor from "anchor-rn";
-import { KeyPair, SolaceSDK } from "..";
+import { SolaceSDK } from "../solace";
 import { RelayerIxData } from "../../relayer";
 import BN from "bn.js";
 import { Solace } from "../../solace/types";
 import {
   ApproveGuardianshipData,
+  GuardianTimeData,
   RequestWalletInformationData,
 } from "../types";
 import IDL from "../../solace/idl.json";
+import { KeyPair } from "../solace";
+
+export async function fetchGuardianData(this: SolaceSDK) {
+  const walletData = await this.fetchWalletData();
+  const pendingGuardianData: GuardianTimeData[] = [];
+  walletData.pendingGuardians.forEach((guardian, i) => {
+    pendingGuardianData.push({
+      guardian,
+      time: walletData.pendingGuardiansApprovalFrom[i].toNumber(),
+    });
+  });
+  const removingGuardianData: GuardianTimeData[] = [];
+  walletData.guardiansToRemove.forEach((guardian, i) => {
+    removingGuardianData.push({
+      guardian,
+      time: walletData.guardiansToRemoveFrom[i].toNumber(),
+    });
+  });
+
+  return {
+    approvedGuardians: walletData.approvedGuardians,
+    pendingGuardianData,
+    removingGuardianData,
+  };
+}
 
 /**
  * Add a guardian to the wallet, signed by the owner
@@ -36,10 +62,9 @@ export async function removeGuardian(
   guardianAdress: anchor.web3.PublicKey,
   payer: anchor.web3.PublicKey
 ): Promise<RelayerIxData> {
-  const tx = this.program.transaction.removeGuardians({
+  const tx = this.program.transaction.requestRemoveGuardian(guardianAdress, {
     accounts: {
       wallet: this.wallet,
-      guardian: guardianAdress,
       owner: this.owner.publicKey,
     },
     signers: [this.owner],
@@ -195,5 +220,36 @@ export class SolaceGuardian {
       pendingGuardians: wallet.pendingGuardians,
       approvedGuardians: wallet.approvedGuardians,
     };
+  }
+
+  static async confirmRemoval(data: ApproveGuardianshipData) {
+    const provider = new anchor.Provider(
+      data.network == "local"
+        ? SolaceSDK.localConnection
+        : SolaceSDK.testnetConnection,
+      new anchor.Wallet(KeyPair.generate()),
+      anchor.Provider.defaultOptions()
+    );
+    const programId = new anchor.web3.PublicKey(data.programAddress);
+    const program = new anchor.Program<Solace>(
+      // @ts-ignore
+      IDL,
+      programId,
+      provider
+    );
+    const wallet = await program.account.wallet.fetch(
+      new anchor.web3.PublicKey(data.solaceWalletAddress)
+    );
+    if (!wallet) {
+      throw "Invalid solace wallet address. The SDK could not find a Solace wallet with the given address, on the selected connection cluster";
+    }
+    return program.instruction.confirmGuardianRemoval(
+      new anchor.web3.PublicKey(data.guardianAddress),
+      {
+        accounts: {
+          wallet: new anchor.web3.PublicKey(data.solaceWalletAddress),
+        },
+      }
+    );
   }
 }

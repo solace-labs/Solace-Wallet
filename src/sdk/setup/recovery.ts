@@ -1,7 +1,7 @@
 import * as anchor from "anchor-rn";
 import { Program } from "anchor-rn";
 import { BN } from "bn.js";
-import { KeyPair, SolaceSDK } from "..";
+import { KeyPair, SolaceSDK } from "../solace";
 import { Solace } from "../../solace/types";
 
 /**

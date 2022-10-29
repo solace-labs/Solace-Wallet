@@ -463,7 +463,7 @@ export type Solace = {
       ]
     },
     {
-      "name": "removeGuardians",
+      "name": "requestRemoveGuardian",
       "accounts": [
         {
           "name": "wallet",
@@ -471,17 +471,33 @@ export type Solace = {
           "isSigner": false
         },
         {
-          "name": "guardian",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "guardian",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "confirmGuardianRemoval",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "guardian",
+          "type": "publicKey"
+        }
+      ]
     },
     {
       "name": "initiateWalletRecovery",
@@ -699,6 +715,18 @@ export type Solace = {
             "name": "ongoingTransfers",
             "type": {
               "vec": "publicKey"
+            }
+          },
+          {
+            "name": "guardiansToRemove",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "guardiansToRemoveFrom",
+            "type": {
+              "vec": "i64"
             }
           }
         ]
@@ -1437,7 +1465,7 @@ export const IDL: Solace = {
       ]
     },
     {
-      "name": "removeGuardians",
+      "name": "requestRemoveGuardian",
       "accounts": [
         {
           "name": "wallet",
@@ -1445,17 +1473,33 @@ export const IDL: Solace = {
           "isSigner": false
         },
         {
-          "name": "guardian",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "guardian",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "confirmGuardianRemoval",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "guardian",
+          "type": "publicKey"
+        }
+      ]
     },
     {
       "name": "initiateWalletRecovery",
@@ -1673,6 +1717,18 @@ export const IDL: Solace = {
             "name": "ongoingTransfers",
             "type": {
               "vec": "publicKey"
+            }
+          },
+          {
+            "name": "guardiansToRemove",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "guardiansToRemoveFrom",
+            "type": {
+              "vec": "i64"
             }
           }
         ]

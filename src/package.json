@@ -1,8 +1,8 @@
 {
   "name": "solace-sdk",
-  "version": "2.0.16",
+  "version": "2.0.24",
   "description": "SDK to interact with the Solace Program",
-  "main": "./dist/cjs/sdk.js",
+  "main": "./dist/cjs/sdk/index.js",
   "type": "commonjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

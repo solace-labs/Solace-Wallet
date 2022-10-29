@@ -1,5 +1,5 @@
 import * as anchor from "anchor-rn";
-import { SolaceSDK } from "..";
+import { SolaceSDK } from "../solace";
 import { OngoingTransfer } from "../types";
 
 export async function fetchOngoingTransfers(
@@ -20,6 +20,8 @@ export async function fetchOngoingTransfers(
     reciever: transfer.to as anchor.web3.PublicKey,
     seedKey: transfer.random as anchor.web3.PublicKey,
     isSplTransfer: false,
+    threshold: transfer.threshold,
+    totalApprovals: (transfer.approvals as boolean[]).filter((a) => a).length,
     senderTokenAccount: transfer.fromTokenAccount as anchor.web3.PublicKey,
     guardianApprovals: transfer.approvers?.map((g, i) => ({
       guardian: g,

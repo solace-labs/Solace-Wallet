@@ -8,7 +8,7 @@ import {
 } from "@solana/spl-token";
 import * as anchor from "anchor-rn";
 import bs58 from "bs58";
-import { SolaceSDK } from ".";
+import { SolaceSDK } from "./solace";
 import { RelayerIxData } from "../relayer";
 import { ATAData } from "./types";
 /**

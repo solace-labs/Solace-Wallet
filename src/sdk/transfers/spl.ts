@@ -1,4 +1,4 @@
-import { SolaceSDK } from "..";
+import { SolaceSDK } from "../solace";
 import * as anchor from "anchor-rn";
 import { BN } from "bn.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
@@ -59,14 +59,32 @@ export async function requestSplTransfer(
   if (incubation) {
     // Instant transfer
     // return await instantTransfer();
-    return this.signTransaction(await instantTransfer(), feePayer);
+    return {
+      transaction: await this.signTransaction(
+        await instantTransfer(),
+        feePayer
+      ),
+      isGuarded: false,
+    };
   } else {
     // Check if trusted
     if (await this.isPubkeyTrusted(walletState, data.recieverTokenAccount)) {
       // Instant transfer
-      return this.signTransaction(await instantTransfer(), feePayer);
+      return {
+        transaction: await this.signTransaction(
+          await instantTransfer(),
+          feePayer
+        ),
+        isGuarded: false,
+      };
     } else {
-      return this.signTransaction(await guardedTransfer(), feePayer);
+      return {
+        transaction: await this.signTransaction(
+          await guardedTransfer(),
+          feePayer
+        ),
+        isGuarded: true,
+      };
     }
   }
 }
