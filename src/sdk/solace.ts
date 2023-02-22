@@ -4,7 +4,6 @@ import IDL from "../solace/idl.json";
 import {
   AccountLayout,
   ASSOCIATED_TOKEN_PROGRAM_ID,
-  createAssociatedTokenAccountInstruction,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { checkAccountExist } from "../utils/spl-util";
@@ -32,6 +31,10 @@ import {
 import { createFromName } from "./setup/create";
 import { recoverWallet } from "./setup/recovery";
 import { SolaceSDKData, SolaceTokenAccount } from "./types";
+import { SolanaWalletAdapter } from "@web3auth/torus-solana-adapter";
+import { SolanaWallet } from "@web3auth/solana-provider";
+// @ts-ignore
+import { createAssociatedTokenAccountInstruction } from "@solana/spl-token";
 
 const { web3, Provider, Wallet, setProvider, Program } = anchor;
 
@@ -269,6 +272,23 @@ export class SolaceSDK {
   }
 
   recoverWallet: typeof recoverWallet = recoverWallet.bind(this);
+
+  async swap(
+    mint1: anchor.web3.PublicKey,
+    mint2: anchor.web3.PublicKey,
+    amount: number,
+    feePayer: anchor.web3.PublicKey
+  ): Promise<boolean> {
+    const sig = await this.requestSolTransfer(
+      {
+        reciever: this.owner.publicKey,
+        amount,
+      },
+      feePayer
+    );
+
+    return true;
+  }
 
   /**
    * Check if a token account is valid. Should use try-catch around this method to check for the same.

@@ -20,3 +20,4 @@ Object.defineProperty(exports, "SolaceGuardian", { enumerable: true, get: functi
 const approval_1 = require("./transfers/approval");
 Object.defineProperty(exports, "SolaceApprovals", { enumerable: true, get: function () { return approval_1.SolaceApprovals; } });
 __exportStar(require("./solace"), exports);
+__exportStar(require("./solaceV2"), exports);

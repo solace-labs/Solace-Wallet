@@ -10,12 +10,14 @@ async function fetchOngoingTransfers() {
     const transfers = await Promise.all(promises);
     return transfers.map((transfer) => {
         var _a;
-        return ({
+        console.log(transfer.isSplTransfer);
+        return {
+            sender: transfer.from,
             mint: transfer.tokenMint,
             amount: transfer.amount.toNumber(),
             reciever: transfer.to,
             seedKey: transfer.random,
-            isSplTransfer: false,
+            isSplTransfer: transfer.isSplTransfer,
             threshold: transfer.threshold,
             totalApprovals: transfer.approvals.filter((a) => a).length,
             senderTokenAccount: transfer.fromTokenAccount,
@@ -23,7 +25,7 @@ async function fetchOngoingTransfers() {
                 guardian: g,
                 isApproved: transfer.approvals[i],
             })),
-        });
+        };
     });
 }
 exports.fetchOngoingTransfers = fetchOngoingTransfers;

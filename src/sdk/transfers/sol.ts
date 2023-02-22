@@ -51,7 +51,7 @@ export async function requestSolTransfer(
         accounts: {
           wallet: this.wallet,
           owner: this.owner.publicKey,
-          rentPayer: this.owner.publicKey,
+          rentPayer: feePayer,
           transfer: transfer,
           systemProgram: anchor.web3.SystemProgram.programId,
         },
@@ -61,7 +61,6 @@ export async function requestSolTransfer(
   };
 
   const instantTransfer = async () => {
-    console.log("instant SOL transfer");
     return this.program.transaction.requestInstantSolTransfer(
       new BN(data.amount),
       {

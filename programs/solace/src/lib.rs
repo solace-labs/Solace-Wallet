@@ -135,14 +135,17 @@ pub mod solace {
     /// Remove the given guardian from the pending guardians vec and add them to the approved guardian vec
     /// This requires the guardian to be a keypair guardian and not a solace-guardian
     /// Check for time-lock
-    pub fn approve_guardianship(ctx: Context<ApproveGuardian>, guardian: Pubkey) -> Result<()> {
+    pub fn approve_guardianship(ctx: Context<Unsecure>, guardian: Pubkey) -> Result<()> {
         instructions::guardians::approve_guardianship(ctx, guardian)
     }
 
     /// Remove guardian
-    /// TODO: Add timelock to remove guardians
-    pub fn remove_guardians(_ctx: Context<RemoveGuardian>) -> Result<()> {
-        todo!("Create a timelock and remove a guardian using it");
+    pub fn request_remove_guardian(ctx: Context<Verified>, guardian: Pubkey) -> Result<()> {
+        instructions::guardians::request_remove_guardian(ctx, guardian)
+    }
+
+    pub fn confirm_guardian_removal(ctx: Context<Unsecure>, guardian: Pubkey) -> Result<()> {
+        instructions::guardians::confirm_remove_guardian(ctx, guardian)
     }
 
     /// Initiate wallet recovery for an account

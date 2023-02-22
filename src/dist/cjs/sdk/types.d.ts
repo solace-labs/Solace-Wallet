@@ -2,6 +2,7 @@ import * as anchor from "anchor-rn";
 export declare type OngoingTransfer = {
     isSplTransfer: boolean;
     amount: number;
+    sender: anchor.web3.PublicKey;
     reciever: anchor.web3.PublicKey;
     mint?: anchor.web3.PublicKey;
     seedKey: anchor.web3.PublicKey;

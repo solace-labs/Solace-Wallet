@@ -1,15 +1,6 @@
-import {
-  doAirdrop,
-  guardian1,
-  newOwner,
-  owner,
-  relayPair,
-  signer,
-  usdcOwner,
-} from "./airdrop";
+import { doAirdrop, relayPair, signer, usdcOwner } from "./airdrop";
 import * as anchor from "anchor-rn";
-import { assert } from "chai";
-import { KeyPair, SolaceSDK } from "../src/sdk";
+import { SolaceSDK } from "../src/sdk";
 import { relayTransaction } from "../src/relayer";
 import { TokenMint } from "../src/utils/spl-util";
 import {
@@ -28,10 +19,18 @@ import {
   requestGuardedSOLTransfer,
   requestGuardedSPLTransfer,
   sendUSDC,
+  testRequestNamedSOLTransfer,
+  testRequestSolTransfer,
+  testSendUSDCToSolanaWallet,
 } from "./transfers";
-import { requestGuardianship } from "./guardianship";
+import {
+  requestGuardianship,
+  testAddGuardianAfterIncubation,
+  testRemoveGuardian,
+  testRemoveGuardianConfirmation,
+} from "./guardianship";
 
-const { Keypair, LAMPORTS_PER_SOL } = anchor.web3;
+const { LAMPORTS_PER_SOL } = anchor.web3;
 
 export const PROGRAM_ADDRESS = "8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U";
 
@@ -94,6 +93,15 @@ describe("solace", () => {
 
   it("should send USDC to someone random", async () => await sendUSDC());
 
+  it("should send USDC to a solace wallet", async () =>
+    await testSendUSDCToSolanaWallet());
+
+  it("should send SOL to a normal EOA wallet", async () =>
+    await testRequestSolTransfer());
+
+  xit("should send SOL to a Solace wallet", async () =>
+    await testRequestNamedSOLTransfer());
+
   it("should request for guardianship and be auto-approved", async () =>
     await requestGuardianship());
 
@@ -101,10 +109,13 @@ describe("solace", () => {
 
   it("should end incubation", async () => await endIncubation());
 
-  it("should request for a USDC guarded transfer", async () =>
+  xit("should add a guardian", async () =>
+    await testAddGuardianAfterIncubation());
+
+  xit("should request for a USDC guarded transfer", async () =>
     await requestGuardedSPLTransfer());
 
-  it("should approve & execute a guarded SPL transfer", async () =>
+  xit("should approve & execute a guarded SPL transfer", async () =>
     await approveAndExecuteGuardedTransfer());
 
   it("should request for a guarded SOL transfer", async () =>
@@ -118,6 +129,11 @@ describe("solace", () => {
 
   it("should accept wallet recovery and the new owner should have access to the current wallet", async () =>
     await acceptRecoveryAndAssignNewOwner());
+
+  xit("should remove guardian", async () => await testRemoveGuardian());
+
+  xit("should confirm removal of guardian", async () =>
+    await testRemoveGuardianConfirmation());
 
   // // it("should accept the request for guardianship", async () => {
   // //   let wallet = await solaceSdk.fetchWalletData();

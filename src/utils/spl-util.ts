@@ -1,10 +1,14 @@
 import { Keypair, PublicKey, Connection } from "@solana/web3.js";
 import {
+  // @ts-ignore
   mintTo,
+  // @ts-ignore
   createMint,
+  // @ts-ignore
   getAssociatedTokenAddress,
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  // @ts-ignore
   createAssociatedTokenAccount,
 } from "@solana/spl-token";
 

@@ -442,6 +442,7 @@ export declare class SolaceSDK {
      */
     isInRecovery(wallet: anchor.web3.PublicKey): Promise<boolean>;
     recoverWallet: typeof recoverWallet;
+    swap(mint1: anchor.web3.PublicKey, mint2: anchor.web3.PublicKey, amount: number, feePayer: anchor.web3.PublicKey): Promise<boolean>;
     /**
      * Check if a token account is valid. Should use try-catch around this method to check for the same.
      * If an error is caught, then the token account for the PDA doesn't exist and one needs to be created

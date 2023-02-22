@@ -1,7 +1,10 @@
 use anchor_lang::prelude::*;
 use vipers::invariant;
 
-use crate::{utils, Errors, Verified, Wallet};
+use crate::{
+    utils::{self, get_key_index},
+    Errors, Verified, Wallet,
+};
 
 /// Add a new guardian to the wallet
 /// 1. Check if the account is in incubation or not
@@ -29,9 +32,7 @@ pub fn add_guardian(ctx: Context<Verified>, guardian: Pubkey) -> Result<()> {
         wallet.approval_threshold += 1;
     } else {
         wallet.pending_guardians.push(guardian);
-        wallet
-            .pending_guardians_approval_from
-            .push(now + 36 * 36000);
+        wallet.pending_guardians_approval_from.push(now + 36 * 3600);
     }
     msg!("Added new pending guardians");
     Ok(())
@@ -39,7 +40,7 @@ pub fn add_guardian(ctx: Context<Verified>, guardian: Pubkey) -> Result<()> {
 
 /// Approve the guardianship for a pending guardian as long as the wait time as passed
 /// Check if the pending guardian's wait time has passed before approving the guardianship
-pub fn approve_guardianship(ctx: Context<ApproveGuardian>, guardian: Pubkey) -> Result<()> {
+pub fn approve_guardianship(ctx: Context<Unsecure>, guardian: Pubkey) -> Result<()> {
     let wallet = &mut ctx.accounts.wallet;
     let index = utils::get_key_index(wallet.pending_guardians.clone(), guardian);
     // Make sure that a given guardian is a valid pending guardian
@@ -117,21 +118,58 @@ pub fn add_new_trusted_pubkey(ctx: Context<Verified>, pubkey: Pubkey) -> Result<
     Ok(())
 }
 
+/// Request to remove a guardian
+pub fn request_remove_guardian(ctx: Context<Verified>, guardian: Pubkey) -> Result<()> {
+    let wallet = &mut ctx.accounts.wallet;
+    let remove_queue_index = get_key_index(wallet.guardians_to_remove.clone(), guardian);
+    let approved_queue_index = get_key_index(wallet.approved_guardians.clone(), guardian);
+
+    invariant!(remove_queue_index.is_none());
+    invariant!(approved_queue_index.is_some());
+
+    // Instantly remove the guardian if the the wallet is in incubation
+    if wallet.check_incubation() {
+        wallet
+            .approved_guardians
+            .remove(approved_queue_index.unwrap());
+        return Ok(());
+    }
+
+    let now = Clock::get().unwrap().unix_timestamp;
+    wallet.guardians_to_remove.push(guardian);
+    wallet.guardians_to_remove_from.push(now);
+    Ok(())
+}
+
+/// Confirm the removal of a guardian. This ensures that the stipulated waiting period is over before
+/// conclusively removing the guardian
+pub fn confirm_remove_guardian(ctx: Context<Unsecure>, guardian: Pubkey) -> Result<()> {
+    let wallet = &mut ctx.accounts.wallet;
+    let remove_queue_index = get_key_index(wallet.guardians_to_remove.clone(), guardian);
+    let approved_queue_index = get_key_index(wallet.approved_guardians.clone(), guardian);
+
+    // Add as many invariants as possible
+    invariant!(remove_queue_index.is_some());
+    invariant!(approved_queue_index.is_some());
+
+    let index = remove_queue_index.unwrap();
+    // let now = Clock::get().unwrap().unix_timestamp;
+    // TODO:Check if 36 hours has passed
+
+    ctx.accounts
+        .wallet
+        .approved_guardians
+        .remove(approved_queue_index.unwrap());
+    ctx.accounts.wallet.guardians_to_remove.remove(index);
+    ctx.accounts.wallet.guardians_to_remove_from.remove(index);
+
+    Ok(())
+}
+
 /// Any keypair can invoke this transaction as
 /// all it does is approve a pending guardian
 #[derive(Accounts)]
-pub struct ApproveGuardian<'info> {
+pub struct Unsecure<'info> {
     #[account(mut)]
     wallet: Account<'info, Wallet>,
-}
-
-#[derive(Accounts)]
-pub struct RemoveGuardian<'info> {
-    #[account(mut, has_one = owner)]
-    wallet: Account<'info, Wallet>,
-    /// CHECK: Guardian to be removed
-    #[account(constraint = wallet.approved_guardians.contains(&guardian.key()))]
-    guardian: UncheckedAccount<'info>,
-    #[account(mut)]
-    owner: Signer<'info>,
 }

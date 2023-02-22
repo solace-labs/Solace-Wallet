@@ -1,8 +1,11 @@
 import {
   AccountLayout,
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  // @ts-ignore
   createAssociatedTokenAccountInstruction,
+  // @ts-ignore
   getAssociatedTokenAddress,
+  // @ts-ignore
   RawAccount,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";

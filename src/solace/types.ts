@@ -638,6 +638,34 @@ export type Solace = {
         "kind": "struct",
         "fields": [
           {
+            "name": "ownerEks",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "ownerEksExpiry",
+            "type": {
+              "vec": "i64"
+            }
+          },
+          {
+            "name": "externalEks",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "externalEksExpiry",
+            "type": {
+              "vec": "i64"
+            }
+          },
+          {
+            "name": "mfaCount",
+            "type": "u8"
+          },
+          {
             "name": "pendingGuardians",
             "type": {
               "vec": "publicKey"
@@ -728,6 +756,22 @@ export type Solace = {
             "type": {
               "vec": "i64"
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "externalEk",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "expiry",
+            "type": "i64"
+          },
+          {
+            "name": "key",
+            "type": "publicKey"
           }
         ]
       }
@@ -854,6 +898,50 @@ export type Solace = {
     }
   ],
   "types": [
+    {
+      "name": "EKInstruction",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "programId",
+            "type": "publicKey"
+          },
+          {
+            "name": "keys",
+            "type": {
+              "vec": {
+                "defined": "EKIxAccountMeta"
+              }
+            }
+          },
+          {
+            "name": "data",
+            "type": "bytes"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EKIxAccountMeta",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pubkey",
+            "type": "publicKey"
+          },
+          {
+            "name": "isSigner",
+            "type": "bool"
+          },
+          {
+            "name": "isWritable",
+            "type": "bool"
+          }
+        ]
+      }
+    },
     {
       "name": "GuardedSPLTransferData",
       "type": {
@@ -1640,6 +1728,34 @@ export const IDL: Solace = {
         "kind": "struct",
         "fields": [
           {
+            "name": "ownerEks",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "ownerEksExpiry",
+            "type": {
+              "vec": "i64"
+            }
+          },
+          {
+            "name": "externalEks",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "externalEksExpiry",
+            "type": {
+              "vec": "i64"
+            }
+          },
+          {
+            "name": "mfaCount",
+            "type": "u8"
+          },
+          {
             "name": "pendingGuardians",
             "type": {
               "vec": "publicKey"
@@ -1730,6 +1846,22 @@ export const IDL: Solace = {
             "type": {
               "vec": "i64"
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "externalEk",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "expiry",
+            "type": "i64"
+          },
+          {
+            "name": "key",
+            "type": "publicKey"
           }
         ]
       }
@@ -1856,6 +1988,50 @@ export const IDL: Solace = {
     }
   ],
   "types": [
+    {
+      "name": "EKInstruction",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "programId",
+            "type": "publicKey"
+          },
+          {
+            "name": "keys",
+            "type": {
+              "vec": {
+                "defined": "EKIxAccountMeta"
+              }
+            }
+          },
+          {
+            "name": "data",
+            "type": "bytes"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EKIxAccountMeta",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pubkey",
+            "type": "publicKey"
+          },
+          {
+            "name": "isSigner",
+            "type": "bool"
+          },
+          {
+            "name": "isWritable",
+            "type": "bool"
+          }
+        ]
+      }
+    },
     {
       "name": "GuardedSPLTransferData",
       "type": {

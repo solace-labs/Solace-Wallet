@@ -39,6 +39,8 @@ const guardian_1 = require("./setup/guardian");
 const helper_1 = require("./helper");
 const create_1 = require("./setup/create");
 const recovery_1 = require("./setup/recovery");
+// @ts-ignore
+const spl_token_2 = require("@solana/spl-token");
 const { web3, Provider, Wallet, setProvider, Program } = anchor;
 exports.PublicKey = anchor.web3.PublicKey;
 exports.KeyPair = anchor.web3.Keypair;
@@ -74,7 +76,7 @@ class SolaceSDK {
          * Create a token account for a given mint.
          */
         this.createAnyTokenAccount = (baseAddress, tokenAccount, mint, feePayer) => {
-            const transaction = new anchor.web3.Transaction().add((0, spl_token_1.createAssociatedTokenAccountInstruction)(feePayer, tokenAccount, baseAddress, mint, spl_token_1.TOKEN_PROGRAM_ID, spl_token_1.ASSOCIATED_TOKEN_PROGRAM_ID));
+            const transaction = new anchor.web3.Transaction().add((0, spl_token_2.createAssociatedTokenAccountInstruction)(feePayer, tokenAccount, baseAddress, mint, spl_token_1.TOKEN_PROGRAM_ID, spl_token_1.ASSOCIATED_TOKEN_PROGRAM_ID));
             return this.signTransaction(transaction, feePayer, true);
         };
         /**
@@ -179,6 +181,13 @@ class SolaceSDK {
     async isInRecovery(wallet) {
         return (await SolaceSDK.fetchDataForWallet(wallet, this.program))
             .recoveryMode;
+    }
+    async swap(mint1, mint2, amount, feePayer) {
+        const sig = await this.requestSolTransfer({
+            reciever: this.owner.publicKey,
+            amount,
+        }, feePayer);
+        return true;
     }
     /**
      * Check if a token account is valid. Should use try-catch around this method to check for the same.

@@ -1,10 +1,20 @@
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, solana_program::instruction};
 use vipers::invariant;
 
 use crate::{utils, Errors};
 
 #[account]
 pub struct Wallet {
+    pub owner_eks: Vec<Pubkey>,
+    pub owner_eks_expiry: Vec<i64>,
+
+    // -- External EK
+    pub external_eks: Vec<Pubkey>,
+    pub external_eks_expiry: Vec<i64>,
+
+    //--------------------------
+    // How many factors are required to approve a MFA request
+    pub mfa_count: u8,
     // The guardians for this wallet
     pub pending_guardians: Vec<Pubkey>,
     // The unix timestamps from when the approvals can be made
@@ -37,6 +47,14 @@ pub struct Wallet {
     pub incubation_mode: bool,
     // List of ongoing transfers
     pub ongoing_transfers: Vec<Pubkey>,
+    pub guardians_to_remove: Vec<Pubkey>,
+    pub guardians_to_remove_from: Vec<i64>,
+}
+
+#[account]
+pub struct ExternalEK {
+    expiry: i64,
+    key: Pubkey,
 }
 
 #[account]
@@ -101,6 +119,27 @@ impl GuardedTransfer {
     }
 }
 
+/// Instruction.
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, Default, PartialEq)]
+pub struct EKInstruction {
+    /// Pubkey of the instruction processor that executes this instruction
+    pub program_id: Pubkey,
+    /// Metadata for what accounts should be passed to the instruction processor
+    pub keys: Vec<EKIxAccountMeta>,
+    /// Opaque data passed to the instruction processor
+    pub data: Vec<u8>,
+}
+/// Account metadata used to define [TXInstruction]s
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Copy, Clone)]
+pub struct EKIxAccountMeta {
+    /// An account's public key
+    pub pubkey: Pubkey,
+    /// True if an Instruction requires a Transaction signature matching `pubkey`.
+    pub is_signer: bool,
+    /// True if the `pubkey` can be loaded as a read-write account.
+    pub is_writable: bool,
+}
+
 impl Wallet {
     /// Helper to check if the wallet has any approved guardians
     pub fn has_guardians(&self) -> bool {
@@ -111,7 +150,7 @@ impl Wallet {
     pub fn check_incubation(&mut self) -> bool {
         let now = Clock::get().unwrap().unix_timestamp;
         // Check if the wallet is in incubation mode
-        if self.created_at < now * 12 * 36000 {
+        if self.created_at < now + (12 * 3600) {
             // if the wallet is in the incubation window, then respect the incubation_mode flag
             self.incubation_mode
         } else {
@@ -127,6 +166,15 @@ impl Wallet {
     /// Check if a given guardian pubkey is a valid guardian or not
     pub fn validate_guardian(&self, guardian: Pubkey) -> bool {
         crate::utils::get_key_index(self.approved_guardians.clone(), guardian).is_some()
+    }
+
+    pub fn add_owner_ek(&self, ek: Pubkey) -> bool {
+        if self.owner_eks.is_empty() || self.owner_eks.len() == 1 {
+            // If owner eks is empty, then blindly add the EK
+        } else {
+            // Initiate 2FA to add a new EK
+        }
+        true
     }
 }
 
