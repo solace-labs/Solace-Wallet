@@ -1,6 +1,6 @@
 # Solace Wallet
 
-Solace is a program (smart-contract) based vault for Solana enhances security using social recovery, written in Rust.
+Solace is a program (smart-contract) based vault for Solana enhances security using social recovery.
 
 Program Address (Testnet) - `8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U`
 
