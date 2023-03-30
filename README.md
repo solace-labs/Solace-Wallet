@@ -6,6 +6,9 @@ Solace implements MPC wallets to ensure the user's funds are decentralized and n
 
 Program Address (Testnet) - `8FRYfiEcSPFuJd27jkKaPBwFCiXDFYrnfwqgH9JFjS2U`
 
+Cronos Address (Testnet) - `0x59882BB120dF47DD39b07755d29f4EeAa55864d6`
+
+
 ![image](https://user-images.githubusercontent.com/103751566/191743628-80f07942-28e6-4cd9-b76f-cc7b5aedef00.png)
 
 Solace provides a user-friendly SDK that can be easily integrated into modern applications, including game engines like Unity and Unreal as well as traditional interfaces that use TypeScript and React. 
